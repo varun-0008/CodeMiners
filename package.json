@@ -1,0 +1,16 @@
+{
+  "name": "codeminers-hackathon",
+  "version": "1.0.0",
+  "description": "CodeMiners Hackathon - Login Page",
+  "main": "app.js",
+  "scripts": {
+    "dev": "npx serve . -p 3000",
+    "deploy": "firebase deploy --only hosting"
+  },
+  "keywords": ["hackathon", "firebase", "login"],
+  "author": "CodeMiners",
+  "license": "MIT",
+  "dependencies": {
+    "firebase": "^10.12.0"
+  }
+}
