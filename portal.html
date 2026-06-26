@@ -39,12 +39,18 @@
         window.location.href = 'index.html';
       } else {
         // Pre-fill email field and lock it for secure querying
-        window.addEventListener('DOMContentLoaded', () => {
+        const fillEmail = () => {
           const emailField = document.getElementById('r-email');
           if (emailField) {
             emailField.value = user.email;
           }
-        });
+        };
+        
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', fillEmail);
+        } else {
+          fillEmail();
+        }
       }
     });
   </script>
