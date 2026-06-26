@@ -46,31 +46,25 @@ function playSectionAnimation(page) {
   const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
 
   if (page === 'home') {
-    tl.from(section.querySelectorAll('.hero img, .hero-eyebrow, .hero-title, .hero-desc'), { 
-      opacity: 0, 
-      y: 20, 
-      duration: 0.7, 
-      stagger: 0.1 
-    })
-    .from(section.querySelectorAll('.home-about-text, .achieve-card, .event-card, .donate-cta'), { 
-      opacity: 0, 
-      y: 30, 
-      duration: 0.6, 
-      stagger: 0.08 
-    }, "-=0.3");
+    tl.fromTo(section.querySelectorAll('.hero img, .hero-eyebrow, .hero-title, .hero-desc'), 
+      { opacity: 0, y: 20 },
+      { opacity: 1, y: 0, duration: 0.7, stagger: 0.1 }
+    )
+    .fromTo(section.querySelectorAll('.home-about-text, .achieve-card, .event-card, .donate-cta'), 
+      { opacity: 0, y: 30 },
+      { opacity: 1, y: 0, duration: 0.6, stagger: 0.08 }, 
+      "-=0.3"
+    );
   } else {
-    tl.from(section.querySelectorAll('.section-heading'), { 
-      opacity: 0, 
-      y: -15, 
-      duration: 0.6 
-    })
-    .from(section.querySelectorAll('.glass-card, .mv-card, .team-card, .why-card, .achieve-card'), { 
-      opacity: 0, 
-      y: 25, 
-      scale: 0.97,
-      duration: 0.5, 
-      stagger: 0.06 
-    }, "-=0.3");
+    tl.fromTo(section.querySelectorAll('.section-heading'), 
+      { opacity: 0, y: -15 },
+      { opacity: 1, y: 0, duration: 0.6 }
+    )
+    .fromTo(section.querySelectorAll('.glass-card, .mv-card, .team-card, .why-card, .achieve-card'), 
+      { opacity: 0, y: 25, scale: 0.97 },
+      { opacity: 1, y: 0, scale: 1, duration: 0.5, stagger: 0.06 }, 
+      "-=0.3"
+    );
   }
 }
 
