@@ -40,7 +40,7 @@ function playSectionAnimation(page) {
   if (!section) return;
 
   // Kill existing tweens to prevent overlapping animations if user clicks fast
-  const targets = section.querySelectorAll('.hero, .home-about-text, .achieve-card, .event-card, .donate-cta, .section-heading, .glass-card, .mv-card, .team-card, .why-card');
+  const targets = section.querySelectorAll('.hero, .home-about-text, .achieve-card, .event-card, .donate-cta, .section-heading, .glass-card, .mv-card, .team-card, .why-card, .contact-card');
   gsap.killTweensOf(targets);
 
   const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
