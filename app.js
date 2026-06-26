@@ -459,7 +459,7 @@ DOM.btnGoogle.addEventListener('click', async () => {
     await auth.signInWithPopup(provider);
     showMessage('Signed in with Google!', 'success');
     setTimeout(() => {
-      window.location.href = 'dashboard.html';
+      window.location.href = 'portal.html';
     }, 800);
   } catch (error) {
     if (error.code !== 'auth/popup-closed-by-user') {
@@ -477,7 +477,7 @@ DOM.btnGithub.addEventListener('click', async () => {
     await auth.signInWithPopup(provider);
     showMessage('Signed in with GitHub!', 'success');
     setTimeout(() => {
-      window.location.href = 'dashboard.html';
+      window.location.href = 'portal.html';
     }, 800);
   } catch (error) {
     if (error.code !== 'auth/popup-closed-by-user') {
