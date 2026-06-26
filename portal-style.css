@@ -181,15 +181,9 @@ input, textarea, select { font-family: inherit; }
 .section {
   display: none;
   min-height: 100vh;
-  animation: fadeInSection 0.4s ease forwards;
 }
 
 .section.active { display: block; }
-
-@keyframes fadeInSection {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
 
 .section-inner {
   max-width: 1140px;

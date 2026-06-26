@@ -22,12 +22,56 @@ function navigate(page) {
   if (target) {
     target.classList.add('active');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    playSectionAnimation(page);
   }
 
   // Update nav links
   document.querySelectorAll('.nav-link[data-page]').forEach(link => {
     link.classList.toggle('active', link.dataset.page === page);
   });
+}
+
+// ─────────────────────────────────────────────────────────────
+// GSAP SECTION ANIMATIONS
+// ─────────────────────────────────────────────────────────────
+function playSectionAnimation(page) {
+  if (typeof gsap === 'undefined') return;
+  const section = document.getElementById('sec-' + page);
+  if (!section) return;
+
+  // Kill existing tweens to prevent overlapping animations if user clicks fast
+  const targets = section.querySelectorAll('.hero, .home-about-text, .achieve-card, .event-card, .donate-cta, .section-heading, .glass-card, .mv-card, .team-card, .why-card');
+  gsap.killTweensOf(targets);
+
+  const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+
+  if (page === 'home') {
+    tl.from(section.querySelectorAll('.hero img, .hero-eyebrow, .hero-title, .hero-desc'), { 
+      opacity: 0, 
+      y: 20, 
+      duration: 0.7, 
+      stagger: 0.1 
+    })
+    .from(section.querySelectorAll('.home-about-text, .achieve-card, .event-card, .donate-cta'), { 
+      opacity: 0, 
+      y: 30, 
+      duration: 0.6, 
+      stagger: 0.08 
+    }, "-=0.3");
+  } else {
+    tl.from(section.querySelectorAll('.section-heading'), { 
+      opacity: 0, 
+      y: -15, 
+      duration: 0.6 
+    })
+    .from(section.querySelectorAll('.glass-card, .mv-card, .team-card, .why-card, .achieve-card'), { 
+      opacity: 0, 
+      y: 25, 
+      scale: 0.97,
+      duration: 0.5, 
+      stagger: 0.06 
+    }, "-=0.3");
+  }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -405,6 +449,9 @@ document.addEventListener('DOMContentLoaded', () => {
   animateLiquidGlass();
   initNavScroll();
   initContactForm();
+
+  // Initial animation
+  setTimeout(() => playSectionAnimation('home'), 100);
 
   // Countdowns
   renderCountdown('2025-07-15T09:00:00', 'countdown-hackforge');
