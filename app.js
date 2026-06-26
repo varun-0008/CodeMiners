@@ -424,13 +424,13 @@ DOM.authForm.addEventListener('submit', async (e) => {
       showMessage('Account created successfully!', 'success');
       // Short delay before redirect
       setTimeout(() => {
-        window.location.href = 'dashboard.html';
+        window.location.href = 'portal.html';
       }, 800);
     } else {
       await auth.signInWithEmailAndPassword(email, password);
       showMessage('Signed in successfully!', 'success');
       setTimeout(() => {
-        window.location.href = 'dashboard.html';
+        window.location.href = 'portal.html';
       }, 800);
     }
   } catch (error) {
