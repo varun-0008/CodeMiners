@@ -221,7 +221,7 @@ function regNext(step) {
       showToast('Please fill in all required fields.', 'error');
       return;
     }
-    if (!/^\S+@\S+\.\S+$/.test(email.value)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) {
       showToast('Please enter a valid email address.', 'error');
       return;
     }

@@ -22,8 +22,8 @@
   --text-dim:        rgba(255,255,255,0.28);
   --green-success:   #2ECC71;
   --blue-accent:     #3498DB;
-  --font-display:    'Orbitron', monospace;
-  --font-body:       'Space Grotesk', sans-serif;
+  --font-display:    sans-serif;
+  --font-body:       sans-serif;
   --transition-smooth: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   --transition-fast:   all 0.18s ease;
   --radius-sm:  8px;
@@ -289,7 +289,6 @@ input, textarea, select { font-family: inherit; }
   border-radius: var(--radius-lg);
   backdrop-filter: blur(16px) saturate(160%);
   -webkit-backdrop-filter: blur(16px) saturate(160%);
-  filter: url(#liquidGlass);
   box-shadow: var(--shadow-card);
   overflow: hidden;
   transition: var(--transition-smooth);
@@ -607,7 +606,6 @@ input, textarea, select { font-family: inherit; }
 }
 
 .mv-card:hover {
-  border-color: rgba(243,156,18,0.35);
   transform: translateY(-3px);
   box-shadow: 0 12px 32px rgba(0,0,0,0.28), var(--shadow-amber);
 }
@@ -1322,24 +1320,23 @@ textarea.field-input { padding-top: 13px; align-self: flex-start; width: 100%; }
   :root { --nav-h: 62px; }
 
   .cloud-nav {
-    top: auto;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    transform: none;
-    border-radius: 20px 20px 0 0;
-    padding: 10px 8px 14px;
+    top: 10px;
+    bottom: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: var(--radius-full);
+    padding: 10px 8px;
     justify-content: space-around;
-    max-width: 100%;
+    max-width: calc(100vw - 20px);
+    width: 100%;
     gap: 0;
-    border-bottom: none;
   }
 
   .nav-link span { display: none; }
   .nav-link { padding: 8px 12px; border-radius: var(--radius-md); flex-direction: column; gap: 3px; }
   .nav-link i { font-size: 18px; }
 
-  .page-wrapper { padding-top: 20px; padding-bottom: 80px; }
+  .page-wrapper { padding-top: 90px; padding-bottom: 40px; }
 
   .hero { padding: 40px 20px 36px; }
 
