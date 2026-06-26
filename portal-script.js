@@ -242,7 +242,32 @@ function regNext(step) {
       }
     }
 
-    setRegStep(3);
+    // Check if user is already registered for this event
+    const btn = document.querySelector('#reg-panel-2 .btn-gold');
+    const originalBtnText = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking...';
+    btn.disabled = true;
+
+    db.collection('registrations')
+      .where('email', '==', email.value)
+      .where('eventName', '==', selectedEvent)
+      .get()
+      .then((snapshot) => {
+        btn.innerHTML = originalBtnText;
+        btn.disabled = false;
+        
+        if (!snapshot.empty) {
+          showToast('You have already registered for this event!', 'error');
+        } else {
+          setRegStep(3);
+        }
+      })
+      .catch((error) => {
+        console.error("Error checking registration:", error);
+        btn.innerHTML = originalBtnText;
+        btn.disabled = false;
+        showToast('Permission denied. Ensure security rules allow reading your own data.', 'error');
+      });
   } else if (step === 3) {
     // Process payment and save to Firebase Firestore
     const btn = document.querySelector('#reg-panel-3 .btn-gold');
