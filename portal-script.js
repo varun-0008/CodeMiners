@@ -261,8 +261,23 @@ function regNext(step) {
       registrationDate: firebase.firestore.FieldValue.serverTimestamp()
     };
 
-    db.collection('registrations').add(payload)
-      .then((docRef) => {
+    // Prepare data for Google Sheets
+    const sheetData = new FormData();
+    sheetData.append('Event', payload.eventName);
+    sheetData.append('Name', payload.fullName);
+    sheetData.append('Email', payload.email);
+    sheetData.append('Phone', payload.phone);
+    sheetData.append('College', payload.college);
+    sheetData.append('Year', payload.studyYear);
+    sheetData.append('ID (PIN/Hall Ticket)', payload.pin || payload.hallTicket || '—');
+
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxz-7gHowiQ7B-MLiSHOO3U6qclqm7Hr4oKaChr8a8Wqw31Y2Y9TBBDBIaExXKGwJNl/exec';
+
+    Promise.all([
+      db.collection('registrations').add(payload),
+      fetch(scriptURL, { method: 'POST', body: sheetData })
+    ])
+      .then(() => {
         btn.innerHTML = '<i class="fa-solid fa-lock"></i> PAY & CONFIRM';
         btn.disabled  = false;
 
@@ -276,13 +291,13 @@ function regNext(step) {
         document.getElementById('receipt-email').textContent = payload.email;
 
         setRegStep(4);
-        showToast('Registration confirmed! Saved to Firestore.', 'success');
+        showToast('Registration confirmed! Saved to Firestore & Sheets.', 'success');
       })
       .catch((error) => {
-        console.error("Error adding document: ", error);
+        console.error("Error saving registration: ", error);
         btn.innerHTML = '<i class="fa-solid fa-lock"></i> PAY & CONFIRM';
         btn.disabled  = false;
-        showToast('Error connecting to database. Please try again.', 'error');
+        showToast('Error connecting to servers. Please try again.', 'error');
       });
   }
 }
