@@ -86,27 +86,25 @@ function createParticles() {
     particle.style.width  = `${size}px`;
     particle.style.height = `${size}px`;
     particle.style.left   = `${Math.random() * 100}%`;
-    particle.style.top    = `${Math.random() * 100}%`;
+    particle.style.bottom = `-20px`; // start below screen
     particle.style.opacity = '0';
 
     DOM.particlesContainer.appendChild(particle);
 
-    // Animate each particle
-    gsap.to(particle, {
-      opacity: Math.random() * 0.6 + 0.1,
-      duration: Math.random() * 1.5 + 0.5,
-      delay: Math.random() * 2,
-    });
+    // Animate each particle to rise like fire embers
+    const dur = Math.random() * 7 + 4; // 4 to 11 seconds rise time
+    const drift = (Math.random() - 0.5) * 200;
 
-    gsap.to(particle, {
-      y: () => `${(Math.random() - 0.5) * 200}`,
-      x: () => `${(Math.random() - 0.5) * 100}`,
-      duration: Math.random() * 15 + 10,
-      repeat: -1,
-      yoyo: true,
-      ease: 'sine.inOut',
-      delay: Math.random() * 5,
-    });
+    gsap.timeline({ repeat: -1, delay: Math.random() * 5 })
+      .to(particle, { opacity: Math.random() * 0.7 + 0.3, duration: 0.5 })
+      .to(particle, {
+        y: () => `-${window.innerHeight + 100}px`,
+        x: () => `${drift}px`,
+        scale: Math.random() * 0.4 + 0.1,
+        duration: dur,
+        ease: 'none'
+      }, "<")
+      .to(particle, { opacity: 0, duration: 1.5 }, "-=1.5");
   }
 }
 

@@ -58,8 +58,10 @@ function initEmbers() {
       animation-delay: ${delay}s;
       animation-duration: ${dur}s;
       background: ${isAmber
-        ? `radial-gradient(circle, rgba(243,156,18,0.9), rgba(230,126,34,0.4))`
-        : `radial-gradient(circle, rgba(255,255,255,0.7), rgba(255,255,255,0))`};
+        ? `radial-gradient(circle, rgba(255,140,0,0.9) 0%, rgba(230,70,0,0.5) 50%, transparent 100%)`
+        : `radial-gradient(circle, rgba(255,215,0,0.9) 0%, rgba(255,120,0,0.5) 50%, transparent 100%)`};
+      box-shadow: 0 0 12px ${isAmber ? 'rgba(255,90,0,0.7)' : 'rgba(255,160,0,0.8)'};
+      filter: blur(1px);
       --drift: ${drift}px;
     `;
 
