@@ -358,10 +358,49 @@ function initNavScroll() {
 }
 
 // ─────────────────────────────────────────────────────────────
+// LIQUID GLASS ANIMATION
+// ─────────────────────────────────────────────────────────────
+function animateLiquidGlass() {
+  const turbulence = document.getElementById('turbulence');
+  const displacement = document.getElementById('displacement');
+  
+  if (!turbulence || !displacement || typeof gsap === 'undefined') return;
+
+  // Subtle continuous turbulence animation
+  const tl = gsap.timeline({ repeat: -1, yoyo: true });
+
+  tl.to(turbulence, {
+    attr: { baseFrequency: '0.02' },
+    duration: 4,
+    ease: 'sine.inOut',
+  })
+  .to(turbulence, {
+    attr: { baseFrequency: '0.012' },
+    duration: 3,
+    ease: 'sine.inOut',
+  })
+  .to(turbulence, {
+    attr: { baseFrequency: '0.018' },
+    duration: 3.5,
+    ease: 'sine.inOut',
+  });
+
+  // Displacement scale breathing
+  gsap.to(displacement, {
+    attr: { scale: 12 },
+    duration: 5,
+    repeat: -1,
+    yoyo: true,
+    ease: 'sine.inOut',
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
 // INIT
 // ─────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   initEmbers();
+  animateLiquidGlass();
   initNavScroll();
   initContactForm();
 

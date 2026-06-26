@@ -295,6 +295,7 @@ input, textarea, select { font-family: inherit; }
   border-radius: var(--radius-lg);
   backdrop-filter: blur(16px) saturate(160%);
   -webkit-backdrop-filter: blur(16px) saturate(160%);
+  filter: url(#liquidGlass);
   box-shadow: var(--shadow-card);
   overflow: hidden;
   transition: var(--transition-smooth);
