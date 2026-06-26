@@ -57,12 +57,19 @@
 </head>
 <body>
 
-  <!-- SVG Filters — Liquid Glass -->
+  <!-- SVG Filters — Liquid Glass iOS 26 -->
   <svg class="svg-filters" aria-hidden="true" style="position:absolute; width:0; height:0;">
     <defs>
-      <filter id="liquidGlass" x="-20%" y="-20%" width="140%" height="140%">
-        <feTurbulence id="turbulence" type="fractalNoise" baseFrequency="0.015" numOctaves="3" seed="2" result="noise" />
-        <feDisplacementMap id="displacement" in="SourceGraphic" in2="noise" scale="8" xChannelSelector="R" yChannelSelector="G" />
+      <!-- Gooey morphing filter -->
+      <filter id="gooey-glass" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="15" result="blur" />
+        <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -11" result="goo" />
+        <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+      </filter>
+      <!-- Lensing displacement/refraction filter -->
+      <filter id="glassRefraction">
+        <feTurbulence id="turbulence" type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="1" result="noise" />
+        <feDisplacementMap id="displacement" in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G" />
       </filter>
     </defs>
   </svg>
@@ -584,58 +591,99 @@
           <h1 class="section-title">Contact <span class="accent">Us</span></h1>
           <p class="section-sub">Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:24px;max-width:1000px;margin:0 auto;">
+        
+        <!-- Shared Container for the Morphing Canvas and Interactive Cards -->
+        <div class="glass-effect-container" id="contact-effect-container" style="max-width:1000px; margin:0 auto; padding: 20px; overflow: visible;">
+          <!-- The Morphing Canvas behind the cards -->
+          <div class="glass-bg-canvas" id="contact-bg-canvas">
+            <div class="glass-bg-blob" id="blob-card-email"></div>
+            <div class="glass-bg-blob" id="blob-card-whatsapp"></div>
+            <div class="glass-bg-blob" id="blob-card-youtube"></div>
+            <div class="glass-bg-blob" id="blob-card-linkedin"></div>
+            <div class="glass-bg-blob" id="blob-card-instagram"></div>
+          </div>
           
-          <a href="mailto:codeminerscommunity@gmail.com" class="glass-card contact-card" style="text-decoration:none;display:flex;align-items:center;gap:18px;padding:24px;transition:var(--transition-smooth);" onmouseover="this.style.transform='translateY(-5px)';this.style.borderColor='rgba(240,165,0,0.4)'" onmouseout="this.style.transform='none';this.style.borderColor='var(--rock-border)'">
-            <div style="width:60px;height:60px;border-radius:14px;background:rgba(240,165,0,0.1);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--gold-primary);">
-              <i class="fa-solid fa-envelope"></i>
-            </div>
-            <div>
-              <div style="font-size:18px;font-weight:700;color:var(--text-light);margin-bottom:4px;">Email Us</div>
-              <div style="font-size:14px;color:var(--text-muted);">codeminerscommunity@gmail.com</div>
-            </div>
-          </a>
+          <!-- The crisp foreground grid -->
+          <div class="contact-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:28px; position:relative; z-index:2; overflow: visible;">
+            
+            <!-- Card 1: Email -->
+            <a href="mailto:codeminerscommunity@gmail.com" class="glass-content-card contact-card" id="card-email" style="text-decoration:none; display:flex; align-items:center; gap:18px; padding:24px;">
+              <div class="glass-shimmer"></div>
+              <div style="width:60px; height:60px; border-radius:14px; background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; box-shadow: inset 0 1px 1px rgba(255,255,255,0.15);">
+                <!-- Google Gmail Logo SVG -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="52 42 88 66" width="32" height="32" style="display:block;">
+                  <path fill="#4285f4" d="M58 108h14V74L52 59v43c0 3.32 2.69 6 6 6"/>
+                  <path fill="#34a853" d="M120 108h14c3.32 0 6-2.69 6-6V59l-20 15"/>
+                  <path fill="#fbbc04" d="M120 48v26l20-15v-8c0-7.42-8.47-11.65-14.4-7.2"/>
+                  <path fill="#ea4335" d="M72 74V48l24 18 24-18v26L96 92"/>
+                  <path fill="#c5221f" d="M52 51v8l20 15V48l-5.6-4.2c-5.94-4.45-14.4-.22-14.4 7.2"/>
+                </svg>
+              </div>
+              <div style="flex:1; min-width: 0;">
+                <div class="vibrant-label" style="font-size:18px; margin-bottom:4px;">Email Us</div>
+                <div class="glass-text-plate" style="padding:4px 8px; margin-top:2px;">
+                  <div style="font-size:13px; color:rgba(255,255,255,0.75); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">codeminerscommunity@gmail.com</div>
+                </div>
+              </div>
+            </a>
 
-          <a href="https://chat.whatsapp.com/II6ZJ4ob5ZW6pDPaINVJR2" target="_blank" class="glass-card contact-card" style="text-decoration:none;display:flex;align-items:center;gap:18px;padding:24px;transition:var(--transition-smooth);" onmouseover="this.style.transform='translateY(-5px)';this.style.borderColor='rgba(37,211,102,0.4)'" onmouseout="this.style.transform='none';this.style.borderColor='var(--rock-border)'">
-            <div style="width:60px;height:60px;border-radius:14px;background:rgba(37,211,102,0.1);display:flex;align-items:center;justify-content:center;font-size:28px;color:#25D366;">
-              <i class="fa-brands fa-whatsapp"></i>
-            </div>
-            <div>
-              <div style="font-size:18px;font-weight:700;color:var(--text-light);margin-bottom:4px;">WhatsApp</div>
-              <div style="font-size:14px;color:var(--text-muted);">Join our community group</div>
-            </div>
-          </a>
+            <!-- Card 2: WhatsApp -->
+            <a href="https://chat.whatsapp.com/II6ZJ4ob5ZW6pDPaINVJR2" target="_blank" class="glass-content-card contact-card" id="card-whatsapp" style="text-decoration:none; display:flex; align-items:center; gap:18px; padding:24px;">
+              <div class="glass-shimmer"></div>
+              <div style="width:60px; height:60px; border-radius:14px; background:rgba(37,211,102,0.12); display:flex; align-items:center; justify-content:center; font-size:28px; color:#25D366; box-shadow: inset 0 1px 1px rgba(255,255,255,0.15);">
+                <i class="fa-brands fa-whatsapp"></i>
+              </div>
+              <div style="flex:1; min-width: 0;">
+                <div class="vibrant-label" style="font-size:18px; margin-bottom:4px;">WhatsApp</div>
+                <div class="glass-text-plate" style="padding:4px 8px; margin-top:2px;">
+                  <div style="font-size:13px; color:rgba(255,255,255,0.75); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Join our community group</div>
+                </div>
+              </div>
+            </a>
 
-          <a href="https://www.youtube.com/@CodeMiners-2026" target="_blank" class="glass-card contact-card" style="text-decoration:none;display:flex;align-items:center;gap:18px;padding:24px;transition:var(--transition-smooth);" onmouseover="this.style.transform='translateY(-5px)';this.style.borderColor='rgba(255,0,0,0.4)'" onmouseout="this.style.transform='none';this.style.borderColor='var(--rock-border)'">
-            <div style="width:60px;height:60px;border-radius:14px;background:rgba(255,0,0,0.1);display:flex;align-items:center;justify-content:center;font-size:28px;color:#FF0000;">
-              <i class="fa-brands fa-youtube"></i>
-            </div>
-            <div>
-              <div style="font-size:18px;font-weight:700;color:var(--text-light);margin-bottom:4px;">YouTube</div>
-              <div style="font-size:14px;color:var(--text-muted);">Watch our latest tutorials</div>
-            </div>
-          </a>
+            <!-- Card 3: YouTube -->
+            <a href="https://www.youtube.com/@CodeMiners-2026" target="_blank" class="glass-content-card contact-card" id="card-youtube" style="text-decoration:none; display:flex; align-items:center; gap:18px; padding:24px;">
+              <div class="glass-shimmer"></div>
+              <div style="width:60px; height:60px; border-radius:14px; background:rgba(255,0,0,0.12); display:flex; align-items:center; justify-content:center; font-size:28px; color:#FF0000; box-shadow: inset 0 1px 1px rgba(255,255,255,0.15);">
+                <i class="fa-brands fa-youtube"></i>
+              </div>
+              <div style="flex:1; min-width: 0;">
+                <div class="vibrant-label" style="font-size:18px; margin-bottom:4px;">YouTube</div>
+                <div class="glass-text-plate" style="padding:4px 8px; margin-top:2px;">
+                  <div style="font-size:13px; color:rgba(255,255,255,0.75); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Watch our latest tutorials</div>
+                </div>
+              </div>
+            </a>
 
-          <a href="#" target="_blank" class="glass-card contact-card" style="text-decoration:none;display:flex;align-items:center;gap:18px;padding:24px;transition:var(--transition-smooth);" onmouseover="this.style.transform='translateY(-5px)';this.style.borderColor='rgba(10,102,194,0.4)'" onmouseout="this.style.transform='none';this.style.borderColor='var(--rock-border)'">
-            <div style="width:60px;height:60px;border-radius:14px;background:rgba(10,102,194,0.1);display:flex;align-items:center;justify-content:center;font-size:28px;color:#0A66C2;">
-              <i class="fa-brands fa-linkedin-in"></i>
-            </div>
-            <div>
-              <div style="font-size:18px;font-weight:700;color:var(--text-light);margin-bottom:4px;">LinkedIn</div>
-              <div style="font-size:14px;color:var(--text-muted);">Connect professionally</div>
-            </div>
-          </a>
+            <!-- Card 4: LinkedIn -->
+            <a href="#" target="_blank" class="glass-content-card contact-card" id="card-linkedin" style="text-decoration:none; display:flex; align-items:center; gap:18px; padding:24px;">
+              <div class="glass-shimmer"></div>
+              <div style="width:60px; height:60px; border-radius:14px; background:rgba(10,102,194,0.12); display:flex; align-items:center; justify-content:center; font-size:28px; color:#0A66C2; box-shadow: inset 0 1px 1px rgba(255,255,255,0.15);">
+                <i class="fa-brands fa-linkedin-in"></i>
+              </div>
+              <div style="flex:1; min-width: 0;">
+                <div class="vibrant-label" style="font-size:18px; margin-bottom:4px;">LinkedIn</div>
+                <div class="glass-text-plate" style="padding:4px 8px; margin-top:2px;">
+                  <div style="font-size:13px; color:rgba(255,255,255,0.75); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Connect professionally</div>
+                </div>
+              </div>
+            </a>
 
-          <a href="#" target="_blank" class="glass-card contact-card" style="text-decoration:none;display:flex;align-items:center;gap:18px;padding:24px;transition:var(--transition-smooth);" onmouseover="this.style.transform='translateY(-5px)';this.style.borderColor='rgba(225,48,108,0.4)'" onmouseout="this.style.transform='none';this.style.borderColor='var(--rock-border)'">
-            <div style="width:60px;height:60px;border-radius:14px;background:rgba(225,48,108,0.1);display:flex;align-items:center;justify-content:center;font-size:28px;color:#E1306C;">
-              <i class="fa-brands fa-instagram"></i>
-            </div>
-            <div>
-              <div style="font-size:18px;font-weight:700;color:var(--text-light);margin-bottom:4px;">Instagram</div>
-              <div style="font-size:14px;color:var(--text-muted);">Follow our updates</div>
-            </div>
-          </a>
+            <!-- Card 5: Instagram -->
+            <a href="#" target="_blank" class="glass-content-card contact-card" id="card-instagram" style="text-decoration:none; display:flex; align-items:center; gap:18px; padding:24px;">
+              <div class="glass-shimmer"></div>
+              <div style="width:60px; height:60px; border-radius:14px; background:rgba(225,48,108,0.12); display:flex; align-items:center; justify-content:center; font-size:28px; color:#E1306C; box-shadow: inset 0 1px 1px rgba(255,255,255,0.15);">
+                <i class="fa-brands fa-instagram"></i>
+              </div>
+              <div style="flex:1; min-width: 0;">
+                <div class="vibrant-label" style="font-size:18px; margin-bottom:4px;">Instagram</div>
+                <div class="glass-text-plate" style="padding:4px 8px; margin-top:2px;">
+                  <div style="font-size:13px; color:rgba(255,255,255,0.75); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Follow our updates</div>
+                </div>
+              </div>
+            </a>
 
+          </div>
         </div>
       </div>
     </section>

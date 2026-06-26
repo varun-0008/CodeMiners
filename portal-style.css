@@ -122,25 +122,28 @@ input, textarea, select { font-family: inherit; }
   top: 16px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 1000;
+  z-index: 9999;
   display: flex;
   align-items: center;
   gap: 4px;
   padding: 8px 16px;
-  background: rgba(35,39,43,0.82);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid var(--rock-border);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+  backdrop-filter: blur(28px) saturate(210%);
+  -webkit-backdrop-filter: blur(28px) saturate(210%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: var(--radius-full);
-  box-shadow: var(--shadow-amber), 0 4px 24px rgba(0,0,0,0.4);
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.22),
+    0 10px 32px rgba(0, 0, 0, 0.45);
   transition: var(--transition-smooth);
   max-width: calc(100vw - 32px);
   flex-wrap: nowrap;
 }
 
 .cloud-nav.scrolled {
-  background: rgba(23,27,31,0.95);
-  box-shadow: var(--glow-gold), 0 8px 40px rgba(0,0,0,0.5);
+  background: linear-gradient(135deg, rgba(30, 34, 40, 0.85) 0%, rgba(15, 17, 21, 0.92) 100%);
+  border-color: rgba(243, 156, 18, 0.38);
+  box-shadow: var(--glow-gold), 0 12px 40px rgba(0, 0, 0, 0.55);
 }
 
 .nav-link {
@@ -161,13 +164,17 @@ input, textarea, select { font-family: inherit; }
 
 .nav-link:hover {
   color: var(--gold-light);
-  background: rgba(243,156,18,0.08);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.1);
 }
 
 .nav-link.active {
-  color: var(--dark-stone-deep);
-  background: linear-gradient(135deg, var(--gold-primary), var(--magma-primary));
-  box-shadow: 0 2px 16px rgba(243,156,18,0.3);
+  color: #fff;
+  background: linear-gradient(135deg, rgba(243,156,18,0.3) 0%, rgba(230,126,34,0.18) 100%);
+  border: 1px solid rgba(243,156,18,0.4);
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.22),
+    0 4px 12px rgba(243, 156, 18, 0.2);
   font-weight: 600;
 }
 
@@ -282,22 +289,203 @@ input, textarea, select { font-family: inherit; }
   font-size: 16px;
 }
 
+/* ── iOS 26 Liquid Glass System ───────────────────────────── */
+:root {
+  --liquid-blur-regular: 18px;
+  --liquid-blur-clear: 6px;
+  --liquid-saturate-regular: 230%;
+  --liquid-saturate-clear: 195%;
+  --liquid-border-regular: rgba(255, 255, 255, 0.22);
+  --liquid-border-clear: rgba(255, 255, 255, 0.12);
+}
+
+.liquid-glass-regular {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+  backdrop-filter: blur(var(--liquid-blur-regular)) saturate(var(--liquid-saturate-regular)) url(#glassRefraction);
+  -webkit-backdrop-filter: blur(var(--liquid-blur-regular)) saturate(var(--liquid-saturate-regular));
+  border: 1px solid var(--liquid-border-regular);
+  box-shadow: 
+    inset 0 1.5px 1.5px rgba(255, 255, 255, 0.25), 
+    inset 0 -1.5px 1.5px rgba(0, 0, 0, 0.35),
+    0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+.liquid-glass-clear {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.01) 100%);
+  backdrop-filter: blur(var(--liquid-blur-clear)) saturate(var(--liquid-saturate-clear));
+  -webkit-backdrop-filter: blur(var(--liquid-blur-clear)) saturate(var(--liquid-saturate-clear));
+  border: 1px solid var(--liquid-border-clear);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.15), 
+    0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+/* ── Unified iOS 26 Liquid Glass Inheritance for Home / About Cards ── */
+.achieve-card, .event-card, .mv-card, .team-card, .donate-cta {
+  position: relative;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%) !important;
+  border: 1px solid var(--liquid-border-regular) !important;
+  backdrop-filter: blur(var(--liquid-blur-regular)) saturate(var(--liquid-saturate-regular)) url(#glassRefraction) !important;
+  -webkit-backdrop-filter: blur(var(--liquid-blur-regular)) saturate(var(--liquid-saturate-regular)) !important;
+  box-shadow: 
+    inset 0 1px 1px rgba(255,255,255,0.22),
+    inset 0 -1px 1px rgba(0,0,0,0.25),
+    var(--shadow-card) !important;
+  overflow: hidden;
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15), border-color 0.3s ease, box-shadow 0.3s ease !important;
+  transform-style: preserve-3d;
+}
+
+.achieve-card:hover, .event-card:hover, .mv-card:hover, .team-card:hover, .donate-cta:hover {
+  border-color: rgba(243, 156, 18, 0.4) !important;
+  box-shadow: var(--shadow-card), var(--shadow-amber) !important;
+}
+
 /* ── Glass Card ───────────────────────────────────────────── */
 .glass-card {
-  background: rgba(44,48,53,0.72);
-  border: 1px solid var(--rock-border);
+  position: relative;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+  border: 1px solid var(--liquid-border-regular);
   border-radius: var(--radius-lg);
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
-  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(var(--liquid-blur-regular)) saturate(var(--liquid-saturate-regular)) url(#glassRefraction);
+  -webkit-backdrop-filter: blur(var(--liquid-blur-regular)) saturate(var(--liquid-saturate-regular));
+  box-shadow: 
+    inset 0 1px 1px rgba(255,255,255,0.22),
+    inset 0 -1px 1px rgba(0,0,0,0.25),
+    var(--shadow-card);
   overflow: hidden;
-  transition: var(--transition-smooth);
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15), border-color 0.3s ease, box-shadow 0.3s ease;
   margin-bottom: 20px;
 }
 
+.glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 50%;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.06), transparent);
+  pointer-events: none;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
 .glass-card:hover {
-  border-color: var(--rock-border-hover);
+  border-color: rgba(243, 156, 18, 0.35);
   box-shadow: var(--shadow-card), var(--shadow-amber);
+}
+
+/* LENSING / REFRACTION */
+.lensing-view {
+  backdrop-filter: blur(var(--liquid-blur-regular)) saturate(var(--liquid-saturate-regular)) url(#glassRefraction);
+  -webkit-backdrop-filter: blur(var(--liquid-blur-regular)) saturate(var(--liquid-saturate-regular));
+}
+
+/* MORPHING CANVAS / GOOEY BLOBS */
+.glass-effect-container {
+  position: relative;
+  width: 100%;
+}
+
+.glass-bg-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  filter: url(#gooey-glass);
+  pointer-events: none;
+  overflow: visible;
+}
+
+.glass-bg-blob {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 50%;
+  transition: transform 0.7s cubic-bezier(0.19, 1, 0.22, 1), background-color 0.4s ease;
+  transform: scale(0.95);
+  transform-origin: center center;
+  box-shadow: 
+    inset 0 1px 2px rgba(255,255,255,0.25),
+    0 4px 15px rgba(0,0,0,0.15);
+}
+
+.glass-bg-blob.hover {
+  transform: scale(1.22);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.glass-bg-blob.active {
+  transform: scale(1.08);
+}
+
+/* Specular interactive overlays */
+.glass-content-card {
+  position: relative;
+  z-index: 2;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.01);
+  backdrop-filter: blur(12px) saturate(150%) url(#glassRefraction);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.18),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.2),
+    0 8px 32px rgba(0,0,0,0.25);
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15), border-color 0.3s ease, box-shadow 0.3s ease;
+  transform-style: preserve-3d;
+}
+
+/* Touch point illumination */
+.glass-content-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(circle 140px at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255, 255, 255, 0.18), transparent 80%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 3;
+}
+
+.glass-content-card:hover::after {
+  opacity: 1;
+}
+
+/* Specular tilt shimmer */
+.glass-shimmer {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.06) 40%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.06) 60%, rgba(255,255,255,0) 100%);
+  background-size: 250% 250%;
+  background-position: var(--shimmer-x, 0%) var(--shimmer-y, 0%);
+  opacity: 0.4;
+  transition: background-position 0.15s ease, opacity 0.3s ease;
+  z-index: 2;
+}
+
+/* Legibility fixes */
+.glass-text-plate {
+  background: rgba(18, 21, 26, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-top: 8px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.vibrant-label {
+  color: var(--text-light);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+.vibrant-accent {
+  background: linear-gradient(135deg, var(--gold-light), var(--magma-primary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
 }
 
 .card-header {

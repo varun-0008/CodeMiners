@@ -327,10 +327,26 @@ function showMessage(text, type = 'error') {
 // ─────────────────────────────────────────────
 function setLoading(state) {
   isLoading = state;
+  const overlay = document.getElementById('loadingOverlay');
   if (state) {
     DOM.btnSubmit.classList.add('loading');
+    if (overlay) {
+      overlay.style.display = 'flex';
+      gsap.fromTo(overlay, 
+        { opacity: 0 }, 
+        { opacity: 1, duration: 0.35, ease: 'power2.out' }
+      );
+    }
   } else {
     DOM.btnSubmit.classList.remove('loading');
+    if (overlay) {
+      gsap.to(overlay, {
+        opacity: 0,
+        duration: 0.25,
+        ease: 'power2.in',
+        onComplete: () => { overlay.style.display = 'none'; }
+      });
+    }
   }
 }
 
@@ -512,4 +528,95 @@ function init() {
   playEntranceAnimation();
   setupInputAnimations();
   setupButtonAnimations();
+  initLiquidGlassPhysics();
+}
+
+function initLiquidGlassPhysics() {
+  const card = document.getElementById('glassCard');
+  if (!card) return;
+
+  // Inject shimmer overlay if not already present
+  let shimmer = card.querySelector('.glass-shimmer');
+  if (!shimmer) {
+    shimmer = document.createElement('div');
+    shimmer.className = 'glass-shimmer';
+    card.appendChild(shimmer);
+  }
+
+  // MOUSE ENTER / TOUCH START
+  function handleActiveStart(e) {
+    card.style.borderColor = 'rgba(243, 156, 18, 0.4)';
+    card.style.boxShadow = '0 24px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(243, 156, 18, 0.2)';
+  }
+
+  // MOUSE LEAVE / TOUCH END
+  function handleActiveEnd() {
+    card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)';
+    card.style.borderColor = '';
+    card.style.boxShadow = '';
+    if (shimmer) {
+      shimmer.style.opacity = '0.4';
+    }
+  }
+
+  // INTERACTIVE TRACKING (MOUSEMOVE / TOUCHMOVE)
+  function handleMove(e) {
+    let clientX, clientY;
+    
+    if (e.touches && e.touches.length) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+
+    const rect = card.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    
+    card.style.setProperty('--mouse-x', `${x}px`);
+    card.style.setProperty('--mouse-y', `${y}px`);
+
+    const xc = rect.width / 2;
+    const yc = rect.height / 2;
+    
+    // Cap rotation to max 3.5 degrees for elegance and stability
+    const maxTilt = 3.5;
+    const tiltX = Math.max(-maxTilt, Math.min(maxTilt, ((yc - y) / yc) * maxTilt));
+    const tiltY = Math.max(-maxTilt, Math.min(maxTilt, ((x - xc) / xc) * maxTilt));
+
+    if (shimmer) {
+      const shimmerX = (x / rect.width) * 100;
+      const shimmerY = (y / rect.height) * 100;
+      card.style.setProperty('--shimmer-x', `${shimmerX}%`);
+      card.style.setProperty('--shimmer-y', `${shimmerY}%`);
+      shimmer.style.opacity = '0.85';
+    }
+
+    const isTouch = e.touches !== undefined;
+    const scale = isTouch ? 0.97 : 1.03;
+    
+    card.style.transform = `perspective(1000px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale(${scale})`;
+  }
+
+  // Desktop Mouse Events
+  card.addEventListener('mousemove', handleMove);
+  card.addEventListener('mouseenter', handleActiveStart);
+  card.addEventListener('mouseleave', handleActiveEnd);
+  card.addEventListener('mousedown', () => {
+    card.style.transform = 'perspective(1000px) scale(0.97)';
+  });
+
+  // Mobile Touch Events
+  card.addEventListener('touchstart', (e) => {
+    handleActiveStart(e);
+    handleMove(e);
+  }, { passive: true });
+
+  card.addEventListener('touchmove', (e) => {
+    handleMove(e);
+  }, { passive: true });
+
+  card.addEventListener('touchend', handleActiveEnd);
 }

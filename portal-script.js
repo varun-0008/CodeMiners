@@ -557,6 +557,7 @@ document.addEventListener('DOMContentLoaded', () => {
   animateLiquidGlass();
   initNavScroll();
   initContactForm();
+  initLiquidGlassPhysics();
 
   // Initial animation
   setTimeout(() => playSectionAnimation('home'), 100);
@@ -590,3 +591,157 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+// ─────────────────────────────────────────────────────────────
+// LIQUID GLASS PHYSICS (DESKTOP + MOBILE)
+// ─────────────────────────────────────────────────────────────
+function initLiquidGlassPhysics() {
+  const cards = document.querySelectorAll('.glass-content-card, .glass-card:not(.cloud-nav), .achieve-card, .event-card, .donate-cta, .mv-card, .team-card');
+  const effectContainer = document.getElementById('contact-effect-container');
+  const canvas = document.getElementById('contact-bg-canvas');
+  
+  if (!cards.length) return;
+
+  // Track layout to position background blobs exactly behind cards
+  function syncBlobPositions() {
+    if (!canvas || !effectContainer) return;
+    const containerRect = effectContainer.getBoundingClientRect();
+    
+    cards.forEach(card => {
+      const cardId = card.id;
+      const blob = document.getElementById(`blob-${cardId}`);
+      if (!blob) return;
+      
+      const cardRect = card.getBoundingClientRect();
+      
+      // Calculate coordinates relative to the container
+      const top = cardRect.top - containerRect.top;
+      const left = cardRect.left - containerRect.left;
+      const width = cardRect.width;
+      const height = cardRect.height;
+      
+      blob.style.top = `${top}px`;
+      blob.style.left = `${left}px`;
+      blob.style.width = `${width}px`;
+      blob.style.height = `${height}px`;
+      blob.style.borderRadius = window.getComputedStyle(card).borderRadius;
+    });
+  }
+
+  // Initial sync and observers
+  setTimeout(syncBlobPositions, 200); // short delay to ensure rendering complete
+  window.addEventListener('resize', syncBlobPositions);
+  
+  const resizeObserver = new ResizeObserver(syncBlobPositions);
+  cards.forEach(card => resizeObserver.observe(card));
+
+  // Sync when page section changes
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', () => {
+      setTimeout(syncBlobPositions, 400); // wait for section transition animation
+    });
+  });
+
+  cards.forEach(card => {
+    const cardId = card.id;
+    const blob = cardId ? document.getElementById(`blob-${cardId}`) : null;
+    let shimmer = card.querySelector('.glass-shimmer');
+    if (!shimmer) {
+      shimmer = document.createElement('div');
+      shimmer.className = 'glass-shimmer';
+      card.appendChild(shimmer);
+    }
+
+    // MOUSE ENTER / TOUCH START
+    function handleActiveStart(e) {
+      if (blob) {
+        blob.classList.add('hover');
+      }
+      card.style.borderColor = 'rgba(243, 156, 18, 0.4)';
+      card.style.boxShadow = '0 16px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(243, 156, 18, 0.25)';
+    }
+
+    // MOUSE LEAVE / TOUCH END
+    function handleActiveEnd() {
+      if (blob) {
+        blob.classList.remove('hover');
+        blob.classList.remove('active');
+      }
+      card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1) translateY(0)';
+      card.style.borderColor = '';
+      card.style.boxShadow = '';
+      if (shimmer) {
+        shimmer.style.opacity = '0.4';
+      }
+    }
+
+    // INTERACTIVE TRACKING (MOUSEMOVE / TOUCHMOVE)
+    function handleMove(e) {
+      let clientX, clientY;
+      
+      if (e.touches && e.touches.length) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else {
+        clientX = e.clientX;
+        clientY = e.clientY;
+      }
+
+      const rect = card.getBoundingClientRect();
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+      
+      // Illumination coord variables
+      card.style.setProperty('--mouse-x', `${x}px`);
+      card.style.setProperty('--mouse-y', `${y}px`);
+
+      // 3D rotation angles
+      const xc = rect.width / 2;
+      const yc = rect.height / 2;
+      
+      // Dynamic tilt cap scaling: smaller cards tilt up to 6 degrees, large form cards tilt subtly at 2.5 degrees max
+      const maxTilt = rect.width > 500 ? 2.5 : 6;
+      const tiltX = Math.max(-maxTilt, Math.min(maxTilt, ((yc - y) / yc) * maxTilt));
+      const tiltY = Math.max(-maxTilt, Math.min(maxTilt, ((x - xc) / xc) * maxTilt));
+
+      // Shimmer reflection translation
+      if (shimmer) {
+        const shimmerX = (x / rect.width) * 100;
+        const shimmerY = (y / rect.height) * 100;
+        card.style.setProperty('--shimmer-x', `${shimmerX}%`);
+        card.style.setProperty('--shimmer-y', `${shimmerY}%`);
+        shimmer.style.opacity = '0.85';
+      }
+
+      const isTouch = e.touches !== undefined;
+      const scale = isTouch ? 0.96 : 1.04;
+      const translateY = isTouch ? 0 : -5;
+      
+      card.style.transform = `perspective(1000px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale(${scale}) translateY(${translateY}px)`;
+    }
+
+    // Desktop Mouse Events
+    card.addEventListener('mousemove', handleMove);
+    card.addEventListener('mouseenter', handleActiveStart);
+    card.addEventListener('mouseleave', handleActiveEnd);
+    card.addEventListener('mousedown', () => {
+      if (blob) blob.classList.add('active');
+      card.style.transform = 'perspective(1000px) scale(0.96) translateY(-2px)';
+    });
+    card.addEventListener('mouseup', () => {
+      if (blob) blob.classList.remove('active');
+    });
+
+    // Mobile Touch Events
+    card.addEventListener('touchstart', (e) => {
+      handleActiveStart(e);
+      handleMove(e);
+    }, { passive: true });
+
+    card.addEventListener('touchmove', (e) => {
+      handleMove(e);
+    }, { passive: true });
+
+    card.addEventListener('touchend', handleActiveEnd);
+  });
+}

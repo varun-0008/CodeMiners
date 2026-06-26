@@ -138,9 +138,13 @@ img { max-width: 100%; display: block; }
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  /* Seamless grid pattern + dark stone gradient running down the entire page */
-  background: var(--dark-stone);
-  background-size: 48px 48px, 48px 48px, 100% 100%;
+  /* Seamless grid pattern + dark stone tint + homepage background image */
+  background: 
+    linear-gradient(rgba(243, 156, 18, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(243, 156, 18, 0.04) 1px, transparent 1px),
+    linear-gradient(rgba(23, 27, 31, 0.72), rgba(23, 27, 31, 0.72)),
+    url('background.png') no-repeat center center fixed;
+  background-size: 52px 52px, 52px 52px, 100% 100%, cover;
 }
 
 /* ---------- Hero ---------- */
@@ -247,45 +251,34 @@ img { max-width: 100%; display: block; }
   width: 100%;
   max-width: 440px;
   padding: var(--space-2xl);
-  background: rgba(52, 58, 64, 0.95); /* Rich Dark Stone background for high contrast on white body */
+  background: rgba(255, 255, 255, 0.015);
   color: var(--pure-white); /* Ensure all text inside card is white */
-  border: 1px solid var(--glass-border);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: var(--radius-xl);
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  box-shadow: var(--shadow-lg), var(--shadow-glow);
+  backdrop-filter: blur(6px) saturate(240%) url(#glassRefraction);
+  -webkit-backdrop-filter: blur(6px) saturate(240%);
+  box-shadow: 
+    inset 0 1px 1px rgba(255,255,255,0.22),
+    inset 0 -1px 1px rgba(0,0,0,0.25),
+    var(--shadow-lg), var(--shadow-glow);
   will-change: transform;
   transition: border-color var(--duration-base) var(--ease-out-expo),
-              box-shadow var(--duration-base) var(--ease-out-expo);
+              box-shadow var(--duration-base) var(--ease-out-expo),
+              transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15);
 }
 
 .glass-card::before {
   content: '';
   position: absolute;
-  inset: 0;
-  border-radius: var(--radius-xl);
-  padding: 1px;
-  background: linear-gradient(
-    135deg,
-    rgba(243, 156, 18, 0.3) 0%,
-    transparent 40%,
-    transparent 60%,
-    rgba(230, 126, 34, 0.15) 100%
-  );
-  -webkit-mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
+  top: 0; left: 0; right: 0; bottom: 50%;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.06), transparent);
   pointer-events: none;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
 }
 
 .glass-card:hover {
-  border-color: var(--glass-border-hover);
-  box-shadow: var(--shadow-lg), 0 0 60px rgba(243, 156, 18, 0.2);
+  border-color: rgba(243, 156, 18, 0.45);
+  box-shadow: var(--shadow-lg), 0 0 60px rgba(243, 156, 18, 0.25);
 }
 
 /* ---------- Card Header ---------- */
@@ -444,24 +437,29 @@ img { max-width: 100%; display: block; }
 .input-field {
   width: 100%;
   padding: 14px 14px 14px 44px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: var(--radius-md);
   color: var(--pure-white);
   font-size: var(--fs-sm);
-  font-weight: 400;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
   outline: none;
   transition: all var(--duration-base) var(--ease-out-expo);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
 .input-field::placeholder {
-  color: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.35);
 }
 
 .input-field:focus {
-  background: rgba(255, 255, 255, 0.08);
+  background: transparent;
   border-color: var(--tech-amber);
-  box-shadow: 0 0 0 3px rgba(243, 156, 18, 0.1), 0 0 20px rgba(243, 156, 18, 0.08);
+  box-shadow: 
+    inset 0 1px 2px rgba(0, 0, 0, 0.15),
+    0 0 0 3px rgba(243, 156, 18, 0.15), 
+    0 0 20px rgba(243, 156, 18, 0.12);
 }
 
 .input-field:focus ~ .input-icon,
