@@ -196,43 +196,94 @@ function regNext(step) {
       showToast('Please select an event to continue.', 'error');
       return;
     }
+    
+    if (selectedEvent === 'CodeMiners Hackathon 2026') {
+      const now = new Date();
+      const openTime = new Date('2026-06-30T00:00:00');
+      const closeTime = new Date('2026-07-02T00:00:00');
+      if (now < openTime || now >= closeTime) {
+        showToast('Hackathon registration is only open from June 30th to July 1st.', 'error');
+        return;
+      }
+    }
+
     setRegStep(2);
   } else if (step === 2) {
     const name    = document.getElementById('r-name');
     const email   = document.getElementById('r-email');
     const phone   = document.getElementById('r-phone');
     const college = document.getElementById('r-college');
+    const year    = document.getElementById('r-year').value;
+    const pin     = document.getElementById('r-pin').value;
+    const hallticket = document.getElementById('r-hallticket').value;
 
     if (!name.value.trim() || !email.value.trim() || !phone.value.trim() || !college.value.trim()) {
       showToast('Please fill in all required fields.', 'error');
       return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) {
+    if (!/^\S+@\S+\.\S+$/.test(email.value)) {
       showToast('Please enter a valid email address.', 'error');
       return;
     }
+    
+    if (year === 'first') {
+      if (!hallticket.trim()) {
+        showToast('Please enter your Hall Ticket Number.', 'error');
+        return;
+      }
+    } else {
+      if (!pin.trim()) {
+        showToast('Please enter your PIN.', 'error');
+        return;
+      }
+      if (!/^\d{5}-[a-zA-Z]{2}-\d{2}$/.test(pin.trim())) {
+        showToast('PIN must be in format NNNNN-AA-NN', 'error');
+        return;
+      }
+    }
+
     setRegStep(3);
   } else if (step === 3) {
-    // Simulate payment processing
+    // Process payment and save to Firebase Firestore
     const btn = document.querySelector('#reg-panel-3 .btn-gold');
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
     btn.disabled = true;
 
-    setTimeout(() => {
-      btn.innerHTML = '<i class="fa-solid fa-lock"></i> PAY & CONFIRM';
-      btn.disabled  = false;
+    const payload = {
+      eventName: selectedEvent,
+      fullName: document.getElementById('r-name').value,
+      email: document.getElementById('r-email').value,
+      phone: document.getElementById('r-phone').value,
+      college: document.getElementById('r-college').value,
+      studyYear: document.getElementById('r-year').value,
+      pin: document.getElementById('r-year').value === 'first' ? null : document.getElementById('r-pin').value,
+      hallTicket: document.getElementById('r-year').value === 'first' ? document.getElementById('r-hallticket').value : null,
+      registrationDate: firebase.firestore.FieldValue.serverTimestamp()
+    };
 
-      // Populate receipt
-      regCount++;
-      const receiptId = 'REG-CM-2025-' + String(regCount).padStart(4, '0');
-      document.getElementById('receipt-id').textContent    = receiptId;
-      document.getElementById('receipt-event').textContent = selectedEvent || '—';
-      document.getElementById('receipt-name').textContent  = document.getElementById('r-name').value;
-      document.getElementById('receipt-email').textContent = document.getElementById('r-email').value;
+    db.collection('registrations').add(payload)
+      .then((docRef) => {
+        btn.innerHTML = '<i class="fa-solid fa-lock"></i> PAY & CONFIRM';
+        btn.disabled  = false;
 
-      setRegStep(4);
-      showToast('Registration confirmed! Check your email for details.', 'success');
-    }, 1800);
+        // Populate receipt
+        regCount++;
+        const receiptId = 'REG-CM-2026-' + String(regCount).padStart(4, '0');
+        
+        document.getElementById('receipt-id').textContent    = receiptId;
+        document.getElementById('receipt-event').textContent = selectedEvent || '—';
+        document.getElementById('receipt-name').textContent  = payload.fullName;
+        document.getElementById('receipt-email').textContent = payload.email;
+
+        setRegStep(4);
+        showToast('Registration confirmed! Saved to Firestore.', 'success');
+      })
+      .catch((error) => {
+        console.error("Error adding document: ", error);
+        btn.innerHTML = '<i class="fa-solid fa-lock"></i> PAY & CONFIRM';
+        btn.disabled  = false;
+        showToast('Error connecting to database. Please try again.', 'error');
+      });
   }
 }
 
@@ -247,6 +298,10 @@ function regReset() {
   document.getElementById('r-email').value   = '';
   document.getElementById('r-phone').value   = '';
   document.getElementById('r-college').value = '';
+  document.getElementById('r-year').value    = 'second';
+  document.getElementById('r-pin').value     = '';
+  document.getElementById('r-hallticket').value = '';
+  toggleIdField();
   setRegStep(1);
 }
 
@@ -258,6 +313,25 @@ function setRegStep(step) {
     if (stepEl) {
       stepEl.classList.toggle('active',    i === step);
       stepEl.classList.toggle('completed', i < step);
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// TOGGLE PIN/HALL TICKET BASED ON YEAR
+// ─────────────────────────────────────────────────────────────
+function toggleIdField() {
+  const year = document.getElementById('r-year');
+  const pinWrap = document.getElementById('pin-wrap');
+  const hallTicketWrap = document.getElementById('hall-ticket-wrap');
+  
+  if (year && pinWrap && hallTicketWrap) {
+    if (year.value === 'first') {
+      pinWrap.style.display = 'none';
+      hallTicketWrap.style.display = 'block';
+    } else {
+      pinWrap.style.display = 'block';
+      hallTicketWrap.style.display = 'none';
     }
   }
 }

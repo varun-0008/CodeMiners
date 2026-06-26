@@ -17,6 +17,7 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script>
     // Firebase config — shared with login page
     const firebaseConfig = {
@@ -30,6 +31,7 @@
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
+    const db = firebase.firestore();
 
     // Auth guard — redirect unauthenticated users back to login
     auth.onAuthStateChanged(function(user) {
@@ -244,13 +246,13 @@
           <h2 class="section-title" style="font-size:22px;">Mission &amp; <span class="accent">Vision</span></h2>
         </div>
         <div class="mv-grid" style="margin-bottom:64px;">
-          <div class="mv-card">
-            <div class="mv-icon"><i class="fa-solid fa-bullseye"></i></div>
+          <div class="mv-card" style="border: none;">
+            <div class="mv-icon" style="border: none;"><i class="fa-solid fa-bullseye"></i></div>
             <div class="mv-title">Our Mission</div>
             <div class="mv-text">To empower student developers through structured competitive events, professional mentorship, and a collaborative community that bridges the gap between academic learning and industry-level execution. We believe great software is mined — through effort, iteration, and teamwork.</div>
           </div>
-          <div class="mv-card">
-            <div class="mv-icon"><i class="fa-solid fa-telescope"></i></div>
+          <div class="mv-card" style="border: none;">
+            <div class="mv-icon" style="border: none;"><i class="fa-solid fa-eye"></i></div>
             <div class="mv-title">Our Vision</div>
             <div class="mv-text">To become the foremost student-run technology guild in the country — one where every member graduates not just with a degree, but with production-quality projects, a professional network, and the battle-tested confidence to build anything they imagine.</div>
           </div>
@@ -406,6 +408,31 @@
                   <div><label class="input-label">EMAIL</label><div class="input-wrap"><i class="fa-solid fa-envelope input-ico"></i><input type="email" class="field-input" id="r-email" placeholder="your@email.com" required></div></div>
                   <div><label class="input-label">PHONE</label><div class="input-wrap"><i class="fa-solid fa-phone input-ico"></i><input type="tel" class="field-input" id="r-phone" placeholder="+91 XXXXX XXXXX" required></div></div>
                   <div><label class="input-label">COLLEGE / INSTITUTION</label><div class="input-wrap"><i class="fa-solid fa-building-columns input-ico"></i><input type="text" class="field-input" id="r-college" placeholder="Your college name" required></div></div>
+                  <div>
+                    <label class="input-label">STUDY YEAR</label>
+                    <div class="input-wrap">
+                      <i class="fa-solid fa-graduation-cap input-ico"></i>
+                      <select class="field-input select-field" id="r-year" onchange="toggleIdField()" style="background:transparent;border:none;color:var(--text-light);width:100%;height:100%;outline:none;padding-left:36px;cursor:pointer;">
+                        <option value="first" style="background:var(--dark-stone);">First Year</option>
+                        <option value="second" style="background:var(--dark-stone);" selected>Second Year</option>
+                        <option value="third" style="background:var(--dark-stone);">Third Year</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div id="pin-wrap">
+                    <label class="input-label">PIN</label>
+                    <div class="input-wrap">
+                      <i class="fa-solid fa-id-card input-ico"></i>
+                      <input type="text" class="field-input" id="r-pin" placeholder="NNNNN-AA-NN">
+                    </div>
+                  </div>
+                  <div id="hall-ticket-wrap" style="display:none;">
+                    <label class="input-label">HALL TICKET NUMBER</label>
+                    <div class="input-wrap">
+                      <i class="fa-solid fa-hashtag input-ico"></i>
+                      <input type="text" class="field-input" id="r-hallticket" placeholder="Your hall ticket number">
+                    </div>
+                  </div>
                 </div>
                 <div style="display:flex;gap:14px;margin-top:6px;">
                   <button type="button" class="btn-ghost" onclick="regBack(2)"><i class="fa-solid fa-arrow-left"></i> Back</button>
