@@ -134,39 +134,27 @@
             <div class="section-tag"><i class="fa-solid fa-calendar-check"></i> UPCOMING EVENTS</div>
             <h2 class="section-title">Don't Miss <span class="accent">These</span></h2>
           </div>
-          <div class="events-preview-grid">
+          <div class="events-preview-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
             <div class="event-card">
               <div class="event-card-top"></div>
               <div class="event-card-body">
-                <div class="event-date"><i class="fa-solid fa-calendar-day"></i> JUL 15, 2025</div>
-                <div class="event-title">HackForge 3.0 — 24-Hour Hackathon</div>
-                <div class="event-desc">Build, break, and innovate. Our flagship hackathon returns with bigger prizes and tougher challenges.</div>
+                <div class="event-date"><i class="fa-solid fa-calendar-day"></i> AUG 15, 2026</div>
+                <div class="event-title">CodeMiners Orientation</div>
+                <div class="event-desc">Welcome to the guild! Learn about our mission, upcoming events, and how you can get involved.</div>
+                <div class="event-footer">
+                  <span class="badge badge-blue"><i class="fa-solid fa-users"></i> Kickoff</span>
+                  <button class="btn-ghost" onclick="navigate('registration')">Register →</button>
+                </div>
+              </div>
+            </div>
+            <div class="event-card">
+              <div class="event-card-top"></div>
+              <div class="event-card-body">
+                <div class="event-date"><i class="fa-solid fa-calendar-day"></i> OCT 10, 2026</div>
+                <div class="event-title">CodeMiners Hackathon 2026</div>
+                <div class="event-desc">Our flagship 24-hour hackathon. Build, break, and innovate to win massive prizes!</div>
                 <div class="event-footer">
                   <span class="badge badge-gold"><i class="fa-solid fa-fire"></i> Flagship</span>
-                  <button class="btn-ghost" onclick="navigate('registration')">Register →</button>
-                </div>
-              </div>
-            </div>
-            <div class="event-card">
-              <div class="event-card-top"></div>
-              <div class="event-card-body">
-                <div class="event-date"><i class="fa-solid fa-calendar-day"></i> AUG 3, 2025</div>
-                <div class="event-title">DevDig — DSA Bootcamp Workshop</div>
-                <div class="event-desc">A comprehensive 2-day workshop on data structures and algorithmic problem solving with industry mentors.</div>
-                <div class="event-footer">
-                  <span class="badge badge-blue"><i class="fa-solid fa-book"></i> Workshop</span>
-                  <button class="btn-ghost" onclick="navigate('registration')">Register →</button>
-                </div>
-              </div>
-            </div>
-            <div class="event-card">
-              <div class="event-card-top"></div>
-              <div class="event-card-body">
-                <div class="event-date"><i class="fa-solid fa-calendar-day"></i> SEP 10, 2025</div>
-                <div class="event-title">CodeVault — UI/UX Design Sprint</div>
-                <div class="event-desc">48 hours to design and prototype your best product interface. For designers and developers alike.</div>
-                <div class="event-footer">
-                  <span class="badge badge-muted"><i class="fa-solid fa-pen-ruler"></i> Design</span>
                   <button class="btn-ghost" onclick="navigate('registration')">Register →</button>
                 </div>
               </div>
@@ -386,28 +374,20 @@
             <div class="card-body">
               <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:24px;">
                 <label class="event-select-opt" style="display:flex;align-items:center;gap:16px;padding:16px 18px;border:1.5px solid var(--rock-border);border-radius:10px;cursor:pointer;transition:var(--transition-smooth);" onmouseover="this.style.borderColor='rgba(240,165,0,0.3)'" onmouseout="this.style.borderColor='var(--rock-border)'">
-                  <input type="radio" name="event-select" value="hackforge" style="accent-color:var(--gold-primary);width:18px;height:18px;" onchange="selectedEvent='HackForge 3.0'">
+                  <input type="radio" name="event-select" value="orientation" style="accent-color:var(--gold-primary);width:18px;height:18px;" onchange="selectedEvent='CodeMiners Orientation'">
                   <div>
-                    <div style="font-weight:700;color:var(--text-light);margin-bottom:4px;">HackForge 3.0 — 24-Hour Hackathon</div>
-                    <div style="font-size:12px;color:var(--text-muted);">July 15–16, 2025 &nbsp;·&nbsp; Teams of 3–5 &nbsp;·&nbsp; ₹500/team</div>
+                    <div style="font-weight:700;color:var(--text-light);margin-bottom:4px;">CodeMiners Orientation</div>
+                    <div style="font-size:12px;color:var(--text-muted);">Aug 15, 2026 &nbsp;·&nbsp; Open to all &nbsp;·&nbsp; Free</div>
+                  </div>
+                  <span class="badge badge-blue" style="margin-left:auto;">Kickoff</span>
+                </label>
+                <label class="event-select-opt" style="display:flex;align-items:center;gap:16px;padding:16px 18px;border:1.5px solid var(--rock-border);border-radius:10px;cursor:pointer;transition:var(--transition-smooth);" onmouseover="this.style.borderColor='rgba(240,165,0,0.3)'" onmouseout="this.style.borderColor='var(--rock-border)'">
+                  <input type="radio" name="event-select" value="hackathon" style="accent-color:var(--gold-primary);width:18px;height:18px;" onchange="selectedEvent='CodeMiners Hackathon 2026'">
+                  <div>
+                    <div style="font-weight:700;color:var(--text-light);margin-bottom:4px;">CodeMiners Hackathon 2026</div>
+                    <div style="font-size:12px;color:var(--text-muted);">Oct 10–11, 2026 &nbsp;·&nbsp; Teams of 3–5 &nbsp;·&nbsp; ₹500/team</div>
                   </div>
                   <span class="badge badge-gold" style="margin-left:auto;">Flagship</span>
-                </label>
-                <label class="event-select-opt" style="display:flex;align-items:center;gap:16px;padding:16px 18px;border:1.5px solid var(--rock-border);border-radius:10px;cursor:pointer;transition:var(--transition-smooth);" onmouseover="this.style.borderColor='rgba(240,165,0,0.3)'" onmouseout="this.style.borderColor='var(--rock-border)'">
-                  <input type="radio" name="event-select" value="devdig" style="accent-color:var(--gold-primary);width:18px;height:18px;" onchange="selectedEvent='DevDig Bootcamp'">
-                  <div>
-                    <div style="font-weight:700;color:var(--text-light);margin-bottom:4px;">DevDig — DSA Bootcamp Workshop</div>
-                    <div style="font-size:12px;color:var(--text-muted);">Aug 3–4, 2025 &nbsp;·&nbsp; Individual &nbsp;·&nbsp; ₹299</div>
-                  </div>
-                  <span class="badge badge-blue" style="margin-left:auto;">Workshop</span>
-                </label>
-                <label class="event-select-opt" style="display:flex;align-items:center;gap:16px;padding:16px 18px;border:1.5px solid var(--rock-border);border-radius:10px;cursor:pointer;transition:var(--transition-smooth);" onmouseover="this.style.borderColor='rgba(240,165,0,0.3)'" onmouseout="this.style.borderColor='var(--rock-border)'">
-                  <input type="radio" name="event-select" value="codevault" style="accent-color:var(--gold-primary);width:18px;height:18px;" onchange="selectedEvent='CodeVault Design Sprint'">
-                  <div>
-                    <div style="font-weight:700;color:var(--text-light);margin-bottom:4px;">CodeVault — UI/UX Design Sprint</div>
-                    <div style="font-size:12px;color:var(--text-muted);">Sep 10–11, 2025 &nbsp;·&nbsp; Teams of 1–3 &nbsp;·&nbsp; Free</div>
-                  </div>
-                  <span class="badge badge-muted" style="margin-left:auto;">Free</span>
                 </label>
               </div>
               <button class="btn-gold" onclick="regNext(1)"><i class="fa-solid fa-arrow-right"></i> CONTINUE</button>
