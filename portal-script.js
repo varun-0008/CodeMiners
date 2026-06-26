@@ -236,8 +236,8 @@ function regNext(step) {
         showToast('Please enter your PIN.', 'error');
         return;
       }
-      if (!/^\d{5}-[a-zA-Z]{2}-\d{2}$/.test(pin.trim())) {
-        showToast('PIN must be in format NNNNN-AA-NN', 'error');
+      if (!/^\d{5}-[a-zA-Z]{2,3}-\d{3}$/.test(pin.trim())) {
+        showToast('PIN must be in format like 24054-cps-063', 'error');
         return;
       }
     }
