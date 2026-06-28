@@ -9,7 +9,7 @@
 // ─────────────────────────────────────────────────────────────
 // PAGE NAVIGATION
 // ─────────────────────────────────────────────────────────────
-const PAGES = ['home', 'about', 'registration', 'donations', 'contact', 'profile'];
+const PAGES = ['home', 'about', 'registration', 'participants', 'donations', 'contact', 'profile'];
 
 function navigate(page) {
   // Hide all sections
@@ -758,3 +758,303 @@ function initLiquidGlassPhysics() {
     card.addEventListener('touchend', handleActiveEnd);
   });
 }
+
+// ─────────────────────────────────────────────────────────────
+// PARTICIPANTS SECTION LOGIC
+// ─────────────────────────────────────────────────────────────
+const ALL_EVENTS = [
+  { id: 'orientation', title: 'CodeMiners Orientation', displayDate: 'June 28, 2026', completionDate: '2026-06-20' },
+  { id: 'hackathon', title: 'CodeMiners Hackathon 2026', displayDate: 'July 4–5, 2026', completionDate: '2026-07-06' }
+];
+
+function loadCompletedEvents() {
+  const container = document.getElementById('completed-events-list');
+  if (!container) return;
+  
+  const today = new Date();
+  const completed = ALL_EVENTS.filter(ev => new Date(ev.completionDate) <= today);
+  
+  if (completed.length === 0) {
+    container.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.5); padding: 20px;">No completed events yet.</p>';
+    return;
+  }
+  
+  let html = '<div class="events-list-box">';
+  completed.forEach(ev => {
+    html += `
+      <div class="event-item" onclick="viewParticipants('${ev.id}', '${ev.title}')" data-id="${ev.id}" style="cursor: pointer;">
+        <div class="event-item-title">${ev.title}</div>
+        <div class="event-item-date"><i class="fa-regular fa-calendar-check"></i> Completed: ${ev.displayDate}</div>
+      </div>
+    `;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+let fetchedMiners = [];
+
+function viewParticipants(eventId, eventTitle) {
+  let isAlreadyActive = false;
+  document.querySelectorAll('#completed-events-list .event-item').forEach(el => {
+    if (el.dataset.id === eventId) {
+      if (el.classList.contains('active')) isAlreadyActive = true;
+      el.classList.add('active');
+    }
+    else el.classList.remove('active');
+  });
+
+  const titleEl = document.getElementById('participants-list-title');
+  
+  if (isAlreadyActive) {
+    // User clicked the active event again. Clear filter.
+    document.querySelectorAll('#completed-events-list .event-item').forEach(el => el.classList.remove('active'));
+    if (titleEl) {
+      titleEl.innerHTML = `<i class="fa-solid fa-users"></i> Miners List`;
+    }
+    loadAllMiners();
+    return;
+  }
+
+  if (titleEl) {
+    titleEl.innerHTML = `<i class="fa-solid fa-users"></i> ${eventTitle} Participants`;
+  }
+  
+  const container = document.getElementById('participants-list-content');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div style="display:flex; justify-content:center; padding: 40px; color: var(--gold-primary);">
+      <i class="fa-solid fa-circle-notch fa-spin fa-2x"></i>
+    </div>
+  `;
+  
+  try {
+    db.collection('registrations')
+      .where('eventName', '==', eventTitle)
+      .get()
+      .then((snapshot) => {
+        fetchedMiners = [];
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          fetchedMiners.push({
+            id: doc.id,
+            name: data.fullName || 'Participant',
+            subtitle: data.college || '', 
+            year: data.studyYear || '',
+            role: 'Participant',
+            about: '', 
+            projects: [],
+            pin: data.pin || '',
+            participationType: data.participationType || 'Individual',
+            teamName: data.teamName || ''
+          });
+        });
+        
+        renderMinersList('');
+      })
+      .catch((error) => {
+        console.error("Error fetching event participants:", error);
+        fetchedMiners = [];
+        renderMinersList('');
+      });
+  } catch (e) {
+    console.error("DB error:", e);
+    fetchedMiners = [];
+    renderMinersList('');
+  }
+}
+
+function loadAllMiners() {
+  const container = document.getElementById('participants-list-content');
+  if (!container) return;
+
+  const titleEl = document.getElementById('participants-list-title');
+  if (titleEl) {
+    titleEl.innerHTML = `<i class="fa-solid fa-users"></i> Miners List`;
+  }
+
+  container.innerHTML = `
+    <div style="display:flex; justify-content:center; padding: 40px; color: var(--gold-primary);">
+      <i class="fa-solid fa-circle-notch fa-spin fa-2x"></i>
+    </div>
+  `;
+  
+  // Fetch from Firebase Firestore - users collection
+  try {
+    db.collection('users')
+      .get()
+      .then((snapshot) => {
+        fetchedMiners = [];
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          let projectsArray = [];
+          if (Array.isArray(data.projects)) {
+            projectsArray = data.projects;
+          }
+          fetchedMiners.push({
+            id: doc.id,
+            name: data.username || 'Anonymous',
+            subtitle: data.fullName || '', 
+            year: '',
+            role: 'CodeMiner',
+            about: data.about || '',
+            projects: projectsArray,
+            pin: data.pin || ''
+          });
+        });
+        
+        renderMinersList('');
+      })
+      .catch((error) => {
+        console.error("Error fetching miners:", error);
+        fetchedMiners = [];
+        renderMinersList('');
+      });
+  } catch (e) {
+    console.error("DB error:", e);
+    fetchedMiners = [];
+    renderMinersList('');
+  }
+}
+
+function renderMinersList(searchQuery = '') {
+  const container = document.getElementById('participants-list-content');
+  if (!container) return;
+
+  const filtered = fetchedMiners.filter(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()) || m.subtitle.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  let html = `
+    <div style="margin-bottom: 20px; position: relative;">
+      <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 16px; top: 14px; color: var(--text-muted);"></i>
+      <input type="text" id="miner-search" placeholder="Search by username or name..." 
+             style="width: 100%; padding: 12px 16px 12px 44px; border-radius: 8px; border: 1.5px solid var(--rock-border); background: rgba(0,0,0,0.3); color: white; outline: none; font-family: inherit;" 
+             value="${searchQuery}" onkeyup="renderMinersList(this.value)">
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr; gap: 12px; max-height: 400px; overflow-y: auto; padding-right: 8px;" id="miners-grid">
+  `;
+
+  if (filtered.length === 0) {
+    html += `<p style="text-align: center; color: var(--text-muted); padding: 20px;">No miners found.</p>`;
+  } else {
+    filtered.forEach(m => {
+      html += `
+        <div class="event-item" style="display: flex; align-items: center; gap: 16px; padding: 12px;" onclick="viewMinerProfile('${m.id}')">
+          <div style="width: 48px; height: 48px; border-radius: 50%; border: 2px solid rgba(240,165,0,0.3); background: rgba(240,165,0,0.1); display: flex; align-items: center; justify-content: center; color: var(--gold-primary); font-size: 20px;">
+            <i class="fa-solid fa-user"></i>
+          </div>
+          <div>
+            <div style="font-weight: 700; color: white; margin-bottom:2px;">${m.name}</div>
+            <div style="font-size: 12px; color: var(--text-muted);">${m.subtitle}</div>
+          </div>
+          <i class="fa-solid fa-chevron-right" style="margin-left: auto; color: var(--text-muted);"></i>
+        </div>
+      `;
+    });
+  }
+  html += `</div>`;
+  container.innerHTML = html;
+
+  const searchInput = document.getElementById('miner-search');
+  if (searchInput) {
+    searchInput.focus();
+  }
+}
+
+function viewMinerProfile(minerId) {
+  const m = fetchedMiners.find(x => x.id === minerId);
+  if (!m) return;
+  const container = document.getElementById('participants-list-content');
+  
+  let projectsHtml = '';
+  if (!m.participationType && m.projects && m.projects.length > 0) {
+    projectsHtml = `
+      <div style="background: rgba(0,0,0,0.2); border: 1.5px solid var(--rock-border); border-radius: 12px; padding: 20px; text-align: left; margin-top: 16px;">
+        <h3 style="margin-top:0; font-size: 15px; color: var(--text-light); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; margin-bottom: 12px;"><i class="fa-solid fa-code"></i> Personal Projects</h3>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          ${m.projects.map(p => `
+            <a href="${p.link}" target="_blank" style="color: var(--gold-primary); text-decoration: none; font-size: 14px; background: rgba(240,165,0,0.1); padding: 8px 12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-link" style="font-size: 12px;"></i> ${p.name || 'View Project'}
+            </a>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  } else if (m.participationType && m.teamProjectLink) {
+    projectsHtml = `
+      <div style="background: rgba(0,0,0,0.2); border: 1.5px solid var(--rock-border); border-radius: 12px; padding: 20px; text-align: left; margin-top: 16px;">
+        <h3 style="margin-top:0; font-size: 15px; color: var(--text-light); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; margin-bottom: 12px;"><i class="fa-solid fa-rocket"></i> Team Project</h3>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+            <a href="${m.teamProjectLink}" target="_blank" style="color: var(--gold-primary); text-decoration: none; font-size: 14px; background: rgba(240,165,0,0.1); padding: 8px 12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-link" style="font-size: 12px;"></i> View Project
+            </a>
+        </div>
+      </div>
+    `;
+  }
+
+  let aboutHtml = '';
+  if (!m.participationType && m.about) {
+    aboutHtml = `
+      <div style="background: rgba(0,0,0,0.2); border: 1.5px solid var(--rock-border); border-radius: 12px; padding: 20px; text-align: left; margin-bottom: 16px;">
+        <h3 style="margin-top:0; font-size: 15px; color: var(--text-light); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; margin-bottom: 12px;"><i class="fa-solid fa-address-card"></i> About Miner</h3>
+        <p style="color: var(--text-muted); font-size: 13px; line-height: 1.6; margin: 0;">
+          ${m.about}
+        </p>
+      </div>
+    `;
+  }
+
+  let membersHtml = '';
+  if (m.participationType && m.teamMembers) {
+    let mArray = [];
+    if (Array.isArray(m.teamMembers)) mArray = m.teamMembers;
+    else if (typeof m.teamMembers === 'string') mArray = m.teamMembers.split(',').map(s=>s.trim()).filter(Boolean);
+    
+    if (mArray.length > 0) {
+      membersHtml = `
+        <div style="background: rgba(0,0,0,0.2); border: 1.5px solid var(--rock-border); border-radius: 12px; padding: 20px; text-align: left; margin-bottom: 16px;">
+          <h3 style="margin-top:0; font-size: 15px; color: var(--text-light); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; margin-bottom: 12px;"><i class="fa-solid fa-users"></i> Team Members</h3>
+          <ul style="color: var(--text-muted); font-size: 13px; line-height: 1.6; margin: 0; padding-left: 20px;">
+            ${mArray.map(member => `<li>${member}</li>`).join('')}
+          </ul>
+        </div>
+      `;
+    }
+  }
+
+  container.innerHTML = `
+    <button class="btn-icon" style="margin-bottom: 16px; color: var(--gold-primary); background: transparent; border: none; cursor: pointer; display:flex; align-items:center; gap: 8px; font-weight:600; font-family:inherit; padding: 0;" onclick="renderMinersList('')">
+      <i class="fa-solid fa-arrow-left"></i> Back to Miners
+    </button>
+    <div style="text-align: center; padding: 0;">
+      <div style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--gold-primary); margin: 0 auto 12px auto; box-shadow: 0 4px 16px rgba(240,165,0,0.2); background: rgba(240,165,0,0.1); display: flex; align-items: center; justify-content: center; color: var(--gold-primary); font-size: 40px;">
+        <i class="fa-solid fa-user"></i>
+      </div>
+      <h2 style="margin: 0 0 4px 0; color: white; font-size: 22px;">${m.name}</h2>
+      <div style="color: var(--gold-primary); font-weight: 600; font-size: 14px; margin-bottom: 16px;">${m.role}</div>
+      
+      ${m.subtitle || m.pin ? `
+      <div style="display: flex; gap: 12px; justify-content: center; margin-bottom: ${m.participationType ? '12px' : '24px'};">
+        ${m.subtitle ? `<span class="badge badge-blue">${m.subtitle}</span>` : ''}
+        ${m.pin ? `<span class="badge badge-gold"><i class="fa-solid fa-hashtag" style="font-size: 10px; opacity: 0.7; margin-right: 4px;"></i>${m.pin}</span>` : ''}
+      </div>` : ''}
+      
+      ${m.participationType ? `
+      <div style="display: flex; gap: 12px; justify-content: center; margin-bottom: 24px;">
+        <span class="badge badge-blue"><i class="fa-solid ${m.participationType.toLowerCase() === 'team' ? 'fa-users' : 'fa-user'}" style="margin-right:4px;"></i>${m.participationType}</span>
+        ${m.teamName ? `<span class="badge badge-gold"><i class="fa-solid fa-flag" style="margin-right:4px;"></i>${m.teamName}</span>` : ''}
+      </div>` : ''}
+      
+      ${membersHtml}
+      ${aboutHtml}
+      ${projectsHtml}
+    </div>
+  `;
+}
+
+// Initialize on load
+setTimeout(() => {
+  loadCompletedEvents();
+  loadAllMiners();
+}, 500);

@@ -87,6 +87,7 @@
     <a class="nav-link active" data-page="home"         onclick="navigate('home');return false;" href="#"><i class="fa-solid fa-house"></i> <span>Home</span></a>
     <a class="nav-link" data-page="about"        onclick="navigate('about');return false;" href="#"><i class="fa-solid fa-users"></i> <span>About</span></a>
     <a class="nav-link" data-page="registration" onclick="navigate('registration');return false;" href="#"><i class="fa-solid fa-id-card-clip"></i> <span>Registration</span></a>
+    <a class="nav-link" data-page="participants" onclick="navigate('participants');return false;" href="#"><i class="fa-solid fa-users-viewfinder"></i> <span>Participants</span></a>
     <a class="nav-link" data-page="donations"    onclick="navigate('donations');return false;" href="#"><i class="fa-solid fa-hand-holding-heart"></i> <span>Donations</span></a>
     <a class="nav-link" data-page="contact"      onclick="navigate('contact');return false;" href="#"><i class="fa-solid fa-envelope"></i> <span>Contact</span></a>
     <a class="nav-link" data-page="profile"      onclick="navigate('profile');return false;" href="#"><i class="fa-solid fa-circle-user"></i> <span>Profile</span></a>
@@ -683,6 +684,47 @@
     </section>
 
     <!-- ══════════════════════════════════
+         PARTICIPANTS SECTION
+         ══════════════════════════════════ -->
+    <section class="section" id="sec-participants">
+      <div class="section-inner">
+        <div class="section-heading">
+          <div class="section-tag"><i class="fa-solid fa-users-viewfinder"></i> COMMUNITY</div>
+          <h1 class="section-title">Event <span class="accent">Participants</span></h1>
+          <p class="section-sub">View the list of registered participants for completed events.</p>
+        </div>
+        <style>
+          .participants-container { max-width: 960px; margin: 0 auto; display: grid; gap: 24px; }
+          .events-list-box { display: flex; flex-direction: column; gap: 12px; }
+          .event-item { padding: 16px; border: 1.5px solid var(--rock-border); border-radius: 10px; cursor: pointer; transition: var(--transition-smooth); background: rgba(0,0,0,0.2); }
+          .event-item:hover, .event-item.active { border-color: rgba(240,165,0,0.5); background: rgba(240,165,0,0.1); }
+          .event-item-title { font-weight: 700; color: var(--text-light); margin-bottom: 4px; }
+          .event-item-date { font-size: 12px; color: var(--text-muted); }
+          @media(min-width: 800px) {
+            .participants-container { grid-template-columns: 1fr 1fr; }
+            .participants-box { height: 100%; overflow-y: auto; }
+          }
+        </style>
+        <div class="participants-container">
+          <!-- Left Box: Events (9 ratio) -->
+          <div class="glass-card no-tilt participants-box">
+            <div class="card-header"><div class="card-title"><i class="fa-solid fa-calendar-check"></i> Events</div></div>
+            <div class="card-body" style="padding: 24px;" id="completed-events-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+          <!-- Right Box: Miners (16 ratio) -->
+          <div class="glass-card no-tilt participants-box">
+            <div class="card-header"><div class="card-title" id="participants-list-title"><i class="fa-solid fa-users"></i> Miners List</div></div>
+            <div class="card-body" style="padding: 24px;" id="participants-list-content">
+              <p style="text-align: center; color: rgba(255,255,255,0.5); margin-top: 40px;">Select an event from the left to view its miners.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════
          PROFILE SECTION
          ══════════════════════════════════ -->
     <section class="section" id="sec-profile">
@@ -754,7 +796,7 @@
                 <div style="text-align: left; background: rgba(0,0,0,0.15); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); flex: 1; display: flex; flex-direction: column;">
                   <div style="display:flex; align-items:center; gap: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px; margin-bottom: 12px;">
                     <i class="fa-solid fa-link" style="color: var(--gold-primary);"></i>
-                    <span style="color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Personal Projects & Links</span>
+                    <span style="color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Personal Projects</span>
                   </div>
                   <div id="profile-projects" style="color: var(--text-light); font-size: 14px; line-height: 1.6; margin: 0; word-break: break-all; flex: 1; overflow-y: auto;">—</div>
                 </div>
@@ -815,7 +857,7 @@
                   </div>
                 </div>
                 <div style="flex:1; display:flex; flex-direction:column;">
-                  <label class="input-label">PERSONAL PROJECTS & LINKS</label>
+                  <label class="input-label">PERSONAL PROJECTS</label>
                   <div id="edit-projects-container" style="flex:1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; padding-right: 4px; max-height: 200px;">
                     <!-- Project inputs injected here -->
                   </div>
@@ -837,7 +879,7 @@
 
   </div><!-- /.page-wrapper -->
 
-  <script src="portal-script.js"></script>
+  <script src="portal-script.js?v=13"></script>
   <script>
     // Global user doc reference
     let currentUserDoc = null;
