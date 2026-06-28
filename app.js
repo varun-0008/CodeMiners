@@ -19,6 +19,7 @@ const firebaseConfig = {
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
+const db = firebase.firestore();
 
 // ─────────────────────────────────────────────
 // DOM References
@@ -45,6 +46,7 @@ const DOM = {
   authForm:     document.getElementById('authForm'),
   nameGroup:    document.getElementById('nameGroup'),
   nameInput:    document.getElementById('nameInput'),
+  emailLabel:   document.getElementById('emailLabel'),
   emailInput:   document.getElementById('emailInput'),
   passwordInput:document.getElementById('passwordInput'),
   passwordToggle: document.getElementById('passwordToggle'),
@@ -56,6 +58,7 @@ const DOM = {
   // Toggle
   toggleText:   document.getElementById('toggleText'),
   toggleBtn:    document.getElementById('toggleBtn'),
+  forgotBtn:    document.getElementById('forgotBtn'),
 
   // Particles
   particlesContainer: document.getElementById('particles-container'),
@@ -301,24 +304,9 @@ function showMessage(text, type = 'error') {
   DOM.messageBox.textContent = text;
   DOM.messageBox.className = `message-box ${type} visible`;
 
-  gsap.from(DOM.messageBox, {
-    y: -8,
-    opacity: 0,
-    duration: 0.35,
-    ease: 'power2.out',
-  });
-
   // Auto-hide after 5s
   setTimeout(() => {
-    gsap.to(DOM.messageBox, {
-      opacity: 0,
-      maxHeight: 0,
-      padding: 0,
-      duration: 0.3,
-      onComplete: () => {
-        DOM.messageBox.className = 'message-box';
-      },
-    });
+    DOM.messageBox.className = 'message-box';
   }, 5000);
 }
 
@@ -327,33 +315,32 @@ function showMessage(text, type = 'error') {
 // ─────────────────────────────────────────────
 function setLoading(state) {
   isLoading = state;
-  const overlay = document.getElementById('loadingOverlay');
   if (state) {
     DOM.btnSubmit.classList.add('loading');
-    if (overlay) {
-      overlay.style.display = 'flex';
-      gsap.fromTo(overlay, 
-        { opacity: 0 }, 
-        { opacity: 1, duration: 0.35, ease: 'power2.out' }
-      );
-    }
   } else {
     DOM.btnSubmit.classList.remove('loading');
-    if (overlay) {
-      gsap.to(overlay, {
-        opacity: 0,
-        duration: 0.25,
-        ease: 'power2.in',
-        onComplete: () => { overlay.style.display = 'none'; }
-      });
-    }
+  }
+}
+
+function showSuccessOverlay() {
+  const overlay = document.getElementById('loadingOverlay');
+  if (overlay) {
+    overlay.style.display = 'flex';
+    gsap.fromTo(overlay, 
+      { opacity: 0 }, 
+      { opacity: 1, duration: 0.35, ease: 'power2.out' }
+    );
   }
 }
 
 // ─────────────────────────────────────────────
 // Login / Sign-Up Toggle
 // ─────────────────────────────────────────────
-DOM.toggleBtn.addEventListener('click', () => {
+let isToggling = false;
+DOM.toggleBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  if (isToggling) return;
+  isToggling = true;
   isSignUp = !isSignUp;
 
   const tl = gsap.timeline();
@@ -368,19 +355,25 @@ DOM.toggleBtn.addEventListener('click', () => {
 
   tl.call(() => {
     if (isSignUp) {
-      DOM.cardTitle.textContent    = 'Create Account';
-      DOM.cardSubtitle.textContent = 'Join CodeMiners';
+      DOM.cardTitle.innerHTML = '<i class="fa-solid fa-user-plus"></i> Join CodeMiners';
+      DOM.cardSubtitle.textContent = 'Begin your journey into the future';
+      DOM.emailLabel.textContent = 'Email Address';
       DOM.nameGroup.style.display  = 'flex';
       DOM.btnText.textContent      = 'Sign Up';
       DOM.toggleText.textContent   = 'Already have an account?';
       DOM.toggleBtn.textContent    = 'Sign In';
+      if (DOM.forgotBtn) DOM.forgotBtn.parentElement.style.display = 'none';
     } else {
-      DOM.cardTitle.textContent    = 'Welcome Back';
-      DOM.cardSubtitle.textContent = 'Sign in to your account';
+      // Switch to Sign-In view
+      DOM.toggleBtn.textContent = 'Sign Up';
+      DOM.toggleText.textContent = 'Don\'t have an account?';
+      DOM.btnText.textContent = 'Sign In';
       DOM.nameGroup.style.display  = 'none';
-      DOM.btnText.textContent      = 'Sign In';
-      DOM.toggleText.textContent   = "Don't have an account?";
-      DOM.toggleBtn.textContent    = 'Sign Up';
+      DOM.emailInput.placeholder = '';
+      DOM.cardTitle.innerHTML = '<i class="fa-solid fa-fingerprint"></i> Welcome Back';
+      DOM.cardSubtitle.textContent = 'Access your neural dashboard';
+      DOM.emailLabel.textContent = 'Username / Email Address';
+      if (DOM.forgotBtn) DOM.forgotBtn.parentElement.style.display = 'block';
     }
 
     // Clear any messages
@@ -394,6 +387,7 @@ DOM.toggleBtn.addEventListener('click', () => {
     duration: 0.35,
     stagger: 0.05,
     ease: 'power2.out',
+    onComplete: () => { isToggling = false; }
   });
 
   // If showing name field, animate it in
@@ -407,16 +401,62 @@ DOM.toggleBtn.addEventListener('click', () => {
 });
 
 // ─────────────────────────────────────────────
+// Forgot Password
+// ─────────────────────────────────────────────
+if (DOM.forgotBtn) {
+  DOM.forgotBtn.addEventListener('click', async () => {
+    const inputVal = DOM.emailInput.value.trim();
+    if (!inputVal) {
+      showMessage('Please enter your username or email address first.');
+      return;
+    }
+
+    setLoading(true);
+    let resetEmail = inputVal;
+
+    try {
+      if (!resetEmail.includes('@')) {
+        // It's a username, lookup email
+        const userRef = db.collection('users').where('username', '==', resetEmail);
+        const snapshot = await userRef.get();
+        if (snapshot.empty) {
+          showMessage('No account found with this username.');
+          setLoading(false);
+          return;
+        }
+        resetEmail = snapshot.docs[0].data().email;
+      } else {
+        // It's an email, check if it exists in our database first
+        const emailRef = db.collection('users').where('email', '==', resetEmail);
+        const snapshot = await emailRef.get();
+        if (snapshot.empty) {
+          showMessage('No account found with this email address.');
+          setLoading(false);
+          return;
+        }
+      }
+
+      await auth.sendPasswordResetEmail(resetEmail);
+      showMessage('Password reset link sent to your email!', 'success');
+    } catch (error) {
+      showMessage(error.message);
+    } finally {
+      setLoading(false);
+    }
+  });
+}
+
+// ─────────────────────────────────────────────
 // Firebase Auth — Email / Password
 // ─────────────────────────────────────────────
 DOM.authForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   if (isLoading) return;
 
-  const email    = DOM.emailInput.value.trim();
+  const inputVal = DOM.emailInput.value.trim();
   const password = DOM.passwordInput.value;
 
-  if (!email || !password) {
+  if (!inputVal || !password) {
     showMessage('Please fill in all fields.');
     return;
   }
@@ -430,18 +470,73 @@ DOM.authForm.addEventListener('submit', async (e) => {
 
   try {
     if (isSignUp) {
-      const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+      const email = inputVal;
       const name = DOM.nameInput.value.trim();
+      
+      if (!name) {
+        showMessage('Please enter a username.');
+        setLoading(false);
+        return;
+      }
+      
+      if (name.includes('@')) {
+        showMessage('Username cannot contain @ symbol.');
+        setLoading(false);
+        return;
+      }
+
+      // Check if username is taken
+      const userRef = db.collection('users').where('username', '==', name);
+      const snapshot = await userRef.get();
+      if (!snapshot.empty) {
+        showMessage('Username already taken. Please try a different one.');
+        setLoading(false);
+        return;
+      }
+
+      const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+      
       if (name) {
         await userCredential.user.updateProfile({ displayName: name });
       }
-      showMessage('Account created successfully!', 'success');
-      // Short delay before redirect
-      setTimeout(() => {
-        window.location.href = 'portal.html';
-      }, 800);
+      
+      // Save mapping to Firestore
+      await db.collection('users').doc(userCredential.user.uid).set({
+        email: email,
+        username: name,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      
+      // Send verification email and sign out
+      await userCredential.user.sendEmailVerification();
+      await auth.signOut();
+      
+      showMessage('Account created! Verification link sent to your email.', 'success');
     } else {
-      await auth.signInWithEmailAndPassword(email, password);
+      let loginEmail = inputVal;
+      
+      // If it's a username (doesn't contain '@'), look up the email
+      if (!loginEmail.includes('@')) {
+        const userRef = db.collection('users').where('username', '==', loginEmail);
+        const snapshot = await userRef.get();
+        if (snapshot.empty) {
+          showMessage('Wrong credentials.');
+          setLoading(false);
+          return;
+        }
+        loginEmail = snapshot.docs[0].data().email;
+      }
+
+      const userCredential = await auth.signInWithEmailAndPassword(loginEmail, password);
+      
+      // Check if email is verified
+      if (!userCredential.user.emailVerified) {
+        await auth.signOut();
+        showMessage('Please verify your email address first.');
+        return; // Stop execution, don't show success overlay
+      }
+      
+      showSuccessOverlay();
       showMessage('Signed in successfully!', 'success');
       setTimeout(() => {
         window.location.href = 'portal.html';
@@ -449,10 +544,10 @@ DOM.authForm.addEventListener('submit', async (e) => {
     }
   } catch (error) {
     const messages = {
-      'auth/user-not-found':          'No account found with this email.',
-      'auth/wrong-password':          'Incorrect password. Try again.',
-      'auth/invalid-credential':      'Invalid credentials. Please check and try again.',
-      'auth/email-already-in-use':    'An account with this email already exists.',
+      'auth/user-not-found':          'Wrong credentials.',
+      'auth/wrong-password':          'Wrong credentials.',
+      'auth/invalid-credential':      'Wrong credentials.',
+      'auth/email-already-in-use':    'Account already exists. Please sign in instead.',
       'auth/weak-password':           'Password should be at least 6 characters.',
       'auth/invalid-email':           'Please enter a valid email address.',
       'auth/too-many-requests':       'Too many attempts. Please try again later.',
@@ -470,7 +565,30 @@ DOM.authForm.addEventListener('submit', async (e) => {
 DOM.btnGoogle.addEventListener('click', async () => {
   const provider = new firebase.auth.GoogleAuthProvider();
   try {
-    await auth.signInWithPopup(provider);
+    const userCredential = await auth.signInWithPopup(provider);
+    
+    // Check if user exists in db, if not create them
+    const userDoc = await db.collection('users').doc(userCredential.user.uid).get();
+    if (!userDoc.exists) {
+      let baseUsername = (userCredential.user.email ? userCredential.user.email.split('@')[0] : 'miner').toLowerCase().replace(/[^a-z0-9]/g, '');
+      let username = baseUsername;
+      let counter = 1;
+      
+      // Ensure unique username
+      while(true) {
+        const usernameCheck = await db.collection('users').where('username', '==', username).get();
+        if (usernameCheck.empty) break;
+        username = baseUsername + counter;
+        counter++;
+      }
+      
+      await db.collection('users').doc(userCredential.user.uid).set({
+        email: userCredential.user.email || '',
+        username: username,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+
     showMessage('Signed in with Google!', 'success');
     setTimeout(() => {
       window.location.href = 'portal.html';
@@ -488,7 +606,31 @@ DOM.btnGoogle.addEventListener('click', async () => {
 DOM.btnGithub.addEventListener('click', async () => {
   const provider = new firebase.auth.GithubAuthProvider();
   try {
-    await auth.signInWithPopup(provider);
+    const userCredential = await auth.signInWithPopup(provider);
+    
+    // Check if user exists in db, if not create them
+    const userDoc = await db.collection('users').doc(userCredential.user.uid).get();
+    if (!userDoc.exists) {
+      let baseUsername = (userCredential.user.email ? userCredential.user.email.split('@')[0] : (userCredential.user.displayName ? userCredential.user.displayName.replace(/\s+/g, '') : 'miner')).toLowerCase().replace(/[^a-z0-9]/g, '');
+      if(!baseUsername) baseUsername = 'miner';
+      let username = baseUsername;
+      let counter = 1;
+      
+      // Ensure unique username
+      while(true) {
+        const usernameCheck = await db.collection('users').where('username', '==', username).get();
+        if (usernameCheck.empty) break;
+        username = baseUsername + counter;
+        counter++;
+      }
+      
+      await db.collection('users').doc(userCredential.user.uid).set({
+        email: userCredential.user.email || '',
+        username: username,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+
     showMessage('Signed in with GitHub!', 'success');
     setTimeout(() => {
       window.location.href = 'portal.html';

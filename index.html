@@ -18,6 +18,7 @@
   <!-- Firebase SDK (compat for CDN usage) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
   <link rel="stylesheet" href="styles.css" />
 
@@ -109,7 +110,7 @@
         <!-- Email/Password Form -->
         <form class="auth-form" id="authForm" autocomplete="off">
           <div class="input-group" id="nameGroup" style="display: none;">
-            <label class="input-label" for="nameInput">Full Name</label>
+            <label class="input-label" for="nameInput">Username</label>
             <div class="input-wrapper">
               <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -120,13 +121,13 @@
           </div>
 
           <div class="input-group">
-            <label class="input-label" for="emailInput">Email Address</label>
+            <label class="input-label" id="emailLabel" for="emailInput">Username / Email Address</label>
             <div class="input-wrapper">
               <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="2" y="4" width="20" height="16" rx="2"/>
                 <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
               </svg>
-              <input class="input-field" type="email" id="emailInput" placeholder="" required />
+              <input class="input-field" type="text" id="emailInput" placeholder="" required />
             </div>
           </div>
 
@@ -149,6 +150,9 @@
                   <line x1="1" y1="1" x2="23" y2="23"/>
                 </svg>
               </button>
+            </div>
+            <div class="forgot-password-wrap">
+              <button class="forgot-password-btn" type="button" id="forgotBtn">Forgot Password?</button>
             </div>
           </div>
 
@@ -206,5 +210,12 @@
   </main>
 
   <script src="app.js"></script>
+  <script>
+    // Disable right-click
+    document.addEventListener('contextmenu', (e) => e.preventDefault());
+    
+    // Disable multiple clicks
+    document.addEventListener('dblclick', (e) => e.preventDefault());
+  </script>
 </body>
 </html>

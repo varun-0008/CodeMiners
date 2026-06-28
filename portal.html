@@ -90,10 +90,6 @@
     <a class="nav-link" data-page="donations"    onclick="navigate('donations');return false;" href="#"><i class="fa-solid fa-hand-holding-heart"></i> <span>Donations</span></a>
     <a class="nav-link" data-page="contact"      onclick="navigate('contact');return false;" href="#"><i class="fa-solid fa-envelope"></i> <span>Contact</span></a>
     <a class="nav-link" data-page="profile"      onclick="navigate('profile');return false;" href="#"><i class="fa-solid fa-circle-user"></i> <span>Profile</span></a>
-    <!-- Sign Out Button -->
-    <a class="nav-link" href="#" onclick="auth.signOut().then(()=>{ window.location.href='index.html'; }); return false;" title="Sign Out" style="margin-left:auto;">
-      <i class="fa-solid fa-right-from-bracket"></i> <span>Sign Out</span>
-    </a>
   </nav>
 
   <!-- Toast Container -->
@@ -207,10 +203,10 @@
               <img src="mainlogo.png" alt="Code Miners" class="footer-brand-logo">
               <p class="footer-brand-desc">Official student coding guild dedicated to mining excellence in software development through competitions, workshops, and collaborative projects.</p>
               <div class="footer-social" style="margin-top:18px;">
-                <a class="social-btn" href="#" title="GitHub"><i class="fa-brands fa-github"></i></a>
-                <a class="social-btn" href="#" title="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
-                <a class="social-btn" href="#" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
-                <a class="social-btn" href="#" title="Twitter/X"><i class="fa-brands fa-x-twitter"></i></a>
+                <a class="social-btn" href="https://www.youtube.com/@CodeMiners-2026" target="_blank" title="YouTube"><i class="fa-brands fa-youtube"></i></a>
+                <a class="social-btn" href="https://www.linkedin.com/in/codeminers-community/" target="_blank" title="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                <a class="social-btn" href="https://www.instagram.com/code_miners?igsh=MXA3YTR2OWRwNjh0ag==" target="_blank" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                <a class="social-btn" href="https://chat.whatsapp.com/IotcXnOO81l07wY9Ft0QeC" target="_blank" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
               </div>
             </div>
             <div>
@@ -234,8 +230,7 @@
             <div>
               <div class="footer-col-title">CONTACT</div>
               <div class="footer-links">
-                <a href="mailto:hello@codeminers.org">hello@codeminers.org</a>
-                <a href="#">Campus Block A, Room 204</a>
+                <a href="mailto:codeminerscommunity@gmail.com">codeminerscommunity@gmail.com</a>
                 <a href="#">Mon–Sat, 9AM–6PM</a>
               </div>
             </div>
@@ -271,7 +266,7 @@
             <div class="mv-text">To empower student developers through structured competitive events, professional mentorship, and a collaborative community that bridges the gap between academic learning and industry-level execution. We believe great software is mined — through effort, iteration, and teamwork.</div>
           </div>
           <div class="mv-card" style="border: none;">
-            <div class="mv-icon" style="border: none;"><i class="fa-solid fa-eye"></i></div>
+            <div class="mv-icon" style="border: none;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" fill="currentColor" style="width: 1.125em; height: 1em; vertical-align: -0.125em;"><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.4 78.1-95.4 92.9-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.8-35.7-46.1-87.7-92.9-131.1C433.5 68.8 368.8 32 288 32zM128 256a160 160 0 1 1 320 0 160 160 0 1 1 -320 0zM288 368a112 112 0 1 0 0-224 112 112 0 1 0 0 224z"/></svg></div>
             <div class="mv-title">Our Vision</div>
             <div class="mv-text">To become the foremost student-run technology guild in the country — one where every member graduates not just with a degree, but with production-quality projects, a professional network, and the battle-tested confidence to build anything they imagine.</div>
           </div>
@@ -314,9 +309,9 @@
           </div>
           <div class="team-card">
             <div class="team-avatar"><i class="fa-solid fa-user"></i></div>
-            <div class="team-name">R.Srigeetha</div>
+            <div class="team-name">V.Goutham Krishna</div>
             <div class="team-role">Student</div>
-            <a href="https://www.linkedin.com/in/srigeetha-ravula-2b4227385?utm_source=share_via&utm_content=profile&utm_medium=member_android" target="_blank" class="team-social-btn"><i class="fa-brands fa-linkedin-in"></i></a>
+            <a href="https://www.linkedin.com/in/goutham-krishna-539010346?utm_source=share_via&utm_content=profile&utm_medium=member_android" target="_blank" class="team-social-btn"><i class="fa-brands fa-linkedin-in"></i></a>
           </div>
           <div class="team-card">
             <div class="team-avatar"><i class="fa-solid fa-user"></i></div>
@@ -338,7 +333,7 @@
         </div>
         <div class="achieve-grid">
           <div class="achieve-card">
-            <div class="achieve-num" data-target="50">50+</div>
+            <div class="achieve-num" data-target="150">150+</div>
             <div class="achieve-label">Active Members</div>
           </div>
           <div class="achieve-card">
@@ -423,7 +418,7 @@
             <div class="card-body">
               <form id="reg-details-form" style="display:flex;flex-direction:column;gap:18px;">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-                  <div><label class="input-label">FULL NAME</label><div class="input-wrap"><i class="fa-solid fa-user input-ico"></i><input type="text" class="field-input" id="r-name" placeholder="Your full name" required></div></div>
+                  <div><label class="input-label">USERNAME</label><div class="input-wrap"><i class="fa-solid fa-user input-ico"></i><input type="text" class="field-input" id="r-name" placeholder="Your username (like Insta)" required></div></div>
                   <div><label class="input-label">EMAIL</label><div class="input-wrap" style="opacity:0.7;cursor:not-allowed;"><i class="fa-solid fa-envelope input-ico"></i><input type="email" class="field-input" id="r-email" placeholder="your@email.com" readonly required></div></div>
                   <div><label class="input-label">PHONE</label><div class="input-wrap"><i class="fa-solid fa-phone input-ico"></i><input type="tel" class="field-input" id="r-phone" placeholder="+91 XXXXX XXXXX" required></div></div>
                   <div><label class="input-label">COLLEGE / INSTITUTION</label><div class="input-wrap"><i class="fa-solid fa-building-columns input-ico"></i><input type="text" class="field-input" id="r-college" placeholder="Your college name" required></div></div>
@@ -554,7 +549,7 @@
                 <div class="amount-grid">
                   <button class="amount-btn" onclick="selectAmount(this, 100)">₹100</button>
                   <button class="amount-btn" onclick="selectAmount(this, 250)">₹250</button>
-                  <button class="amount-btn selected" onclick="selectAmount(this, 500)">₹500</button>
+                  <button class="amount-btn" onclick="selectAmount(this, 500)">₹500</button>
                   <button class="amount-btn" onclick="selectAmount(this, 1000)">₹1,000</button>
                 </div>
               </div>
@@ -575,8 +570,7 @@
         <div class="thankyou-card" id="donation-thankyou" style="display:none;">
           <i class="fa-solid fa-heart thankyou-ico"></i>
           <div class="thankyou-title">Thank You for Your Donation!</div>
-          <p class="thankyou-text">Your generosity powers the Code Miners community. We'll send a confirmation to your email shortly.</p>
-          <button class="btn-gold" onclick="document.getElementById('donation-thankyou').style.display='none';document.getElementById('donation-main-grid').style.display='block';"><i class="fa-solid fa-rotate-right"></i> DONATE AGAIN</button>
+          <p class="thankyou-text">Your generosity powers the Code Miners community.</p>
         </div>
       </div>
     </section>
@@ -628,7 +622,7 @@
             </a>
 
             <!-- Card 2: WhatsApp -->
-            <a href="https://chat.whatsapp.com/II6ZJ4ob5ZW6pDPaINVJR2" target="_blank" class="glass-content-card contact-card" id="card-whatsapp" style="text-decoration:none; display:flex; align-items:center; gap:18px; padding:24px;">
+            <a href="https://chat.whatsapp.com/IotcXnOO81l07wY9Ft0QeC" target="_blank" class="glass-content-card contact-card" id="card-whatsapp" style="text-decoration:none; display:flex; align-items:center; gap:18px; padding:24px;">
               <div class="glass-shimmer"></div>
               <div style="width:60px; height:60px; border-radius:14px; background:rgba(37,211,102,0.12); display:flex; align-items:center; justify-content:center; font-size:28px; color:#25D366; box-shadow: inset 0 1px 1px rgba(255,255,255,0.15);">
                 <i class="fa-brands fa-whatsapp"></i>
@@ -656,7 +650,7 @@
             </a>
 
             <!-- Card 4: LinkedIn -->
-            <a href="#" target="_blank" class="glass-content-card contact-card" id="card-linkedin" style="text-decoration:none; display:flex; align-items:center; gap:18px; padding:24px;">
+            <a href="https://www.linkedin.com/in/codeminers-community/" target="_blank" class="glass-content-card contact-card" id="card-linkedin" style="text-decoration:none; display:flex; align-items:center; gap:18px; padding:24px;">
               <div class="glass-shimmer"></div>
               <div style="width:60px; height:60px; border-radius:14px; background:rgba(10,102,194,0.12); display:flex; align-items:center; justify-content:center; font-size:28px; color:#0A66C2; box-shadow: inset 0 1px 1px rgba(255,255,255,0.15);">
                 <i class="fa-brands fa-linkedin-in"></i>
@@ -670,7 +664,7 @@
             </a>
 
             <!-- Card 5: Instagram -->
-            <a href="#" target="_blank" class="glass-content-card contact-card" id="card-instagram" style="text-decoration:none; display:flex; align-items:center; gap:18px; padding:24px;">
+            <a href="https://www.instagram.com/code_miners?igsh=MXA3YTR2OWRwNjh0ag==" target="_blank" class="glass-content-card contact-card" id="card-instagram" style="text-decoration:none; display:flex; align-items:center; gap:18px; padding:24px;">
               <div class="glass-shimmer"></div>
               <div style="width:60px; height:60px; border-radius:14px; background:rgba(225,48,108,0.12); display:flex; align-items:center; justify-content:center; font-size:28px; color:#E1306C; box-shadow: inset 0 1px 1px rgba(255,255,255,0.15);">
                 <i class="fa-brands fa-instagram"></i>
@@ -698,16 +692,144 @@
           <h1 class="section-title">My <span class="accent">Profile</span></h1>
           <p class="section-sub">Manage your account and view your event history.</p>
         </div>
-        <div class="glass-card" style="max-width:540px;margin:0 auto;">
-          <div class="card-body" style="text-align:center;padding:40px 32px;">
-            <div style="width:80px;height:80px;border-radius:50%;background:rgba(240,165,0,0.12);border:2px solid rgba(240,165,0,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:32px;color:var(--gold-primary);" id="profile-avatar-icon">
-              <i class="fa-solid fa-circle-user"></i>
-            </div>
-            <div id="profile-name" style="font-size:20px;font-weight:700;color:var(--text-light);margin-bottom:6px;">Loading...</div>
-            <div id="profile-email" style="font-size:14px;color:var(--text-muted);margin-bottom:28px;">—</div>
-            <button class="btn-ghost" onclick="auth.signOut().then(()=>{ window.location.href='index.html'; });">
-              <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+        <style>
+          .profile-16-9 { max-width: 540px; margin: 0 auto; position: relative; }
+          .profile-grid { display: flex; flex-direction: column; gap: 16px; }
+          .profile-right { display: flex; flex-direction: column; height: 100%; }
+          @media(min-width: 800px) {
+            .profile-16-9 { max-width: 960px; aspect-ratio: 16/9; overflow: hidden; display: flex; flex-direction: column; }
+            .profile-16-9 .card-body { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+            .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; height: 100%; align-items: stretch; }
+          }
+        </style>
+        <div class="glass-card profile-16-9 no-tilt" id="profile-card-main">
+          <div class="card-body" style="padding: 56px 32px 40px 32px;">
+            <!-- Edit Icon with ultra-large hit area -->
+            <button class="btn-icon" style="position: absolute; top: 12px; right: 12px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; color: var(--gold-primary); font-size: 18px; cursor:pointer; border-radius: 50%; background: transparent; z-index: 10;" onclick="toggleEditProfile()" id="edit-profile-btn" title="Edit Profile">
+              <i class="fa-solid fa-pen-to-square"></i>
             </button>
+            
+            <!-- VIEW MODE -->
+            <div id="profile-view-mode" class="profile-grid">
+              <!-- LEFT COLUMN: Avatar + Details -->
+              <div class="profile-left" style="display:flex; flex-direction:column; gap: 16px;">
+                <div style="text-align:center;">
+                  <div style="width:80px;height:80px;border-radius:50%;background:rgba(240,165,0,0.12);border:2px solid rgba(240,165,0,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:32px;color:var(--gold-primary);" id="profile-avatar-icon">
+                    <i class="fa-solid fa-circle-user"></i>
+                  </div>
+                  <div id="profile-display-name" style="font-size:22px;font-weight:700;color:var(--text-light);margin-bottom:24px;">Loading...</div>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap: 16px; text-align: left; background: rgba(0,0,0,0.15); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                  
+                  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px;">
+                    <span style="color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Username</span>
+                    <span id="profile-username" style="color: var(--text-light); font-weight: 500;">—</span>
+                  </div>
+
+                  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px;">
+                    <span style="color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Full Name</span>
+                    <span id="profile-fullname" style="color: var(--text-light); font-weight: 500;">—</span>
+                  </div>
+
+                  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px;">
+                    <span style="color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Email</span>
+                    <span id="profile-email" style="color: var(--text-light); font-weight: 500;">—</span>
+                  </div>
+
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">PIN Number</span>
+                    <span id="profile-pin" style="color: var(--text-light); font-weight: 500;">—</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- RIGHT COLUMN: About + Projects + Sign out -->
+              <div class="profile-right">
+                <div style="text-align: left; background: rgba(0,0,0,0.15); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px;">
+                  <span style="color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 8px;">About Me</span>
+                  <p id="profile-about" style="color: var(--text-light); font-size: 14px; line-height: 1.6; margin: 0; background: rgba(255,255,255,0.03); padding: 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">—</p>
+                </div>
+                
+                <div style="text-align: left; background: rgba(0,0,0,0.15); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); flex: 1; display: flex; flex-direction: column;">
+                  <div style="display:flex; align-items:center; gap: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px; margin-bottom: 12px;">
+                    <i class="fa-solid fa-link" style="color: var(--gold-primary);"></i>
+                    <span style="color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Personal Projects & Links</span>
+                  </div>
+                  <div id="profile-projects" style="color: var(--text-light); font-size: 14px; line-height: 1.6; margin: 0; word-break: break-all; flex: 1; overflow-y: auto;">—</div>
+                </div>
+
+                <div style="text-align: right; margin-top: 20px;">
+                  <button class="btn-ghost" onclick="auth.signOut().then(()=>{ window.location.href='index.html'; });">
+                    <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- EDIT MODE -->
+            <div id="profile-edit-mode" class="profile-grid" style="display:none; text-align: left;">
+              <!-- LEFT COLUMN: Inputs -->
+              <div class="profile-left" style="display:flex; flex-direction:column; gap: 14px;">
+                <div style="text-align:center; margin-bottom: 8px;">
+                  <div style="width:80px;height:80px;border-radius:50%;background:rgba(240,165,0,0.12);border:2px solid rgba(240,165,0,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:32px;color:var(--gold-primary);">
+                    <i class="fa-solid fa-circle-user"></i>
+                  </div>
+                </div>
+                <div>
+                  <label class="input-label">USERNAME</label>
+                  <div class="input-wrap">
+                    <i class="fa-solid fa-at input-ico"></i>
+                    <input type="text" class="field-input" id="edit-username" placeholder="Your username" disabled title="Username cannot be changed currently">
+                  </div>
+                </div>
+                <div>
+                  <label class="input-label">FULL NAME</label>
+                  <div class="input-wrap">
+                    <i class="fa-solid fa-user input-ico"></i>
+                    <input type="text" class="field-input" id="edit-fullname" placeholder="">
+                  </div>
+                </div>
+                <div>
+                  <label class="input-label">EMAIL</label>
+                  <div class="input-wrap">
+                    <i class="fa-solid fa-envelope input-ico"></i>
+                    <input type="email" class="field-input" id="edit-email" placeholder="john@example.com" disabled title="Email cannot be changed here">
+                  </div>
+                </div>
+                <div>
+                  <label class="input-label">PIN NUMBER</label>
+                  <div class="input-wrap">
+                    <i class="fa-solid fa-id-card input-ico"></i>
+                    <input type="text" class="field-input" id="edit-pin" placeholder="">
+                  </div>
+                </div>
+              </div>
+
+              <!-- RIGHT COLUMN: Textareas & Save -->
+              <div class="profile-right" style="display:flex; flex-direction:column; gap: 14px;">
+                <div style="flex:1; display:flex; flex-direction:column;">
+                  <label class="input-label">ABOUT ME</label>
+                  <div class="textarea-wrap" style="flex:1; position: relative; background: var(--dark-stone); border: 1px solid var(--rock-border); border-radius: var(--radius-md); transition: all 0.3s ease;">
+                    <textarea class="field-input" id="edit-about" placeholder="Tell us a bit about yourself..." style="height:100%; min-height:90px; resize: none; border:none; padding:14px;"></textarea>
+                  </div>
+                </div>
+                <div style="flex:1; display:flex; flex-direction:column;">
+                  <label class="input-label">PERSONAL PROJECTS & LINKS</label>
+                  <div id="edit-projects-container" style="flex:1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; padding-right: 4px; max-height: 200px;">
+                    <!-- Project inputs injected here -->
+                  </div>
+                  <button type="button" class="btn-ghost" style="border: 1px dashed rgba(255,255,255,0.2); justify-content: center; width: 100%; padding: 10px;" onclick="addProjectField()">
+                    <i class="fa-solid fa-plus"></i> Add Project
+                  </button>
+                </div>
+                <div style="display:flex; gap:12px; margin-top: auto;">
+                  <button class="btn-ghost" style="flex:1; padding: 18px 0; justify-content: center; border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-md);" onclick="toggleEditProfile()">CANCEL</button>
+                  <button class="btn-gold" style="flex:1; padding: 18px 0; justify-content: center;" onclick="saveProfile()" id="save-profile-btn"><i class="fa-solid fa-check"></i> SAVE</button>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -717,15 +839,216 @@
 
   <script src="portal-script.js"></script>
   <script>
+    // Global user doc reference
+    let currentUserDoc = null;
+
     // Populate profile section with Firebase user info
-    auth.onAuthStateChanged(function(user) {
+    auth.onAuthStateChanged(async function(user) {
       if (user) {
-        const nameEl  = document.getElementById('profile-name');
-        const emailEl = document.getElementById('profile-email');
-        if (nameEl)  nameEl.textContent  = user.displayName || 'CodeMiner';
+        const displayEl  = document.getElementById('profile-display-name');
+        const usernameEl = document.getElementById('profile-username');
+        const fullnameEl = document.getElementById('profile-fullname');
+        const emailEl    = document.getElementById('profile-email');
+        const pinEl      = document.getElementById('profile-pin');
+        const aboutEl    = document.getElementById('profile-about');
+        const projectsEl = document.getElementById('profile-projects');
+
+        if (displayEl) displayEl.textContent = user.displayName || 'CodeMiner';
+        if (usernameEl) usernameEl.textContent = user.displayName || '—';
         if (emailEl) emailEl.textContent = user.email || '—';
+
+        // Pre-fill edit fields
+        document.getElementById('edit-email').value = user.email || '';
+        document.getElementById('edit-username').value = user.displayName || '';
+
+        try {
+          const userDoc = await db.collection('users').doc(user.uid).get();
+          if (userDoc.exists) {
+            const data = userDoc.data();
+            currentUserDoc = data;
+            
+            if (data.username && usernameEl) {
+              usernameEl.textContent = data.username;
+              document.getElementById('edit-username').value = data.username;
+            }
+            if (data.fullName && fullnameEl) {
+              fullnameEl.textContent = data.fullName;
+              document.getElementById('edit-fullname').value = data.fullName;
+            } else if (fullnameEl) {
+              fullnameEl.textContent = 'Not provided';
+              document.getElementById('edit-fullname').value = '';
+            }
+            
+            if (data.pin && pinEl) {
+              pinEl.textContent = data.pin;
+              document.getElementById('edit-pin').value = data.pin;
+            } else if (pinEl) {
+              pinEl.textContent = 'Not provided';
+              document.getElementById('edit-pin').value = '';
+            }
+            
+            if (data.about && aboutEl) {
+              aboutEl.textContent = data.about;
+              document.getElementById('edit-about').value = data.about;
+            } else if (aboutEl) {
+              aboutEl.textContent = 'Write a short bio about yourself...';
+              document.getElementById('edit-about').value = '';
+            }
+            
+            if (data.projects) {
+              const projectsContainer = document.getElementById('edit-projects-container');
+              if (projectsContainer) projectsContainer.innerHTML = '';
+              
+              let projectsArray = [];
+              if (Array.isArray(data.projects)) {
+                projectsArray = data.projects;
+              } else if (typeof data.projects === 'string') {
+                projectsArray = data.projects.split('\n').filter(l => l.trim()).map(l => ({ name: 'Project', link: l.trim() }));
+              }
+
+              if (projectsArray.length > 0) {
+                if(projectsEl) {
+                  projectsEl.innerHTML = projectsArray.map(p => `
+                    <div style="margin-bottom: 12px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.02);">
+                      <div style="color: var(--gold-light); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">${p.name || 'Untitled Project'}</div>
+                      ${p.link ? `<a href="${p.link}" target="_blank" style="color: var(--blue-accent); text-decoration: underline; font-size: 13px; word-break: break-all;"><i class="fa-solid fa-link" style="font-size: 11px; margin-right: 6px;"></i>${p.link}</a>` : ''}
+                    </div>
+                  `).join('');
+                }
+                projectsArray.forEach(p => addProjectField(p.name, p.link));
+              } else {
+                if(projectsEl) projectsEl.innerHTML = 'No projects added yet...';
+                addProjectField();
+              }
+            } else {
+              if (projectsEl) projectsEl.innerHTML = 'No projects added yet...';
+              const projectsContainer = document.getElementById('edit-projects-container');
+              if (projectsContainer) {
+                projectsContainer.innerHTML = '';
+                addProjectField();
+              }
+            }
+            
+            if (data.fullName && displayEl) displayEl.textContent = data.fullName;
+          } else {
+            if (fullnameEl) fullnameEl.textContent = 'Not provided';
+            if (pinEl) pinEl.textContent = 'Not provided';
+            if (aboutEl) aboutEl.textContent = 'Write a short bio about yourself...';
+            if (projectsEl) projectsEl.innerHTML = 'No projects added yet...';
+          }
+        } catch (error) {
+          console.error("Error fetching user details:", error);
+          if (fullnameEl) fullnameEl.textContent = 'Not provided';
+          if (pinEl) pinEl.textContent = 'Not provided';
+          if (aboutEl) aboutEl.textContent = 'Write a short bio about yourself...';
+          if (projectsEl) projectsEl.innerHTML = 'No projects added yet...';
+        }
       }
     });
+
+    function toggleEditProfile() {
+      const viewMode = document.getElementById('profile-view-mode');
+      const editMode = document.getElementById('profile-edit-mode');
+      const editBtn = document.getElementById('edit-profile-btn');
+      
+      if (viewMode.style.display === 'none') {
+        viewMode.style.display = '';
+        editMode.style.display = 'none';
+        editBtn.style.display = 'inline-block';
+      } else {
+        viewMode.style.display = 'none';
+        editMode.style.display = '';
+        editBtn.style.display = 'none';
+      }
+    }
+
+    function addProjectField(name = '', link = '') {
+      const container = document.getElementById('edit-projects-container');
+      if (!container) return;
+      const div = document.createElement('div');
+      div.className = 'project-edit-item';
+      div.style.cssText = 'display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); position: relative;';
+      div.innerHTML = `
+        <button type="button" onclick="this.parentElement.remove()" style="position: absolute; top: 12px; right: 12px; background: none; border: none; color: var(--text-muted); cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+        <div style="padding-right: 24px;">
+          <input type="text" class="field-input proj-name" placeholder="Project Name (e.g. My Portfolio)" value="${name}" style="background: rgba(255,255,255,0.05); margin-bottom: 8px; padding: 10px 14px;">
+          <input type="text" class="field-input proj-link" placeholder="Link (e.g. https://github.com/...)" value="${link}" style="background: rgba(255,255,255,0.05); padding: 10px 14px;">
+        </div>
+      `;
+      container.appendChild(div);
+    }
+
+    async function saveProfile() {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const newFullName = document.getElementById('edit-fullname').value.trim();
+      const newPin = document.getElementById('edit-pin').value.trim();
+      const newAbout = document.getElementById('edit-about').value.trim();
+      
+      const projectItems = document.querySelectorAll('.project-edit-item');
+      const newProjects = [];
+      projectItems.forEach(item => {
+        const name = item.querySelector('.proj-name').value.trim();
+        const link = item.querySelector('.proj-link').value.trim();
+        if (name || link) {
+          newProjects.push({ name: name || 'Untitled Project', link });
+        }
+      });
+      
+      const btn = document.getElementById('save-profile-btn');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> SAVING...';
+      btn.disabled = true;
+
+      try {
+        await db.collection('users').doc(user.uid).set({
+          fullName: newFullName || null,
+          pin: newPin || null,
+          about: newAbout || null,
+          projects: newProjects.length > 0 ? newProjects : null
+        }, { merge: true });
+
+        // Optionally update Auth profile displayName if full name is provided
+        if (newFullName) {
+          await user.updateProfile({ displayName: newFullName });
+          document.getElementById('profile-display-name').textContent = newFullName;
+        }
+
+        // Update UI View Mode
+        document.getElementById('profile-fullname').textContent = newFullName || 'Not provided';
+        document.getElementById('profile-pin').textContent = newPin || 'Not provided';
+        document.getElementById('profile-about').textContent = newAbout || 'Write a short bio about yourself...';
+        
+        const projectsEl = document.getElementById('profile-projects');
+        if (newProjects.length > 0 && projectsEl) {
+          projectsEl.innerHTML = newProjects.map(p => `
+            <div style="margin-bottom: 12px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.02);">
+              <div style="color: var(--gold-light); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">${p.name || 'Untitled Project'}</div>
+              ${p.link ? `<a href="${p.link}" target="_blank" style="color: var(--blue-accent); text-decoration: underline; font-size: 13px; word-break: break-all;"><i class="fa-solid fa-link" style="font-size: 11px; margin-right: 6px;"></i>${p.link}</a>` : ''}
+            </div>
+          `).join('');
+        } else if (projectsEl) {
+          projectsEl.innerHTML = 'No projects added yet...';
+        }
+        
+        showToast('Profile updated successfully!', 'success');
+        toggleEditProfile();
+      } catch (error) {
+        console.error("Error saving profile:", error);
+        showToast('Failed to update profile. Try again.', 'error');
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    }
+  </script>
+  <script>
+    // Disable right-click
+    document.addEventListener('contextmenu', (e) => e.preventDefault());
+    
+    // Disable multiple clicks
+    document.addEventListener('dblclick', (e) => e.preventDefault());
   </script>
 </body>
 </html>

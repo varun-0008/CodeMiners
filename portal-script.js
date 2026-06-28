@@ -391,7 +391,7 @@ function selectPayMethod(method) {
 // ─────────────────────────────────────────────────────────────
 // DONATION FLOW
 // ─────────────────────────────────────────────────────────────
-let donationAmount = 500;
+let donationAmount = null;
 
 function selectAmount(btn, amount) {
   document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('selected'));
@@ -405,15 +405,22 @@ function handleDonation() {
   const name  = document.getElementById('donor-name').value.trim();
   const email = document.getElementById('donor-email').value.trim();
 
+  let finalAmount = donationAmount;
   const customVal = document.getElementById('custom-amount').value;
   if (customVal && Number(customVal) >= 10) {
-    donationAmount = Number(customVal);
+    finalAmount = Number(customVal);
   }
 
-  if (!name) {
-    showToast('Please enter your name.', 'error'); return;
+  if (!finalAmount) {
+    showToast('Please select or enter a donation amount.', 'error');
+    return;
   }
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+
+  // Use fallback name if not provided
+  const displayName = name || 'Anonymous Contributor';
+
+  // Optional: validate email ONLY if it's provided
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     showToast('Please enter a valid email address.', 'error'); return;
   }
 
@@ -428,7 +435,7 @@ function handleDonation() {
 
     document.getElementById('donation-main-grid').style.display  = 'none';
     document.getElementById('donation-thankyou').style.display   = 'flex';
-    showToast(`Thank you ${name}! ₹${donationAmount} donation received.`, 'success', 5000);
+    showToast(`Thank you ${displayName}! ₹${finalAmount} donation received.`, 'success', 5000);
   }, 1600);
 }
 
@@ -667,7 +674,9 @@ function initLiquidGlassPhysics() {
         blob.classList.remove('hover');
         blob.classList.remove('active');
       }
-      card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1) translateY(0)';
+      if (!card.classList.contains('no-tilt')) {
+        card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1) translateY(0)';
+      }
       card.style.borderColor = '';
       card.style.boxShadow = '';
       if (shimmer) {
@@ -717,7 +726,9 @@ function initLiquidGlassPhysics() {
       const scale = isTouch ? 0.96 : 1.04;
       const translateY = isTouch ? 0 : -5;
       
-      card.style.transform = `perspective(1000px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale(${scale}) translateY(${translateY}px)`;
+      if (!card.classList.contains('no-tilt')) {
+        card.style.transform = `perspective(1000px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale(${scale}) translateY(${translateY}px)`;
+      }
     }
 
     // Desktop Mouse Events
@@ -726,7 +737,9 @@ function initLiquidGlassPhysics() {
     card.addEventListener('mouseleave', handleActiveEnd);
     card.addEventListener('mousedown', () => {
       if (blob) blob.classList.add('active');
-      card.style.transform = 'perspective(1000px) scale(0.96) translateY(-2px)';
+      if (!card.classList.contains('no-tilt')) {
+        card.style.transform = 'perspective(1000px) scale(0.96) translateY(-2px)';
+      }
     });
     card.addEventListener('mouseup', () => {
       if (blob) blob.classList.remove('active');

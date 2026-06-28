@@ -186,18 +186,8 @@
     </button>
   </div>
 
+  <script src="firebase-config.js"></script>
   <script>
-    // ── Firebase Config (same as login page) ──
-    const firebaseConfig = {
-      apiKey:            "AIzaSyBPXWdCMkXUtubyOx5OGR6iPxcmqJDqex8",
-      authDomain:        "codeminer.firebaseapp.com",
-      projectId:         "codeminer",
-      storageBucket:     "codeminer.firebasestorage.app",
-      messagingSenderId: "904581344425",
-      appId:             "1:904581344425:web:37ae619d7d8403957f8db8",
-      measurementId:     "G-1P9T3KN8VJ"
-    };
-
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
@@ -249,6 +239,13 @@
         },
       });
     });
+  </script>
+  <script>
+    // Disable right-click
+    document.addEventListener('contextmenu', (e) => e.preventDefault());
+    
+    // Disable multiple clicks
+    document.addEventListener('dblclick', (e) => e.preventDefault());
   </script>
 </body>
 </html>
