@@ -1597,3 +1597,182 @@ textarea.field-input { padding-top: 13px; align-self: flex-start; width: 100%; }
   }
   .ember { display: none; }
 }
+
+/* ── GPay & UPI Payment Portal Modal ───────────────────────── */
+.payment-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 15000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.payment-modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+.payment-modal-card {
+  width: 90%;
+  max-width: 440px;
+  padding: 30px;
+  text-align: center;
+  transform: scale(0.9) translateY(20px);
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15);
+}
+.payment-modal-overlay.active .payment-modal-card {
+  transform: scale(1) translateY(0);
+}
+.payment-qrcode-wrap {
+  position: relative;
+  display: inline-block;
+  margin: 16px auto;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-lg);
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.15),
+    0 8px 32px rgba(0, 0, 0, 0.4);
+}
+.payment-qrcode-wrap img {
+  display: block;
+  width: 190px;
+  height: 190px;
+  border-radius: var(--radius-md);
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+.upi-details-box {
+  margin: 14px 0;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+.upi-id-text {
+  font-family: var(--font-mono, monospace);
+  font-size: 13px;
+  color: var(--text-color);
+  letter-spacing: 0.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.btn-copy-upi {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--color-amber);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.25s ease;
+}
+.btn-copy-upi:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+.btn-copy-upi:active {
+  transform: translateY(0);
+}
+.payment-amount-display {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--color-amber);
+  margin: 10px 0 5px;
+  text-shadow: var(--shadow-amber);
+}
+.payment-badge-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+.payment-badge {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.payment-actions-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+}
+.payment-btn-gpay {
+  background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.25),
+    0 4px 12px rgba(26, 115, 232, 0.3);
+}
+.payment-btn-gpay:hover {
+  background: linear-gradient(135deg, #2b7de9 0%, #1b63c8 100%);
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.35),
+    0 6px 16px rgba(26, 115, 232, 0.45);
+}
+
+/* ── Payment Verification Simulator ── */
+.payment-status-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 16px 0 8px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.status-dot {
+  width: 9px;
+  height: 9px;
+  background-color: var(--color-amber);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--color-amber);
+}
+.status-dot.pulsing {
+  animation: statusPulse 1.4s infinite ease-in-out;
+}
+.status-dot.success {
+  background-color: #00e676 !important;
+  box-shadow: 0 0 12px #00e676 !important;
+}
+.status-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-color);
+  letter-spacing: 0.3px;
+}
+@keyframes statusPulse {
+  0% { transform: scale(0.85); opacity: 0.5; }
+  50% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(0.85); opacity: 0.5; }
+}
+
+

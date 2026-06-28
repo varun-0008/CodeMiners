@@ -9,7 +9,7 @@
 // ─────────────────────────────────────────────────────────────
 // PAGE NAVIGATION
 // ─────────────────────────────────────────────────────────────
-const PAGES = ['home', 'about', 'registration', 'participants', 'donations', 'contact', 'profile'];
+const PAGES = ['home', 'about', 'registration', 'participants', 'teams', 'donations', 'contact', 'profile'];
 
 function navigate(page) {
   // Hide all sections
@@ -29,6 +29,11 @@ function navigate(page) {
   document.querySelectorAll('.nav-link[data-page]').forEach(link => {
     link.classList.toggle('active', link.dataset.page === page);
   });
+
+  // Trigger Team Sync if visiting Teams page
+  if (page === 'teams' && typeof syncTeamSection === 'function') {
+    syncTeamSection();
+  }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -401,6 +406,13 @@ function selectAmount(btn, amount) {
   if (customInput) customInput.value = '';
 }
 
+let currentPaymentDetails = {
+  amount: 0,
+  name: '',
+  email: ''
+};
+let paymentVerificationTimers = [];
+
 function handleDonation() {
   const name  = document.getElementById('donor-name').value.trim();
   const email = document.getElementById('donor-email').value.trim();
@@ -424,9 +436,119 @@ function handleDonation() {
     showToast('Please enter a valid email address.', 'error'); return;
   }
 
-  // Simulate processing
+  currentPaymentDetails = {
+    amount: finalAmount,
+    name: displayName,
+    email: email
+  };
+
+  openPaymentModal(finalAmount, displayName);
+}
+
+function openPaymentModal(amount, name) {
+  // Update amount display
+  document.getElementById('paymentAmountDisplay').textContent = `₹${amount}`;
+
+  // Reset verification status
+  const statusDot = document.getElementById('paymentStatusDot');
+  const statusText = document.getElementById('paymentStatusText');
+  statusDot.className = 'status-dot pulsing';
+  statusText.textContent = 'Awaiting payment verification...';
+  statusText.style.color = '';
+
+  // Clear existing timers
+  paymentVerificationTimers.forEach(clearTimeout);
+  paymentVerificationTimers = [];
+
+  // Build UPI URI parameters:
+  const payeeUPI = "8106116521-1@okbizaxis";
+  const payeeName = "Mallikarjuna tea point";
+  const merchantCode = "BCR2DN5TRDR2F4QL";
+  const transactionRef = "CICAgNi99uX9Pg";
+  const transactionNote = encodeURIComponent(`Donation by ${name}`);
+  
+  // Construct standard UPI deep link string
+  const upiLink = `upi://pay?pa=${payeeUPI}&pn=${encodeURIComponent(payeeName)}&mc=${merchantCode}&tr=${transactionRef}&tn=${transactionNote}&am=${amount}&cu=INR`;
+  
+  // Detect mobile
+  const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+  
+  if (isMobile) {
+    document.getElementById('desktopPaymentArea').style.display = 'none';
+    document.getElementById('mobilePaymentArea').style.display = 'block';
+    
+    const gpayBtn = document.getElementById('mobileGPayBtn');
+    gpayBtn.style.display = 'flex';
+    gpayBtn.href = upiLink;
+  } else {
+    document.getElementById('desktopPaymentArea').style.display = 'block';
+    document.getElementById('mobilePaymentArea').style.display = 'none';
+    document.getElementById('mobileGPayBtn').style.display = 'none';
+    
+    // Generate QR Code dynamically
+    const qrImage = document.getElementById('paymentQRCode');
+    qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiLink)}`;
+  }
+  
+  // Show overlay
+  const modal = document.getElementById('paymentModal');
+  modal.classList.add('active');
+
+  // Start automatic verification simulation
+  // Step 1: Update status to "Verifying with bank..." after 3.5 seconds
+  paymentVerificationTimers.push(setTimeout(() => {
+    statusText.textContent = 'Verifying transaction with bank...';
+  }, 3500));
+
+  // Step 2: Update status to "Success" after 7 seconds
+  paymentVerificationTimers.push(setTimeout(() => {
+    statusDot.className = 'status-dot success';
+    statusText.textContent = 'Payment verified successfully!';
+    statusText.style.color = '#00e676';
+    showToast('Payment verified!', 'success');
+  }, 7000));
+
+  // Step 3: Complete donation and close modal after 8.8 seconds
+  paymentVerificationTimers.push(setTimeout(() => {
+    confirmPayment();
+  }, 8800));
+}
+
+function closePaymentModal() {
+  document.getElementById('paymentModal').classList.remove('active');
+  // Cancel verification checks
+  paymentVerificationTimers.forEach(clearTimeout);
+  paymentVerificationTimers = [];
+}
+
+function copyUPI() {
+  const upiText = document.getElementById('upiIdText').textContent;
+  navigator.clipboard.writeText(upiText).then(() => {
+    showToast('UPI ID copied to clipboard!', 'success');
+    const copyBtn = document.querySelector('.btn-copy-upi');
+    if (copyBtn) {
+      const originalHtml = copyBtn.innerHTML;
+      copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+      copyBtn.style.borderColor = '#00e676';
+      copyBtn.style.color = '#00e676';
+      setTimeout(() => {
+        copyBtn.innerHTML = originalHtml;
+        copyBtn.style.borderColor = '';
+        copyBtn.style.color = '';
+      }, 2000);
+    }
+  }).catch(err => {
+    console.error('Failed to copy UPI: ', err);
+    showToast('Failed to copy UPI ID.', 'error');
+  });
+}
+
+function confirmPayment() {
+  closePaymentModal();
+  
+  // Simulate processing animation on main button first
   const btn = document.querySelector('#donation-form-card .btn-gold');
-  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Confirming Payment...';
   btn.disabled  = true;
 
   setTimeout(() => {
@@ -435,8 +557,8 @@ function handleDonation() {
 
     document.getElementById('donation-main-grid').style.display  = 'none';
     document.getElementById('donation-thankyou').style.display   = 'flex';
-    showToast(`Thank you ${displayName}! ₹${finalAmount} donation received.`, 'success', 5000);
-  }, 1600);
+    showToast(`Thank you ${currentPaymentDetails.name}! ₹${currentPaymentDetails.amount} donation confirmed.`, 'success', 5000);
+  }, 1000);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -1058,3 +1180,529 @@ setTimeout(() => {
   loadCompletedEvents();
   loadAllMiners();
 }, 500);
+
+// ─────────────────────────────────────────────────────────────
+// HACKATHON TEAM MANAGEMENT WORKFLOW
+// ─────────────────────────────────────────────────────────────
+let currentTeamId = null;
+let currentTeamData = null;
+
+
+async function syncTeamSection() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const loadingView = document.getElementById('team-loading-view');
+  const noTeamView = document.getElementById('team-no-team-view');
+  const dashboardView = document.getElementById('team-dashboard-view');
+
+  if (loadingView) loadingView.style.display = 'block';
+  if (noTeamView) noTeamView.style.display = 'none';
+  if (dashboardView) dashboardView.style.display = 'none';
+
+  try {
+    const userDoc = await db.collection('users').doc(user.uid).get();
+    const userData = userDoc.exists ? userDoc.data() : {};
+    
+    if (userData.teamId) {
+      currentTeamId = userData.teamId;
+      const teamDoc = await db.collection('teams').doc(userData.teamId).get();
+      if (teamDoc.exists) {
+        currentTeamData = teamDoc.data();
+        renderTeamDashboard(user, teamDoc.id, currentTeamData);
+        if (loadingView) loadingView.style.display = 'none';
+        if (dashboardView) {
+          dashboardView.style.display = 'grid';
+          if (window.innerWidth < 800) {
+            dashboardView.style.display = 'block';
+          }
+        }
+      } else {
+        // Team doc doesn't exist anymore, clean up user profile reference
+        await db.collection('users').doc(user.uid).update({ 
+          teamId: firebase.firestore.FieldValue.delete() 
+        });
+        currentTeamId = null;
+        currentTeamData = null;
+        renderNoTeamView(user);
+      }
+    } else {
+      currentTeamId = null;
+      currentTeamData = null;
+      renderNoTeamView(user);
+    }
+  } catch (error) {
+    console.error("Error syncing team section:", error);
+    showToast("Failed to load team data.", "error");
+  }
+}
+
+function renderNoTeamView(user) {
+  const loadingView = document.getElementById('team-loading-view');
+  const noTeamView = document.getElementById('team-no-team-view');
+  if (loadingView) loadingView.style.display = 'none';
+  if (noTeamView) {
+    noTeamView.style.display = 'grid';
+    if (window.innerWidth < 800) {
+      noTeamView.style.display = 'block';
+    }
+  }
+  
+  // Reset input values
+  const nameInput = document.getElementById('new-team-name');
+  const techInput = document.getElementById('new-team-tech');
+  const descInput = document.getElementById('new-team-desc');
+  if (nameInput) nameInput.value = '';
+  if (techInput) techInput.value = '';
+  if (descInput) descInput.value = '';
+
+  loadIncomingInvitations(user);
+}
+
+async function loadIncomingInvitations(user) {
+  const container = document.getElementById('pending-invites-list');
+  if (!container) return;
+  container.innerHTML = '<p style="color:rgba(255,255,255,0.4); text-align:center; padding: 20px;"><i class="fa-solid fa-spinner fa-spin"></i> Checking invitations...</p>';
+
+  try {
+    const querySnapshot = await db.collection('invitations')
+      .where('receiverEmail', '==', user.email)
+      .where('status', '==', 'pending')
+      .get();
+
+    if (querySnapshot.empty) {
+      container.innerHTML = '<p style="color:rgba(255,255,255,0.4); text-align:center; padding: 20px;">No pending invitations found.</p>';
+      return;
+    }
+
+    let invitesHtml = '';
+    querySnapshot.forEach(doc => {
+      const invite = doc.data();
+      invitesHtml += `
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 16px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px;">
+          <div>
+            <div style="font-weight: 700; color: var(--color-amber); font-size: 14px;">${invite.teamName}</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Invited by: ${invite.senderName}</div>
+          </div>
+          <div style="display: flex; gap: 8px; margin-top: 4px;">
+            <button class="btn-gold" style="padding: 6px 12px; font-size: 12px; flex: 1; justify-content: center;" onclick="acceptInvitation('${doc.id}', '${invite.teamId}')"><i class="fa-solid fa-check"></i> Accept</button>
+            <button class="btn-ghost" style="padding: 6px 12px; font-size: 12px; border: 1px solid rgba(255,255,255,0.1); flex: 1; justify-content: center; color: var(--text-muted);" onclick="rejectInvitation('${doc.id}')"><i class="fa-solid fa-xmark"></i> Decline</button>
+          </div>
+        </div>
+      `;
+    });
+    container.innerHTML = invitesHtml;
+  } catch (error) {
+    console.error("Error loading incoming invitations:", error);
+    container.innerHTML = `<p style="color:var(--text-danger); text-align:center; padding: 20px;">Failed to load invitations: ${error.message || error}</p>`;
+  }
+}
+
+async function createTeam() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const teamName = document.getElementById('new-team-name').value.trim();
+  const techStack = document.getElementById('new-team-tech').value.trim();
+  const description = document.getElementById('new-team-desc').value.trim();
+  const btn = document.getElementById('create-team-btn');
+
+  if (!teamName) {
+    showToast("Please enter a team name.", "error"); return;
+  }
+  if (!techStack) {
+    showToast("Please specify your tech stack.", "error"); return;
+  }
+
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating...';
+  btn.disabled = true;
+
+  try {
+    // Check uniqueness of team name
+    const teamCheck = await db.collection('teams').where('name', '==', teamName).get();
+    if (!teamCheck.empty) {
+      showToast("A team with this name already exists.", "error");
+      btn.innerHTML = '<i class="fa-solid fa-circle-plus"></i> CREATE TEAM';
+      btn.disabled = false;
+      return;
+    }
+
+    // Retrieve username from user document
+    const userDoc = await db.collection('users').doc(user.uid).get();
+    const userData = userDoc.exists ? userDoc.data() : {};
+    const username = userData.username || user.displayName || user.email;
+
+    const newTeamRef = db.collection('teams').doc();
+    const teamPayload = {
+      name: teamName,
+      leaderId: user.uid,
+      leaderName: username,
+      techStack: techStack,
+      description: description || 'No description provided.',
+      members: [
+        {
+          uid: user.uid,
+          name: username,
+          email: user.email,
+          role: 'leader'
+        }
+      ],
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    const batch = db.batch();
+    batch.set(newTeamRef, teamPayload);
+    batch.update(db.collection('users').doc(user.uid), { teamId: newTeamRef.id });
+    
+    // Add document to 'mail' collection to send notification email (Trigger Email schema)
+    const mailRef = db.collection('mail').doc();
+    batch.set(mailRef, {
+      to: user.email,
+      message: {
+        subject: `Team "${teamName}" Created Successfully!`,
+        text: `Congratulations! Your hackathon team "${teamName}" has been successfully created. Invite other miners to join your squad!`,
+        html: `<p>Congratulations!</p><p>Your hackathon team <strong>${teamName}</strong> has been successfully created.</p><p>Invite other miners to join your squad!</p>`
+      }
+    });
+
+    await batch.commit();
+    showToast(`Team "${teamName}" created successfully!`, "success");
+    syncTeamSection();
+  } catch (error) {
+    console.error("Error creating team:", error);
+    showToast("Failed to create team. Try again.", "error");
+    btn.innerHTML = '<i class="fa-solid fa-circle-plus"></i> CREATE TEAM';
+    btn.disabled = false;
+  }
+}
+
+function renderTeamDashboard(user, teamId, teamData) {
+  document.getElementById('dash-team-name').textContent = teamData.name;
+  document.getElementById('dash-team-desc').textContent = teamData.description || 'No description provided.';
+  document.getElementById('dash-team-tech').textContent = teamData.techStack;
+  
+  const numMembers = teamData.members.length;
+  document.getElementById('team-size-badge').textContent = `${numMembers} / 4 members`;
+
+  const membersList = document.getElementById('team-members-list');
+  let membersHtml = '';
+  teamData.members.forEach(member => {
+    const isLeader = member.role === 'leader';
+    membersHtml += `
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px;">
+        <div style="display:flex; align-items:center; gap: 12px; overflow: hidden;">
+          <div style="width: 36px; height: 36px; border-radius: 50%; background: ${isLeader ? 'rgba(240,165,0,0.1)' : 'rgba(255,255,255,0.04)'}; border: 1px solid ${isLeader ? 'rgba(240,165,0,0.3)' : 'rgba(255,255,255,0.1)'}; display:flex; align-items:center; justify-content:center; color: ${isLeader ? 'var(--color-amber)' : 'var(--text-muted)'}; flex-shrink:0;">
+            <i class="fa-solid ${isLeader ? 'fa-crown' : 'fa-user'}"></i>
+          </div>
+          <div style="overflow: hidden;">
+            <div style="font-weight: 700; font-size: 13.5px; color: var(--text-light); text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${member.name} ${member.uid === user.uid ? '<span style="font-size:10px; color:var(--color-amber); font-weight:normal;">(You)</span>' : ''}</div>
+            <div style="font-size: 11px; color: var(--text-muted); text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${member.email}</div>
+          </div>
+        </div>
+        <span class="badge ${isLeader ? 'badge-gold' : 'badge-blue'}">${isLeader ? 'Leader' : 'Member'}</span>
+      </div>
+    `;
+  });
+  membersList.innerHTML = membersHtml;
+
+  const isUserLeader = teamData.leaderId === user.uid;
+  const actionsContainer = document.getElementById('team-management-actions');
+  
+  if (isUserLeader) {
+    actionsContainer.innerHTML = `
+      <button class="btn-ghost" style="flex: 1; padding: 14px 0; justify-content: center; border-color: rgba(244,67,54,0.3); color: #f44336;" onclick="disbandTeam()"><i class="fa-solid fa-trash-can"></i> DISBAND TEAM</button>
+    `;
+    document.getElementById('leader-invite-card').style.display = 'block';
+    loadSentInvitations(teamId);
+  } else {
+    actionsContainer.innerHTML = `
+      <button class="btn-ghost" style="flex: 1; padding: 14px 0; justify-content: center; border-color: rgba(255,255,255,0.1); color: var(--text-muted);" onclick="leaveTeam()"><i class="fa-solid fa-right-from-bracket"></i> LEAVE TEAM</button>
+    `;
+    document.getElementById('leader-invite-card').style.display = 'none';
+  }
+}
+
+async function sendInvitation() {
+  const user = auth.currentUser;
+  if (!user || !currentTeamId || !currentTeamData) return;
+
+  if (currentTeamData.members.length >= 4) {
+    showToast("Your team is already full (maximum 4 members).", "error"); return;
+  }
+
+  const identifier = document.getElementById('invite-identifier').value.trim();
+  const btn = document.getElementById('send-invite-btn');
+
+  if (!identifier) {
+    showToast("Please enter an email or username.", "error"); return;
+  }
+
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
+  btn.disabled = true;
+
+  try {
+    let receiverEmail = "";
+    let receiverUid = "";
+    let receiverUsername = "";
+
+    const isEmail = identifier.includes('@');
+    let userQuery;
+
+    if (isEmail) {
+      userQuery = await db.collection('users').where('email', '==', identifier).get();
+    } else {
+      userQuery = await db.collection('users').where('username', '==', identifier).get();
+    }
+
+    if (userQuery.empty) {
+      showToast(`User "${identifier}" not found in our records.`, "error");
+      btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> SEND INVITATION';
+      btn.disabled = false;
+      return;
+    }
+
+    const targetUserDoc = userQuery.docs[0];
+    const targetData = targetUserDoc.data();
+
+    receiverEmail = targetData.email;
+    receiverUid = targetUserDoc.id;
+    receiverUsername = targetData.username || receiverEmail;
+
+    if (targetData.teamId) {
+      showToast(`"${receiverUsername}" is already in another team.`, "error");
+      btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> SEND INVITATION';
+      btn.disabled = false;
+      return;
+    }
+
+    if (receiverUid === user.uid) {
+      showToast("You cannot invite yourself.", "error");
+      btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> SEND INVITATION';
+      btn.disabled = false;
+      return;
+    }
+
+    const inviteCheck = await db.collection('invitations')
+      .where('teamId', '==', currentTeamId)
+      .where('receiverEmail', '==', receiverEmail)
+      .where('status', '==', 'pending')
+      .get();
+
+    if (!inviteCheck.empty) {
+      showToast(`An invitation is already pending for "${receiverUsername}".`, "error");
+      btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> SEND INVITATION';
+      btn.disabled = false;
+      return;
+    }
+
+    const batch = db.batch();
+    const newInviteRef = db.collection('invitations').doc();
+    batch.set(newInviteRef, {
+      teamId: currentTeamId,
+      teamName: currentTeamData.name,
+      senderId: user.uid,
+      senderName: currentTeamData.leaderName,
+      senderEmail: user.email,
+      receiverEmail: receiverEmail,
+      receiverUid: receiverUid,
+      receiverUsername: receiverUsername,
+      status: 'pending',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    // Write invite mail trigger
+    const mailRef = db.collection('mail').doc();
+    batch.set(mailRef, {
+      to: receiverEmail,
+      message: {
+        subject: `You've been invited to join team "${currentTeamData.name}"!`,
+        text: `Hi ${receiverUsername}! You got an invitation to join the team "${currentTeamData.name}" by ${currentTeamData.leaderName}. Log in to your CodeMiners portal and visit the Teams page to accept or decline.`,
+        html: `<p>Hi <strong>${receiverUsername}</strong>!</p><p>You got an invitation to join the team <strong>${currentTeamData.name}</strong> by <strong>${currentTeamData.leaderName}</strong>.</p><p>Log in to your <a href="http://localhost:3000/">CodeMiners Portal</a> and visit the <strong>Teams</strong> section to accept or decline the request.</p>`
+      }
+    });
+
+    await batch.commit();
+    showToast(`Invitation sent to ${receiverUsername}!`, "success");
+    document.getElementById('invite-identifier').value = '';
+    loadSentInvitations(currentTeamId);
+  } catch (error) {
+    console.error("Error sending invitation:", error);
+    showToast("Failed to send invitation.", "error");
+  } finally {
+    btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> SEND INVITATION';
+    btn.disabled = false;
+  }
+}
+
+async function loadSentInvitations(teamId) {
+  const container = document.getElementById('sent-invites-list');
+  if (!container) return;
+
+  try {
+    const querySnapshot = await db.collection('invitations')
+      .where('teamId', '==', teamId)
+      .where('status', '==', 'pending')
+      .get();
+
+    if (querySnapshot.empty) {
+      container.innerHTML = '<p style="color:rgba(255,255,255,0.3); font-size:12px;">No active sent invites.</p>';
+      return;
+    }
+
+    let invitesHtml = '';
+    querySnapshot.forEach(doc => {
+      const invite = doc.data();
+      invitesHtml += `
+        <div style="display:flex; justify-content:space-between; align-items:center; background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 6px; font-size: 12px;">
+          <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width: 65%;">
+            <div style="font-weight:700; color:var(--text-light); text-overflow:ellipsis; overflow:hidden;">${invite.receiverUsername}</div>
+            <div style="font-size:10px; color:var(--text-muted); text-overflow:ellipsis; overflow:hidden;">${invite.receiverEmail}</div>
+          </div>
+          <button class="btn-ghost" style="padding: 4px 8px; font-size:11px; border-color: rgba(244,67,54,0.2); color:#f44336;" onclick="revokeInvitation('${doc.id}')">Revoke</button>
+        </div>
+      `;
+    });
+    container.innerHTML = invitesHtml;
+  } catch (error) {
+    console.error("Error loading sent invites:", error);
+    container.innerHTML = `<p style="color:var(--text-danger); font-size:12px;">Failed to load: ${error.message || error}</p>`;
+  }
+}
+
+async function revokeInvitation(inviteId) {
+  try {
+    await db.collection('invitations').doc(inviteId).update({ status: 'revoked' });
+    showToast("Invitation revoked.", "success");
+    loadSentInvitations(currentTeamId);
+  } catch (error) {
+    console.error("Error revoking invite:", error);
+    showToast("Failed to revoke invite.", "error");
+  }
+}
+
+async function acceptInvitation(inviteId, teamId) {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  try {
+    const teamDoc = await db.collection('teams').doc(teamId).get();
+    if (!teamDoc.exists) {
+      showToast("This team no longer exists.", "error");
+      await db.collection('invitations').doc(inviteId).delete();
+      syncTeamSection();
+      return;
+    }
+    const teamData = teamDoc.data();
+    if (teamData.members.length >= 4) {
+      showToast("This team is already full.", "error"); return;
+    }
+
+    const userDoc = await db.collection('users').doc(user.uid).get();
+    const userData = userDoc.exists ? userDoc.data() : {};
+    const username = userData.username || user.displayName || user.email;
+
+    const newMember = {
+      uid: user.uid,
+      name: username,
+      email: user.email,
+      role: 'member'
+    };
+
+    const batch = db.batch();
+    
+    batch.update(db.collection('teams').doc(teamId), {
+      members: firebase.firestore.FieldValue.arrayUnion(newMember)
+    });
+
+    batch.update(db.collection('users').doc(user.uid), {
+      teamId: teamId
+    });
+
+    batch.update(db.collection('invitations').doc(inviteId), {
+      status: 'accepted'
+    });
+
+    const otherInvites = await db.collection('invitations')
+      .where('receiverEmail', '==', user.email)
+      .where('status', '==', 'pending')
+      .get();
+      
+    otherInvites.forEach(doc => {
+      if (doc.id !== inviteId) {
+        batch.update(db.collection('invitations').doc(doc.id), { status: 'rejected' });
+      }
+    });
+
+    await batch.commit();
+    showToast(`You have joined "${teamData.name}"!`, "success");
+    syncTeamSection();
+  } catch (error) {
+    console.error("Error accepting invitation:", error);
+    showToast("Failed to join team.", "error");
+  }
+}
+
+async function rejectInvitation(inviteId) {
+  const user = auth.currentUser;
+  if (!user) return;
+  try {
+    await db.collection('invitations').doc(inviteId).update({ status: 'rejected' });
+    showToast("Invitation declined.", "success");
+    syncTeamSection();
+  } catch (error) {
+    console.error("Error declining invitation:", error);
+    showToast("Failed to decline invitation.", "error");
+  }
+}
+
+async function leaveTeam() {
+  const user = auth.currentUser;
+  if (!user || !currentTeamId || !currentTeamData) return;
+
+  if (confirm("Are you sure you want to leave the team?")) {
+    try {
+      const updatedMembers = currentTeamData.members.filter(m => m.uid !== user.uid);
+      
+      const batch = db.batch();
+      batch.update(db.collection('teams').doc(currentTeamId), { members: updatedMembers });
+      batch.update(db.collection('users').doc(user.uid), { teamId: firebase.firestore.FieldValue.delete() });
+
+      await batch.commit();
+      showToast("You have left the team.", "success");
+      syncTeamSection();
+    } catch (error) {
+      console.error("Error leaving team:", error);
+      showToast("Failed to leave team.", "error");
+    }
+  }
+}
+
+async function disbandTeam() {
+  const user = auth.currentUser;
+  if (!user || !currentTeamId || !currentTeamData) return;
+
+  if (confirm("WARNING: Are you sure you want to disband the team? All members will be removed and invitations revoked!")) {
+    try {
+      const batch = db.batch();
+      
+      for (const member of currentTeamData.members) {
+        batch.update(db.collection('users').doc(member.uid), { teamId: firebase.firestore.FieldValue.delete() });
+      }
+
+      const invites = await db.collection('invitations').where('teamId', '==', currentTeamId).get();
+      invites.forEach(doc => {
+        batch.update(db.collection('invitations').doc(doc.id), { status: 'revoked' });
+      });
+
+      batch.delete(db.collection('teams').doc(currentTeamId));
+
+      await batch.commit();
+      showToast(`Team "${currentTeamData.name}" has been disbanded.`, "success");
+      syncTeamSection();
+    } catch (error) {
+      console.error("Error disbanding team:", error);
+      showToast("Failed to disband team.", "error");
+    }
+  }
+}
+

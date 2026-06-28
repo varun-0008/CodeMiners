@@ -88,6 +88,7 @@
     <a class="nav-link" data-page="about"        onclick="navigate('about');return false;" href="#"><i class="fa-solid fa-users"></i> <span>About</span></a>
     <a class="nav-link" data-page="registration" onclick="navigate('registration');return false;" href="#"><i class="fa-solid fa-id-card-clip"></i> <span>Registration</span></a>
     <a class="nav-link" data-page="participants" onclick="navigate('participants');return false;" href="#"><i class="fa-solid fa-users-viewfinder"></i> <span>Participants</span></a>
+    <!-- <a class="nav-link" data-page="teams"        onclick="navigate('teams');return false;" href="#"><i class="fa-solid fa-people-group"></i> <span>Teams</span></a> -->
     <a class="nav-link" data-page="donations"    onclick="navigate('donations');return false;" href="#"><i class="fa-solid fa-hand-holding-heart"></i> <span>Donations</span></a>
     <a class="nav-link" data-page="contact"      onclick="navigate('contact');return false;" href="#"><i class="fa-solid fa-envelope"></i> <span>Contact</span></a>
     <a class="nav-link" data-page="profile"      onclick="navigate('profile');return false;" href="#"><i class="fa-solid fa-circle-user"></i> <span>Profile</span></a>
@@ -877,6 +878,102 @@
       </div>
     </section>
 
+    <!-- ══════════════════════════════════
+         TEAM MANAGEMENT SECTION
+         ══════════════════════════════════ -->
+    <section class="section" id="sec-teams">
+      <div class="section-inner">
+        <div class="section-heading">
+          <div class="section-tag"><i class="fa-solid fa-people-group"></i> TEAM MANAGEMENT</div>
+          <h1 class="section-title">My <span class="accent">Hackathon Team</span></h1>
+          <p class="section-sub">Create a team, invite collaborators, and manage your squad for the hackathon.</p>
+        </div>
+
+        <!-- State 1: Loading State -->
+        <div id="team-loading-view" style="text-align: center; padding: 40px;">
+          <i class="fa-solid fa-spinner fa-spin" style="font-size: 32px; color: var(--color-amber); margin-bottom: 16px;"></i>
+          <p style="color: var(--text-muted);">Loading team data...</p>
+        </div>
+
+        <!-- State 2: No Team View -->
+        <div id="team-no-team-view" style="display: none; max-width: 960px; margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 32px;">
+          <!-- Card 1: Create a Team -->
+          <div class="glass-card" id="team-create-card">
+            <div class="card-header"><div class="card-title"><i class="fa-solid fa-plus"></i> Create a New Team</div></div>
+            <div class="card-body" style="padding: 24px;">
+              <div style="margin-bottom: 16px;">
+                <label class="input-label">TEAM NAME</label>
+                <div class="input-wrap"><i class="fa-solid fa-signature input-ico"></i><input type="text" class="field-input" id="new-team-name" placeholder="Enter team name"></div>
+              </div>
+              <div style="margin-bottom: 16px;">
+                <label class="input-label">TECH STACK / SKILLS</label>
+                <div class="input-wrap"><i class="fa-solid fa-code input-ico"></i><input type="text" class="field-input" id="new-team-tech" placeholder="e.g. React, Node.js, Firebase"></div>
+              </div>
+              <div style="margin-bottom: 24px;">
+                <label class="input-label">TEAM DESCRIPTION (OPTIONAL)</label>
+                <div class="textarea-wrap"><textarea class="field-input" id="new-team-desc" placeholder="Describe your team goal or project idea..." style="min-height:80px; resize: none;"></textarea></div>
+              </div>
+              <button class="btn-gold" style="width: 100%;" id="create-team-btn" onclick="createTeam()"><i class="fa-solid fa-circle-plus"></i> CREATE TEAM</button>
+            </div>
+          </div>
+
+          <!-- Card 2: Pending Invitations -->
+          <div class="glass-card" id="team-invites-card">
+            <div class="card-header"><div class="card-title"><i class="fa-solid fa-envelope-open-text"></i> Pending Team Invitations</div></div>
+            <div class="card-body" style="padding: 24px; max-height: 400px; overflow-y: auto;" id="pending-invites-list">
+              <!-- Populated via Javascript -->
+            </div>
+          </div>
+        </div>
+
+        <!-- State 3: Team Dashboard View -->
+        <div id="team-dashboard-view" style="display: none; max-width: 960px; margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 32px;">
+          <!-- Left: Team Details & Members -->
+          <div class="glass-card" id="team-overview-card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+              <div class="card-title"><i class="fa-solid fa-shield-halved"></i> Team Overview</div>
+              <span class="badge badge-green" id="team-size-badge" style="margin-left: auto; font-size: 11px; padding: 4px 10px;">1 / 4 members</span>
+            </div>
+            <div class="card-body" style="padding: 24px;">
+              <h2 id="dash-team-name" style="font-size: 24px; color: var(--color-amber); font-weight: 800; margin-bottom: 8px; text-shadow: var(--shadow-amber);">—</h2>
+              <p id="dash-team-desc" style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px; line-height: 1.5;">—</p>
+              
+              <div style="margin-bottom: 24px; background: rgba(0,0,0,0.15); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.03);">
+                <div style="font-size: 11px; color: rgba(255,255,255,0.4); text-transform: uppercase; margin-bottom: 4px;">Tech Stack</div>
+                <div id="dash-team-tech" style="font-weight: 600; color: var(--text-light);">—</div>
+              </div>
+
+              <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; font-weight: 700;">Team Members</div>
+              <div id="team-members-list" style="display: flex; flex-direction: column; gap: 12px;">
+                <!-- Populated via Javascript -->
+              </div>
+              
+              <div style="margin-top: 32px; display: flex; gap: 12px;" id="team-management-actions">
+                <!-- Leave or Disband button injected here -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Inviting Members -->
+          <div class="glass-card" id="leader-invite-card">
+            <div class="card-header"><div class="card-title"><i class="fa-solid fa-paper-plane"></i> Recruit Members</div></div>
+            <div class="card-body" style="padding: 24px;">
+              <div style="margin-bottom: 20px;">
+                <label class="input-label">INVITE BY EMAIL OR USERNAME</label>
+                <div class="input-wrap"><i class="fa-solid fa-user-plus input-ico"></i><input type="text" class="field-input" id="invite-identifier" placeholder="Enter username or email address"></div>
+              </div>
+              <button class="btn-gold" style="width: 100%; margin-bottom: 24px;" id="send-invite-btn" onclick="sendInvitation()"><i class="fa-solid fa-paper-plane"></i> SEND INVITATION</button>
+
+              <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; font-weight: 700;">Sent Invitations</div>
+              <div id="sent-invites-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 200px; overflow-y: auto;">
+                <!-- Populated via Javascript -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </div><!-- /.page-wrapper -->
 
   <script src="portal-script.js?v=13"></script>
@@ -1085,6 +1182,59 @@
       }
     }
   </script>
+
+  <!-- ── GPay & UPI Payment Portal Modal ── -->
+  <div class="payment-modal-overlay" id="paymentModal">
+    <div class="payment-modal-card glass-card liquid-glass-regular" id="paymentModalCard">
+      <div class="card-header" style="border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 12px; margin-bottom: 16px;">
+        <div class="card-title" style="font-size: 16px;"><i class="fa-solid fa-credit-card"></i> UPI Payment Portal</div>
+      </div>
+      
+      <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px;">Amount to Pay</div>
+      <div class="payment-amount-display" id="paymentAmountDisplay">₹500</div>
+      
+      <!-- QR Code scanner for desktop -->
+      <div id="desktopPaymentArea">
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Scan the QR code below using Google Pay or any other UPI app</p>
+        <div class="payment-qrcode-wrap">
+          <img id="paymentQRCode" src="" alt="UPI QR Code">
+        </div>
+      </div>
+
+      <!-- Quick Launch for Mobile Devices -->
+      <div id="mobilePaymentArea" style="display: none; margin: 16px 0;">
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Tap below to launch Google Pay or any UPI payment app on your device</p>
+      </div>
+
+      <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-top: 10px;">Payee Details</div>
+      <div class="upi-details-box">
+        <div style="text-align: left; overflow: hidden;">
+          <div style="font-size: 9px; color: rgba(255,255,255,0.4); text-transform: uppercase;">UPI ID</div>
+          <div class="upi-id-text" id="upiIdText">8106116521-1@okbizaxis</div>
+        </div>
+        <button class="btn-copy-upi" onclick="copyUPI()"><i class="fa-solid fa-copy"></i> Copy</button>
+      </div>
+
+      <div class="payment-badge-row">
+        <span class="payment-badge"><i class="fa-solid fa-shield-halved" style="color:#00e676;"></i> Secure UPI</span>
+        <span class="payment-badge"><i class="fa-brands fa-google-pay" style="color:#4285f4; font-size:16px;"></i> Google Pay</span>
+      </div>
+
+      <!-- Live Payment Verification Simulator -->
+      <div class="payment-status-box">
+        <span class="status-dot pulsing" id="paymentStatusDot"></span>
+        <span class="status-text" id="paymentStatusText">Awaiting payment verification...</span>
+      </div>
+
+      <div class="payment-actions-vertical">
+        <a id="mobileGPayBtn" href="#" class="btn btn-gold payment-btn-gpay" style="display: none; width: 100%; text-decoration: none; justify-content: center; align-items: center; gap: 8px;">
+          <i class="fa-brands fa-google-pay" style="font-size: 20px;"></i> PAY WITH GPAY
+        </a>
+        <button class="btn-text" style="color: rgba(255,255,255,0.6);" onclick="closePaymentModal()"><i class="fa-solid fa-xmark"></i> Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // Disable right-click
     document.addEventListener('contextmenu', (e) => e.preventDefault());
