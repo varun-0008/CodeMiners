@@ -2136,7 +2136,7 @@ function payWithRazorpaySDK(btnElement) {
   btnElement.disabled = true;
 
   const options = {
-    key: RAZORPAY_KEY_ID,
+    key: 'rzp_live_T77jqjiWmPUazt',
     amount: amount * 100, // in paise
     currency: "INR",
     name: "CodeMiners",
