@@ -2154,6 +2154,19 @@ function payWithRazorpaySDK(btnElement) {
       email: email,
       contact: phone
     },
+    notes: {
+      name: fullName,
+      email: email,
+      phone: phone,
+      college: document.getElementById('r-college').value.trim(),
+      year: document.getElementById('r-year').value,
+      pin: document.getElementById('r-pin').value.trim(),
+      hallticket: document.getElementById('r-hallticket').value.trim(),
+      role: 'leader',
+      eventName: selectedEvent,
+      teamName: document.getElementById('r-team-name') ? document.getElementById('r-team-name').value.trim() : '',
+      teamSize: teamSize
+    },
     theme: {
       color: "#3395ff"
     },

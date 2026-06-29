@@ -2,8 +2,9 @@
   "name": "codeminers-hackathon",
   "version": "1.0.0",
   "description": "CodeMiners Hackathon - Login Page",
-  "main": "app.js",
+  "main": "server.js",
   "scripts": {
+    "start": "node server.js",
     "dev": "npx serve . -p 3000",
     "deploy": "npx firebase-tools deploy --only hosting"
   },
