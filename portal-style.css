@@ -1775,4 +1775,17 @@ textarea.field-input { padding-top: 13px; align-self: flex-start; width: 100%; }
   100% { transform: scale(0.85); opacity: 0.5; }
 }
 
+/* ── Mobile Performance Optimization Overrides ── */
+@media (max-width: 767px) {
+  .liquid-glass-regular, .liquid-glass-clear, .glass-card, .event-card, .achieve-card, .mv-card, .team-card {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(14, 25, 41, 0.95) !important;
+  }
+  .cloud-nav {
+    backdrop-filter: blur(8px) saturate(120%) !important;
+    -webkit-backdrop-filter: blur(8px) saturate(120%) !important;
+  }
+}
+
 

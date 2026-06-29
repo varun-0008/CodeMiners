@@ -82,6 +82,8 @@ function playSectionAnimation(page) {
 // EMBER PARTICLE SYSTEM
 // ─────────────────────────────────────────────────────────────
 function initEmbers() {
+  if (window.innerWidth < 768) return; // Disable background particles on mobile to improve performance
+  
   const container = document.getElementById('embers');
   if (!container) return;
 
@@ -1010,6 +1012,8 @@ function initNavScroll() {
 // LIQUID GLASS ANIMATION
 // ─────────────────────────────────────────────────────────────
 function animateLiquidGlass() {
+  if (window.innerWidth < 768) return; // Disable SVG filter animation on mobile to prevent lag
+  
   const turbulence = document.getElementById('turbulence');
   const displacement = document.getElementById('displacement');
   
@@ -1092,6 +1096,8 @@ document.addEventListener('DOMContentLoaded', () => {
 // LIQUID GLASS PHYSICS (DESKTOP + MOBILE)
 // ─────────────────────────────────────────────────────────────
 function initLiquidGlassPhysics() {
+  if (window.innerWidth < 768) return; // Disable interactive 3D physics on mobile to prevent lag during scroll
+  
   const cards = document.querySelectorAll('.glass-content-card, .glass-card:not(.cloud-nav), .achieve-card, .event-card, .donate-cta, .mv-card, .team-card');
   const effectContainer = document.getElementById('contact-effect-container');
   const canvas = document.getElementById('contact-bg-canvas');
