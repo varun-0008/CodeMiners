@@ -808,7 +808,7 @@ function handleDonation() {
     email: email
   };
 
-  openPaymentModal(finalAmount, displayName);
+  payDonationWithRazorpaySDK(finalAmount, displayName, email);
 }
 
 function openPaymentModal(amount, name) {
@@ -2231,6 +2231,57 @@ function payWithRazorpaySDK(btnElement) {
     console.error("Razorpay SDK Error: ", err);
     btnElement.innerHTML = originalBtnHtml;
     btnElement.disabled = false;
+    showToast("Failed to load payment gateway. Try again.", "error");
+  }
+}
+
+function payDonationWithRazorpaySDK(amount, name, email) {
+  const btn = document.querySelector('#donation-form-card .btn-gold');
+  if (!btn) return;
+  const originalBtnHtml = btn.innerHTML;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+  btn.disabled = true;
+
+  const options = {
+    key: 'rzp_live_T77jqjiWmPUazt',
+    amount: amount * 100, // in paise
+    currency: "INR",
+    name: "CodeMiners",
+    description: "Donation to CodeMiners Guild",
+    image: "logo.png",
+    handler: function (response) {
+      showToast("Donation Successful! Thank you!", "success");
+      btn.innerHTML = originalBtnHtml;
+      btn.disabled = false;
+      
+      // Update UI to show thank you card
+      document.getElementById('donation-main-grid').style.display  = 'none';
+      document.getElementById('donation-thankyou').style.display   = 'flex';
+      showToast(`Thank you ${name}! ₹${amount} donation confirmed.`, 'success', 5000);
+    },
+    prefill: {
+      name: name,
+      email: email
+    },
+    theme: {
+      color: "#3395ff"
+    },
+    modal: {
+      ondismiss: function () {
+        btn.innerHTML = originalBtnHtml;
+        btn.disabled = false;
+        showToast("Donation payment cancelled.", "info");
+      }
+    }
+  };
+
+  try {
+    const rzp = new Razorpay(options);
+    rzp.open();
+  } catch (err) {
+    console.error("Razorpay SDK Error: ", err);
+    btn.innerHTML = originalBtnHtml;
+    btn.disabled = false;
     showToast("Failed to load payment gateway. Try again.", "error");
   }
 }
