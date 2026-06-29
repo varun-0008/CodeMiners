@@ -388,67 +388,11 @@ function processRegistration(btnElement, paymentId = null) {
 
   const scriptURL = 'https://script.google.com/macros/s/AKfycbxz-7gHowiQ7B-MLiSHOO3U6qclqm7Hr4oKaChr8a8Wqw31Y2Y9TBBDBIaExXKGwJNl/exec';
 
-  const batch = db.batch();
-
-  if (role === 'leader' && user) {
-    const newTeamRef = db.collection('teams').doc();
-    const username = user.displayName || fullName;
-    batch.set(newTeamRef, {
-      name: teamName,
-      leaderId: user.uid,
-      leaderName: username,
-      techStack: 'Not specified yet',
-      description: 'Created during registration.',
-      members: [{ uid: user.uid, name: username, email: user.email, role: 'leader' }],
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    batch.update(db.collection('users').doc(user.uid), { teamId: newTeamRef.id });
-
-    // Create invitations for selected members
-    pendingInvites.forEach(inv => {
-      const inviteRef = db.collection('invitations').doc();
-      batch.set(inviteRef, {
-        teamId: newTeamRef.id,
-        teamName: teamName,
-        senderId: user.uid,
-        senderName: username,
-        senderEmail: user.email,
-        receiverEmail: inv.email,
-        receiverUid: inv.uid,
-        receiverUsername: inv.username,
-        status: 'pending',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-
-      // Trigger email
-      const mailRef = db.collection('mail').doc();
-      batch.set(mailRef, {
-        to: inv.email,
-        message: {
-          subject: `You've been invited to join team "${teamName}"!`,
-          text: `Hi ${inv.username}! You got an invitation to join the team "${teamName}" by ${username}. Log in to your CodeMiners portal and visit the Teams page to accept or decline.`,
-          html: `<p>Hi <strong>${inv.username}</strong>!</p><p>You got an invitation to join the team <strong>${teamName}</strong> by <strong>${username}</strong>.</p><p>Log in to your <a href="http://localhost:3000/">CodeMiners Portal</a> and visit the <strong>Teams</strong> section to accept or decline the request.</p>`
-        }
-      });
-    });
-    
-    // Mail for the leader
-    const leaderMailRef = db.collection('mail').doc();
-    batch.set(leaderMailRef, {
-      to: user.email,
-      message: {
-        subject: `Team "${teamName}" Created Successfully!`,
-        text: `Congratulations! Your hackathon team "${teamName}" has been successfully created.`,
-        html: `<p>Congratulations!</p><p>Your hackathon team <strong>${teamName}</strong> has been successfully created.</p>`
-      }
-    });
-  }
-
-  // Insert into Supabase database first
+  // Insert into Supabase registrations table first
   supabaseClient
     .from('registrations')
     .insert(supabasePayload)
-    .then(({ error: supabaseError }) => {
+    .then(async ({ error: supabaseError }) => {
       if (supabaseError) {
         console.error("Error saving registration to Supabase: ", supabaseError);
         btnElement.innerHTML = originalBtnText;
@@ -457,39 +401,109 @@ function processRegistration(btnElement, paymentId = null) {
         return;
       }
 
-      // Supabase insert succeeded, now commit Firebase batch and sync Google Sheet
-      Promise.all([
-        batch.commit(),
-        fetch(scriptURL, { method: 'POST', body: sheetData }).catch(e => console.warn('Sheet error:', e))
-      ])
-        .then(() => {
+      let insertedTeamId = null;
+      if (role === 'leader' && user) {
+        const username = user.displayName || fullName;
+        const teamPayload = {
+          name: teamName,
+          leader_id: user.uid,
+          leader_name: username,
+          tech_stack: 'Not specified yet',
+          description: 'Created during registration.',
+          members: [{ uid: user.uid, name: username, email: user.email, role: 'leader' }]
+        };
+
+        const { data: teamData, error: teamError } = await supabaseClient
+          .from('teams')
+          .insert(teamPayload)
+          .select('id')
+          .single();
+
+        if (teamError) {
+          console.error("Error creating team in Supabase: ", teamError);
           btnElement.innerHTML = originalBtnText;
-          btnElement.disabled  = false;
+          btnElement.disabled = false;
+          showToast('Registration saved, but failed to create team. Try setting up team from profile.', 'error');
+          return;
+        }
 
-          // Populate receipt
-          regCount++;
-          const receiptId = 'REG-CM-2026-' + String(regCount).padStart(4, '0');
-          
-          document.getElementById('receipt-id').textContent    = receiptId;
-          document.getElementById('receipt-event').textContent = selectedEvent || '—';
-          document.getElementById('receipt-name').textContent  = fullName;
-          document.getElementById('receipt-email').textContent = email;
+        insertedTeamId = teamData.id;
 
-          setRegStep(4);
-          showToast('Registration confirmed! Saved to Supabase.', 'success');
-          
-          if (role === 'leader') {
-            showToast(`Team "${teamName}" created and invites sent!`, 'success');
-            // Refresh team data if they go to Teams tab
-            if (typeof syncTeamSection === 'function') syncTeamSection();
+        const batch = db.batch();
+        batch.update(db.collection('users').doc(user.uid), { teamId: insertedTeamId });
+
+        if (pendingInvites.length > 0) {
+          const invitePayloads = pendingInvites.map(inv => ({
+            team_id: insertedTeamId,
+            team_name: teamName,
+            sender_id: user.uid,
+            sender_name: username,
+            sender_email: user.email,
+            receiver_email: inv.email,
+            receiver_uid: inv.uid,
+            receiver_username: inv.username,
+            status: 'pending'
+          }));
+
+          const { error: inviteError } = await supabaseClient
+            .from('invitations')
+            .insert(invitePayloads);
+
+          if (inviteError) {
+            console.warn("Failed to create invites in Supabase: ", inviteError);
           }
-        })
-        .catch((error) => {
-          console.error("Error completing registration pipeline: ", error);
-          btnElement.innerHTML = originalBtnText;
-          btnElement.disabled  = false;
-          showToast('Error finalizing registration pipeline.', 'error');
+
+          pendingInvites.forEach(inv => {
+            const mailRef = db.collection('mail').doc();
+            batch.set(mailRef, {
+              to: inv.email,
+              message: {
+                subject: `You've been invited to join team "${teamName}"!`,
+                text: `Hi ${inv.username}! You got an invitation to join the team "${teamName}" by ${username}. Log in to your CodeMiners portal and visit the Teams page to accept or decline.`,
+                html: `<p>Hi <strong>${inv.username}</strong>!</p><p>You got an invitation to join the team <strong>${teamName}</strong> by <strong>${username}</strong>.</p><p>Log in to your <a href="http://localhost:3000/">CodeMiners Portal</a> and visit the <strong>Teams</strong> section to accept or decline the request.</p>`
+              }
+            });
+          });
+        }
+
+        const leaderMailRef = db.collection('mail').doc();
+        batch.set(leaderMailRef, {
+          to: user.email,
+          message: {
+            subject: `Team "${teamName}" Created Successfully!`,
+            text: `Congratulations! Your hackathon team "${teamName}" has been successfully created.`,
+            html: `<p>Congratulations!</p><p>Your hackathon team <strong>${teamName}</strong> has been successfully created.</p>`
+          }
         });
+
+        try {
+          await batch.commit();
+        } catch (e) {
+          console.warn("Firestore team sync error:", e);
+        }
+      }
+
+      fetch(scriptURL, { method: 'POST', body: sheetData })
+        .catch(e => console.warn('Sheet error:', e));
+
+      btnElement.innerHTML = originalBtnText;
+      btnElement.disabled  = false;
+
+      regCount++;
+      const receiptId = 'REG-CM-2026-' + String(regCount).padStart(4, '0');
+      
+      document.getElementById('receipt-id').textContent    = receiptId;
+      document.getElementById('receipt-event').textContent = selectedEvent || '—';
+      document.getElementById('receipt-name').textContent  = fullName;
+      document.getElementById('receipt-email').textContent = email;
+
+      setRegStep(4);
+      showToast('Registration confirmed! Saved to Supabase.', 'success');
+      
+      if (role === 'leader') {
+        showToast(`Team "${teamName}" created and invites sent!`, 'success');
+        if (typeof syncTeamSection === 'function') syncTeamSection();
+      }
     });
 }
 
@@ -1659,11 +1673,31 @@ async function syncTeamSection() {
     const userData = userDoc.exists ? userDoc.data() : {};
     
     if (userData.teamId) {
-      currentTeamId = userData.teamId;
-      const teamDoc = await db.collection('teams').doc(userData.teamId).get();
-      if (teamDoc.exists) {
-        currentTeamData = teamDoc.data();
-        renderTeamDashboard(user, teamDoc.id, currentTeamData);
+      const { data: teamData, error: teamError } = await supabaseClient
+        .from('teams')
+        .select('*')
+        .eq('id', userData.teamId)
+        .maybeSingle();
+
+      if (teamError) throw teamError;
+
+      if (teamData) {
+        currentTeamId = userData.teamId;
+        currentTeamData = teamData;
+        
+        // Map postgres snake_case keys back to the component-level expected camelCase keys
+        const formattedTeamData = {
+          name: teamData.name,
+          description: teamData.description,
+          techStack: teamData.tech_stack,
+          leaderId: teamData.leader_id,
+          leaderName: teamData.leader_name,
+          members: teamData.members,
+          createdAt: teamData.created_at
+        };
+        currentTeamData = formattedTeamData;
+
+        renderTeamDashboard(user, userData.teamId, formattedTeamData);
         if (loadingView) loadingView.style.display = 'none';
         if (dashboardView) {
           dashboardView.style.display = 'grid';
@@ -1719,28 +1753,30 @@ async function loadIncomingInvitations(user) {
   container.innerHTML = '<p style="color:rgba(255,255,255,0.4); text-align:center; padding: 20px;"><i class="fa-solid fa-spinner fa-spin"></i> Checking invitations...</p>';
 
   try {
-    const querySnapshot = await db.collection('invitations')
-      .where('receiverEmail', '==', user.email)
-      .where('status', '==', 'pending')
-      .get();
+    const { data: invitesSnapshot, error } = await supabaseClient
+      .from('invitations')
+      .select('*')
+      .eq('receiver_email', user.email)
+      .eq('status', 'pending');
 
-    if (querySnapshot.empty) {
+    if (error) throw error;
+
+    if (!invitesSnapshot || invitesSnapshot.length === 0) {
       container.innerHTML = '<p style="color:rgba(255,255,255,0.4); text-align:center; padding: 20px;">No pending invitations found.</p>';
       return;
     }
 
     let invitesHtml = '';
-    querySnapshot.forEach(doc => {
-      const invite = doc.data();
+    invitesSnapshot.forEach(invite => {
       invitesHtml += `
         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 16px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px;">
           <div>
-            <div style="font-weight: 700; color: var(--color-amber); font-size: 14px;">${invite.teamName}</div>
-            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Invited by: ${invite.senderName}</div>
+            <div style="font-weight: 700; color: var(--color-amber); font-size: 14px;">${invite.team_name}</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Invited by: ${invite.sender_name}</div>
           </div>
           <div style="display: flex; gap: 8px; margin-top: 4px;">
-            <button class="btn-gold" style="padding: 6px 12px; font-size: 12px; flex: 1; justify-content: center;" onclick="acceptInvitation('${doc.id}', '${invite.teamId}')"><i class="fa-solid fa-check"></i> Accept</button>
-            <button class="btn-ghost" style="padding: 6px 12px; font-size: 12px; border: 1px solid rgba(255,255,255,0.1); flex: 1; justify-content: center; color: var(--text-muted);" onclick="rejectInvitation('${doc.id}')"><i class="fa-solid fa-xmark"></i> Decline</button>
+            <button class="btn-gold" style="padding: 6px 12px; font-size: 12px; flex: 1; justify-content: center;" onclick="acceptInvitation('${invite.id}', '${invite.team_id}')"><i class="fa-solid fa-check"></i> Accept</button>
+            <button class="btn-ghost" style="padding: 6px 12px; font-size: 12px; border: 1px solid rgba(255,255,255,0.1); flex: 1; justify-content: center; color: var(--text-muted);" onclick="rejectInvitation('${invite.id}')"><i class="fa-solid fa-xmark"></i> Decline</button>
           </div>
         </div>
       `;
@@ -1772,9 +1808,14 @@ async function createTeam() {
   btn.disabled = true;
 
   try {
-    // Check uniqueness of team name
-    const teamCheck = await db.collection('teams').where('name', '==', teamName).get();
-    if (!teamCheck.empty) {
+    // Check uniqueness of team name in Supabase
+    const { data: teamCheck, error: checkError } = await supabaseClient
+      .from('teams')
+      .select('id')
+      .eq('name', teamName);
+
+    if (checkError) throw checkError;
+    if (teamCheck && teamCheck.length > 0) {
       showToast("A team with this name already exists.", "error");
       btn.innerHTML = '<i class="fa-solid fa-circle-plus"></i> CREATE TEAM';
       btn.disabled = false;
@@ -1786,12 +1827,11 @@ async function createTeam() {
     const userData = userDoc.exists ? userDoc.data() : {};
     const username = userData.username || user.displayName || user.email;
 
-    const newTeamRef = db.collection('teams').doc();
     const teamPayload = {
       name: teamName,
-      leaderId: user.uid,
-      leaderName: username,
-      techStack: techStack,
+      leader_id: user.uid,
+      leader_name: username,
+      tech_stack: techStack,
       description: description || 'No description provided.',
       members: [
         {
@@ -1800,13 +1840,19 @@ async function createTeam() {
           email: user.email,
           role: 'leader'
         }
-      ],
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      ]
     };
 
+    const { data: teamData, error: insertError } = await supabaseClient
+      .from('teams')
+      .insert(teamPayload)
+      .select('id')
+      .single();
+
+    if (insertError) throw insertError;
+
     const batch = db.batch();
-    batch.set(newTeamRef, teamPayload);
-    batch.update(db.collection('users').doc(user.uid), { teamId: newTeamRef.id });
+    batch.update(db.collection('users').doc(user.uid), { teamId: teamData.id });
     
     // Add document to 'mail' collection to send notification email (Trigger Email schema)
     const mailRef = db.collection('mail').doc();
@@ -1936,35 +1982,41 @@ async function sendInvitation() {
       return;
     }
 
-    const inviteCheck = await db.collection('invitations')
-      .where('teamId', '==', currentTeamId)
-      .where('receiverEmail', '==', receiverEmail)
-      .where('status', '==', 'pending')
-      .get();
+    const { data: inviteCheck, error: checkError } = await supabaseClient
+      .from('invitations')
+      .select('id')
+      .eq('team_id', currentTeamId)
+      .eq('receiver_email', receiverEmail)
+      .eq('status', 'pending');
 
-    if (!inviteCheck.empty) {
+    if (checkError) throw checkError;
+
+    if (inviteCheck && inviteCheck.length > 0) {
       showToast(`An invitation is already pending for "${receiverUsername}".`, "error");
       btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> SEND INVITATION';
       btn.disabled = false;
       return;
     }
 
-    const batch = db.batch();
-    const newInviteRef = db.collection('invitations').doc();
-    batch.set(newInviteRef, {
-      teamId: currentTeamId,
-      teamName: currentTeamData.name,
-      senderId: user.uid,
-      senderName: currentTeamData.leaderName,
-      senderEmail: user.email,
-      receiverEmail: receiverEmail,
-      receiverUid: receiverUid,
-      receiverUsername: receiverUsername,
-      status: 'pending',
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    const invitePayload = {
+      team_id: currentTeamId,
+      team_name: currentTeamData.name,
+      sender_id: user.uid,
+      sender_name: currentTeamData.leaderName,
+      sender_email: user.email,
+      receiver_email: receiverEmail,
+      receiver_uid: receiverUid,
+      receiver_username: receiverUsername,
+      status: 'pending'
+    };
 
-    // Write invite mail trigger
+    const { error: inviteError } = await supabaseClient
+      .from('invitations')
+      .insert(invitePayload);
+
+    if (inviteError) throw inviteError;
+
+    const batch = db.batch();
     const mailRef = db.collection('mail').doc();
     batch.set(mailRef, {
       to: receiverEmail,
@@ -1993,26 +2045,28 @@ async function loadSentInvitations(teamId) {
   if (!container) return;
 
   try {
-    const querySnapshot = await db.collection('invitations')
-      .where('teamId', '==', teamId)
-      .where('status', '==', 'pending')
-      .get();
+    const { data: invitesSnapshot, error } = await supabaseClient
+      .from('invitations')
+      .select('*')
+      .eq('team_id', teamId)
+      .eq('status', 'pending');
 
-    if (querySnapshot.empty) {
+    if (error) throw error;
+
+    if (!invitesSnapshot || invitesSnapshot.length === 0) {
       container.innerHTML = '<p style="color:rgba(255,255,255,0.3); font-size:12px;">No active sent invites.</p>';
       return;
     }
 
     let invitesHtml = '';
-    querySnapshot.forEach(doc => {
-      const invite = doc.data();
+    invitesSnapshot.forEach(invite => {
       invitesHtml += `
         <div style="display:flex; justify-content:space-between; align-items:center; background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 6px; font-size: 12px;">
           <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width: 65%;">
-            <div style="font-weight:700; color:var(--text-light); text-overflow:ellipsis; overflow:hidden;">${invite.receiverUsername}</div>
-            <div style="font-size:10px; color:var(--text-muted); text-overflow:ellipsis; overflow:hidden;">${invite.receiverEmail}</div>
+            <div style="font-weight:700; color:var(--text-light); text-overflow:ellipsis; overflow:hidden;">${invite.receiver_username}</div>
+            <div style="font-size:10px; color:var(--text-muted); text-overflow:ellipsis; overflow:hidden;">${invite.receiver_email}</div>
           </div>
-          <button class="btn-ghost" style="padding: 4px 8px; font-size:11px; border-color: rgba(244,67,54,0.2); color:#f44336;" onclick="revokeInvitation('${doc.id}')">Revoke</button>
+          <button class="btn-ghost" style="padding: 4px 8px; font-size:11px; border-color: rgba(244,67,54,0.2); color:#f44336;" onclick="revokeInvitation('${invite.id}')">Revoke</button>
         </div>
       `;
     });
@@ -2025,7 +2079,13 @@ async function loadSentInvitations(teamId) {
 
 async function revokeInvitation(inviteId) {
   try {
-    await db.collection('invitations').doc(inviteId).update({ status: 'revoked' });
+    const { error } = await supabaseClient
+      .from('invitations')
+      .update({ status: 'revoked' })
+      .eq('id', inviteId);
+
+    if (error) throw error;
+
     showToast("Invitation revoked.", "success");
     loadSentInvitations(currentTeamId);
   } catch (error) {
@@ -2039,14 +2099,21 @@ async function acceptInvitation(inviteId, teamId) {
   if (!user) return;
 
   try {
-    const teamDoc = await db.collection('teams').doc(teamId).get();
-    if (!teamDoc.exists) {
+    const { data: teamData, error: teamError } = await supabaseClient
+      .from('teams')
+      .select('*')
+      .eq('id', teamId)
+      .maybeSingle();
+
+    if (teamError) throw teamError;
+
+    if (!teamData) {
       showToast("This team no longer exists.", "error");
-      await db.collection('invitations').doc(inviteId).delete();
+      await supabaseClient.from('invitations').delete().eq('id', inviteId);
       syncTeamSection();
       return;
     }
-    const teamData = teamDoc.data();
+
     if (teamData.members.length >= 4) {
       showToast("This team is already full.", "error"); return;
     }
@@ -2062,32 +2129,40 @@ async function acceptInvitation(inviteId, teamId) {
       role: 'member'
     };
 
-    const batch = db.batch();
-    
-    batch.update(db.collection('teams').doc(teamId), {
-      members: firebase.firestore.FieldValue.arrayUnion(newMember)
-    });
+    const updatedMembers = [...teamData.members, newMember];
 
-    batch.update(db.collection('users').doc(user.uid), {
-      teamId: teamId
-    });
+    const { error: updateTeamError } = await supabaseClient
+      .from('teams')
+      .update({ members: updatedMembers })
+      .eq('id', teamId);
 
-    batch.update(db.collection('invitations').doc(inviteId), {
-      status: 'accepted'
-    });
+    if (updateTeamError) throw updateTeamError;
 
-    const otherInvites = await db.collection('invitations')
-      .where('receiverEmail', '==', user.email)
-      .where('status', '==', 'pending')
-      .get();
-      
-    otherInvites.forEach(doc => {
-      if (doc.id !== inviteId) {
-        batch.update(db.collection('invitations').doc(doc.id), { status: 'rejected' });
+    await db.collection('users').doc(user.uid).update({ teamId: teamId });
+
+    const { error: updateInviteError } = await supabaseClient
+      .from('invitations')
+      .update({ status: 'accepted' })
+      .eq('id', inviteId);
+
+    if (updateInviteError) console.warn("Failed to accept invitation record: ", updateInviteError);
+
+    const { data: otherInvites, error: fetchOtherInvitesError } = await supabaseClient
+      .from('invitations')
+      .select('id')
+      .eq('receiver_email', user.email)
+      .eq('status', 'pending');
+
+    if (!fetchOtherInvitesError && otherInvites && otherInvites.length > 0) {
+      const otherInviteIds = otherInvites.map(d => d.id).filter(id => id !== inviteId);
+      if (otherInviteIds.length > 0) {
+        await supabaseClient
+          .from('invitations')
+          .update({ status: 'rejected' })
+          .in('id', otherInviteIds);
       }
-    });
+    }
 
-    await batch.commit();
     showToast(`You have joined "${teamData.name}"!`, "success");
     syncTeamSection();
   } catch (error) {
@@ -2100,7 +2175,13 @@ async function rejectInvitation(inviteId) {
   const user = auth.currentUser;
   if (!user) return;
   try {
-    await db.collection('invitations').doc(inviteId).update({ status: 'rejected' });
+    const { error } = await supabaseClient
+      .from('invitations')
+      .update({ status: 'rejected' })
+      .eq('id', inviteId);
+
+    if (error) throw error;
+
     showToast("Invitation declined.", "success");
     syncTeamSection();
   } catch (error) {
@@ -2117,11 +2198,17 @@ async function leaveTeam() {
     try {
       const updatedMembers = currentTeamData.members.filter(m => m.uid !== user.uid);
       
-      const batch = db.batch();
-      batch.update(db.collection('teams').doc(currentTeamId), { members: updatedMembers });
-      batch.update(db.collection('users').doc(user.uid), { teamId: firebase.firestore.FieldValue.delete() });
+      const { error: updateError } = await supabaseClient
+        .from('teams')
+        .update({ members: updatedMembers })
+        .eq('id', currentTeamId);
 
-      await batch.commit();
+      if (updateError) throw updateError;
+
+      await db.collection('users').doc(user.uid).update({ 
+        teamId: firebase.firestore.FieldValue.delete() 
+      });
+
       showToast("You have left the team.", "success");
       syncTeamSection();
     } catch (error) {
@@ -2138,19 +2225,31 @@ async function disbandTeam() {
   if (confirm("WARNING: Are you sure you want to disband the team? All members will be removed and invitations revoked!")) {
     try {
       const batch = db.batch();
-      
       for (const member of currentTeamData.members) {
-        batch.update(db.collection('users').doc(member.uid), { teamId: firebase.firestore.FieldValue.delete() });
+        batch.update(db.collection('users').doc(member.uid), { 
+          teamId: firebase.firestore.FieldValue.delete() 
+        });
+      }
+      try {
+        await batch.commit();
+      } catch (e) {
+        console.warn("Error updating user profiles during disband:", e);
       }
 
-      const invites = await db.collection('invitations').where('teamId', '==', currentTeamId).get();
-      invites.forEach(doc => {
-        batch.update(db.collection('invitations').doc(doc.id), { status: 'revoked' });
-      });
+      const { error: inviteError } = await supabaseClient
+        .from('invitations')
+        .update({ status: 'revoked' })
+        .eq('team_id', currentTeamId);
 
-      batch.delete(db.collection('teams').doc(currentTeamId));
+      if (inviteError) console.warn("Error revoking invitations during disband:", inviteError);
 
-      await batch.commit();
+      const { error: deleteError } = await supabaseClient
+        .from('teams')
+        .delete()
+        .eq('id', currentTeamId);
+
+      if (deleteError) throw deleteError;
+
       showToast(`Team "${currentTeamData.name}" has been disbanded.`, "success");
       syncTeamSection();
     } catch (error) {
