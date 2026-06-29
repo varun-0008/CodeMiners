@@ -210,10 +210,16 @@
   </main>
 
   <script src="app.js"></script>
-  
+  <script>
+    // Disable right-click
+    document.addEventListener('contextmenu', (e) => e.preventDefault());
+    
+    // Disable multiple clicks
+    document.addEventListener('dblclick', (e) => e.preventDefault());
+  </script>
 
 <script>
-  // Disable Ctrl, Shift shortcuts (F12, Ctrl+Shift+I/C/J, Ctrl+U) and Right Click to prevent inspection
+    // Disable Ctrl, Shift shortcuts (F12, Ctrl+Shift+I/C/J, Ctrl+U) and Right Click to prevent inspection
   document.addEventListener('keydown', function(e) {
     if (e.key === 'F12' || e.keyCode === 123) {
       e.preventDefault();

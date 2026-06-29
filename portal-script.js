@@ -785,7 +785,7 @@ function handleDonation() {
 
   let finalAmount = donationAmount;
   const customVal = document.getElementById('custom-amount').value;
-  if (customVal && Number(customVal) >= 10) {
+  if (customVal && Number(customVal) >= 1) {
     finalAmount = Number(customVal);
   }
 
@@ -1083,6 +1083,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (customAmount) {
     customAmount.addEventListener('input', () => {
       document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('selected'));
+      donationAmount = null;
     });
   }
 });

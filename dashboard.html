@@ -187,10 +187,69 @@
   </div>
 
   <script src="firebase-config.js"></script>
-  
+  <script>
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    const loadingScreen = document.getElementById('loadingScreen');
+    const dashboard     = document.getElementById('dashboard');
+    const avatar        = document.getElementById('avatar');
+    const userName      = document.getElementById('userName');
+    const userEmail     = document.getElementById('userEmail');
+    const btnSignOut    = document.getElementById('btnSignOut');
+
+    // ── Auth state check ──
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        // Populate dashboard
+        const name = user.displayName || user.email.split('@')[0];
+        userName.textContent  = name;
+        userEmail.textContent = user.email;
+        avatar.textContent    = name.charAt(0).toUpperCase();
+
+        // Hide loader, show dashboard
+        gsap.to(loadingScreen, {
+          opacity: 0,
+          duration: 0.3,
+          onComplete: () => { loadingScreen.style.display = 'none'; }
+        });
+
+        gsap.to(dashboard, {
+          opacity: 1,
+          y: 0,
+          duration: 0.8,
+          ease: 'power3.out',
+          delay: 0.1,
+        });
+      } else {
+        // Not signed in — redirect to login
+        window.location.href = 'index.html';
+      }
+    });
+
+    // ── Sign Out ──
+    btnSignOut.addEventListener('click', async () => {
+      gsap.to(dashboard, {
+        opacity: 0,
+        y: -20,
+        duration: 0.3,
+        onComplete: async () => {
+          await auth.signOut();
+          window.location.href = 'index.html';
+        },
+      });
+    });
+  </script>
+  <script>
+    // Disable right-click
+    document.addEventListener('contextmenu', (e) => e.preventDefault());
+    
+    // Disable multiple clicks
+    document.addEventListener('dblclick', (e) => e.preventDefault());
+  </script>
 
 <script>
-  // Disable Ctrl, Shift shortcuts (F12, Ctrl+Shift+I/C/J, Ctrl+U) and Right Click to prevent inspection
+    // Disable Ctrl, Shift shortcuts (F12, Ctrl+Shift+I/C/J, Ctrl+U) and Right Click to prevent inspection
   document.addEventListener('keydown', function(e) {
     if (e.key === 'F12' || e.keyCode === 123) {
       e.preventDefault();
