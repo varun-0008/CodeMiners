@@ -204,10 +204,10 @@ function regNext(step) {
     
     if (selectedEvent === 'CodeMiners Hackathon 2026') {
       const now = new Date();
-      const openTime = new Date('2026-06-30T00:00:00');
-      const closeTime = new Date('2026-07-02T00:00:00');
+      const openTime = new Date('2026-06-29T00:00:00');
+      const closeTime = new Date('2026-07-06T00:00:00');
       if (now < openTime || now >= closeTime) {
-        showToast('Hackathon registration is only open from June 30th to July 1st.', 'error');
+        showToast('Hackathon registration is only open from June 29th to July 5th.', 'error');
         return;
       }
     }
@@ -1201,8 +1201,9 @@ function initLiquidGlassPhysics() {
 // PARTICIPANTS SECTION LOGIC
 // ─────────────────────────────────────────────────────────────
 const ALL_EVENTS = [
-  { id: 'orientation', title: 'CodeMiners Orientation', displayDate: 'June 28, 2026', completionDate: '2026-06-20' },
-  { id: 'hackathon', title: 'CodeMiners Hackathon 2026', displayDate: 'July 4–5, 2026', completionDate: '2026-07-06' }
+  { id: 'orientation', title: 'CodeMiners Orientation', displayDate: 'June 28, 2026', completionDate: '2026-06-28' },
+  { id: 'pre-hackathon', title: 'Pre-Hackthon', displayDate: 'July 1, 2026', completionDate: '2026-07-01' },
+  { id: 'hackathon', title: 'CodeMiners Hackathon 2026', displayDate: 'July 6, 2026', completionDate: '2026-07-06' }
 ];
 
 function loadCompletedEvents() {
@@ -1491,10 +1492,55 @@ function viewMinerProfile(minerId) {
   `;
 }
 
+function filterPastEvents() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const container = document.getElementById('event-select-container');
+  if (!container) return;
+
+  const options = container.querySelectorAll('.event-select-opt');
+  let visibleCount = 0;
+
+  options.forEach(opt => {
+    const endDateStr = opt.getAttribute('data-end-date');
+    if (endDateStr) {
+      const parts = endDateStr.split('-');
+      const endDate = new Date(parts[0], parts[1] - 1, parts[2]);
+      endDate.setHours(0, 0, 0, 0);
+
+      if (today > endDate) {
+        opt.style.display = 'none';
+      } else {
+        opt.style.display = 'flex';
+        visibleCount++;
+      }
+    }
+  });
+
+  if (visibleCount === 0) {
+    let fallback = document.getElementById('no-events-fallback');
+    if (!fallback) {
+      fallback = document.createElement('div');
+      fallback.id = 'no-events-fallback';
+      fallback.style.cssText = 'text-align: center; padding: 24px; color: var(--text-muted); font-size: 14px;';
+      fallback.innerHTML = '<i class="fa-solid fa-calendar-xmark" style="font-size: 24px; margin-bottom: 12px; color: var(--text-muted); display: block;"></i> No active events are available for registration at this time.';
+      container.parentNode.insertBefore(fallback, container.nextSibling);
+    }
+    const nextBtn = document.querySelector('#reg-panel-1 .btn-gold');
+    if (nextBtn) {
+      nextBtn.disabled = true;
+      nextBtn.style.opacity = '0.5';
+      nextBtn.style.cursor = 'not-allowed';
+    }
+  }
+}
+
 // Initialize on load
 setTimeout(() => {
   loadCompletedEvents();
   loadAllMiners();
+  filterPastEvents();
 }, 500);
 
 // ─────────────────────────────────────────────────────────────
