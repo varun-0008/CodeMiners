@@ -217,5 +217,20 @@
     // Disable multiple clicks
     document.addEventListener('dblclick', (e) => e.preventDefault());
   </script>
+
+<script>
+  // Disable Ctrl, Shift, F12 and Right Click to prevent inspection
+  document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey || e.shiftKey || e.key === 'F12' || e.keyCode === 123) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+  }, true);
+  
+  document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+  }, true);
+</script>
 </body>
 </html>

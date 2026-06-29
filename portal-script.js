@@ -241,30 +241,74 @@ function regNext(step) {
         showToast('Please enter your PIN.', 'error');
         return;
       }
-      if (!/^\d{5}-[a-zA-Z]{2,3}-\d{3}$/.test(pin.trim())) {
-        showToast('PIN must be in format like 24054-cps-063', 'error');
+    }
+    
+    const role = document.getElementById('r-role').value;
+    if (role === 'leader') {
+      const teamName = document.getElementById('r-team-name').value.trim();
+      const teamSize = document.getElementById('r-team-size').value;
+      if (!teamName) {
+        showToast('Please enter a Team Name.', 'error');
+        return;
+      }
+      if (!teamSize || teamSize < 1 || teamSize > 5) {
+        showToast('Team size must be between 1 and 5.', 'error');
         return;
       }
     }
 
-    // Check if user is already registered for this event
+    // Check if user is already registered with this PIN globally
     const btn = document.querySelector('#reg-panel-2 .btn-gold');
     const originalBtnText = btn.innerHTML;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking...';
     btn.disabled = true;
 
-    db.collection('registrations')
-      .where('email', '==', email.value)
-      .where('eventName', '==', selectedEvent)
-      .get()
+    let idQuery;
+    if (year === 'first') {
+      idQuery = db.collection('registrations')
+        .where('hallTicket', '==', hallticket.trim())
+        .get();
+    } else {
+      idQuery = db.collection('registrations')
+        .where('pin', '==', pin.trim())
+        .get();
+    }
+
+    idQuery
       .then((snapshot) => {
-        btn.innerHTML = originalBtnText;
-        btn.disabled = false;
-        
         if (!snapshot.empty) {
-          showToast('You have already registered for this event!', 'error');
+          btn.innerHTML = originalBtnText;
+          btn.disabled = false;
+          const idType = year === 'first' ? 'Hall Ticket' : 'PIN';
+          showToast(`This ${idType} has already been registered! (PINs can only be used once)`, 'error');
+          return;
+        }
+        
+        if (role === 'leader') {
+          const teamName = document.getElementById('r-team-name').value.trim();
+          db.collection('registrations')
+            .where('eventName', '==', selectedEvent)
+            .where('teamName', '==', teamName)
+            .get()
+            .then(teamSnap => {
+              btn.innerHTML = originalBtnText;
+              btn.disabled = false;
+              if (!teamSnap.empty) {
+                showToast(`Team name "${teamName}" is already taken for this event.`, 'error');
+              } else {
+                setRegStep(3);
+              }
+            })
+            .catch(error => {
+              console.error("Error checking team name:", error);
+              btn.innerHTML = originalBtnText;
+              btn.disabled = false;
+              showToast('Error verifying team name.', 'error');
+            });
         } else {
-          setRegStep(3);
+          btn.innerHTML = originalBtnText;
+          btn.disabled = false;
+          processRegistration(btn);
         }
       })
       .catch((error) => {
@@ -274,62 +318,140 @@ function regNext(step) {
         showToast('Permission denied. Ensure security rules allow reading your own data.', 'error');
       });
   } else if (step === 3) {
-    // Process payment and save to Firebase Firestore
     const btn = document.querySelector('#reg-panel-3 .btn-gold');
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
-    btn.disabled = true;
-
-    const payload = {
-      eventName: selectedEvent,
-      fullName: document.getElementById('r-name').value,
-      email: document.getElementById('r-email').value,
-      phone: document.getElementById('r-phone').value,
-      college: document.getElementById('r-college').value,
-      studyYear: document.getElementById('r-year').value,
-      pin: document.getElementById('r-year').value === 'first' ? null : document.getElementById('r-pin').value,
-      hallTicket: document.getElementById('r-year').value === 'first' ? document.getElementById('r-hallticket').value : null,
-      registrationDate: firebase.firestore.FieldValue.serverTimestamp()
-    };
-
-    // Prepare data for Google Sheets
-    const sheetData = new FormData();
-    sheetData.append('Event', payload.eventName);
-    sheetData.append('Name', payload.fullName);
-    sheetData.append('Email', payload.email);
-    sheetData.append('Phone', payload.phone);
-    sheetData.append('College', payload.college);
-    sheetData.append('Year', payload.studyYear);
-    sheetData.append('ID (PIN/Hall Ticket)', payload.pin || payload.hallTicket || '—');
-
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxz-7gHowiQ7B-MLiSHOO3U6qclqm7Hr4oKaChr8a8Wqw31Y2Y9TBBDBIaExXKGwJNl/exec';
-
-    Promise.all([
-      db.collection('registrations').add(payload),
-      fetch(scriptURL, { method: 'POST', body: sheetData })
-    ])
-      .then(() => {
-        btn.innerHTML = '<i class="fa-solid fa-lock"></i> PAY & CONFIRM';
-        btn.disabled  = false;
-
-        // Populate receipt
-        regCount++;
-        const receiptId = 'REG-CM-2026-' + String(regCount).padStart(4, '0');
-        
-        document.getElementById('receipt-id').textContent    = receiptId;
-        document.getElementById('receipt-event').textContent = selectedEvent || '—';
-        document.getElementById('receipt-name').textContent  = payload.fullName;
-        document.getElementById('receipt-email').textContent = payload.email;
-
-        setRegStep(4);
-        showToast('Registration confirmed! Saved to Firestore & Sheets.', 'success');
-      })
-      .catch((error) => {
-        console.error("Error saving registration: ", error);
-        btn.innerHTML = '<i class="fa-solid fa-lock"></i> PAY & CONFIRM';
-        btn.disabled  = false;
-        showToast('Error connecting to servers. Please try again.', 'error');
-      });
+    processRegistration(btn);
   }
+}
+
+function processRegistration(btnElement) {
+  const originalBtnText = btnElement.innerHTML;
+  btnElement.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+  btnElement.disabled = true;
+
+  const user = auth.currentUser;
+  const role = document.getElementById('r-role').value;
+  const teamName = document.getElementById('r-team-name') ? document.getElementById('r-team-name').value.trim() : '';
+  const fullName = document.getElementById('r-name').value;
+  const email = document.getElementById('r-email').value;
+
+  const payload = {
+    eventName: selectedEvent,
+    fullName: fullName,
+    email: email,
+    phone: document.getElementById('r-phone').value,
+    college: document.getElementById('r-college').value,
+    studyYear: document.getElementById('r-year').value,
+    pin: document.getElementById('r-year').value === 'first' ? null : document.getElementById('r-pin').value,
+    hallTicket: document.getElementById('r-year').value === 'first' ? document.getElementById('r-hallticket').value : null,
+    role: role,
+    teamName: role === 'leader' ? teamName : null,
+    registrationDate: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  // Prepare data for Google Sheets
+  const sheetData = new FormData();
+  sheetData.append('Event', payload.eventName);
+  sheetData.append('Name', payload.fullName);
+  sheetData.append('Email', payload.email);
+  sheetData.append('Phone', payload.phone);
+  sheetData.append('College', payload.college);
+  sheetData.append('Year', payload.studyYear);
+  sheetData.append('ID (PIN/Hall Ticket)', payload.pin || payload.hallTicket || '—');
+  sheetData.append('Role', payload.role);
+  sheetData.append('Team Name', payload.teamName || '—');
+
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbxz-7gHowiQ7B-MLiSHOO3U6qclqm7Hr4oKaChr8a8Wqw31Y2Y9TBBDBIaExXKGwJNl/exec';
+
+  const batch = db.batch();
+  const regRef = db.collection('registrations').doc();
+  batch.set(regRef, payload);
+
+  if (role === 'leader' && user) {
+    const newTeamRef = db.collection('teams').doc();
+    const username = user.displayName || fullName;
+    batch.set(newTeamRef, {
+      name: teamName,
+      leaderId: user.uid,
+      leaderName: username,
+      techStack: 'Not specified yet',
+      description: 'Created during registration.',
+      members: [{ uid: user.uid, name: username, email: user.email, role: 'leader' }],
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    batch.update(db.collection('users').doc(user.uid), { teamId: newTeamRef.id });
+
+    // Create invitations for selected members
+    pendingInvites.forEach(inv => {
+      const inviteRef = db.collection('invitations').doc();
+      batch.set(inviteRef, {
+        teamId: newTeamRef.id,
+        teamName: teamName,
+        senderId: user.uid,
+        senderName: username,
+        senderEmail: user.email,
+        receiverEmail: inv.email,
+        receiverUid: inv.uid,
+        receiverUsername: inv.username,
+        status: 'pending',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      // Trigger email
+      const mailRef = db.collection('mail').doc();
+      batch.set(mailRef, {
+        to: inv.email,
+        message: {
+          subject: `You've been invited to join team "${teamName}"!`,
+          text: `Hi ${inv.username}! You got an invitation to join the team "${teamName}" by ${username}. Log in to your CodeMiners portal and visit the Teams page to accept or decline.`,
+          html: `<p>Hi <strong>${inv.username}</strong>!</p><p>You got an invitation to join the team <strong>${teamName}</strong> by <strong>${username}</strong>.</p><p>Log in to your <a href="http://localhost:3000/">CodeMiners Portal</a> and visit the <strong>Teams</strong> section to accept or decline the request.</p>`
+        }
+      });
+    });
+    
+    // Mail for the leader
+    const leaderMailRef = db.collection('mail').doc();
+    batch.set(leaderMailRef, {
+      to: user.email,
+      message: {
+        subject: `Team "${teamName}" Created Successfully!`,
+        text: `Congratulations! Your hackathon team "${teamName}" has been successfully created.`,
+        html: `<p>Congratulations!</p><p>Your hackathon team <strong>${teamName}</strong> has been successfully created.</p>`
+      }
+    });
+  }
+
+  Promise.all([
+    batch.commit(),
+    fetch(scriptURL, { method: 'POST', body: sheetData }).catch(e => console.warn('Sheet error:', e))
+  ])
+    .then(() => {
+      btnElement.innerHTML = originalBtnText;
+      btnElement.disabled  = false;
+
+      // Populate receipt
+      regCount++;
+      const receiptId = 'REG-CM-2026-' + String(regCount).padStart(4, '0');
+      
+      document.getElementById('receipt-id').textContent    = receiptId;
+      document.getElementById('receipt-event').textContent = selectedEvent || '—';
+      document.getElementById('receipt-name').textContent  = payload.fullName;
+      document.getElementById('receipt-email').textContent = payload.email;
+
+      setRegStep(4);
+      showToast('Registration confirmed! Saved to Firestore.', 'success');
+      
+      if (role === 'leader') {
+        showToast(`Team "${teamName}" created and invites sent!`, 'success');
+        // Refresh team data if they go to Teams tab
+        if (typeof syncTeamSection === 'function') syncTeamSection();
+      }
+    })
+    .catch((error) => {
+      console.error("Error saving registration: ", error);
+      btnElement.innerHTML = originalBtnText;
+      btnElement.disabled  = false;
+      showToast('Error connecting to servers. Please try again.', 'error');
+    });
 }
 
 function regBack(step) {
@@ -380,6 +502,200 @@ function toggleIdField() {
     }
   }
 }
+
+// ─────────────────────────────────────────────────────────────
+// TOGGLE ROLE FIELDS (TEAM LEADER / MEMBER)
+// ─────────────────────────────────────────────────────────────
+function toggleRoleFields() {
+  const role = document.getElementById('r-role');
+  const leaderFields = document.getElementById('team-leader-fields');
+  
+  if (role && leaderFields) {
+    const btn = document.getElementById('reg-step-2-btn');
+    if (role.value === 'leader') {
+      leaderFields.style.display = 'block';
+      if (btn) btn.innerHTML = '<i class="fa-solid fa-arrow-right"></i> CONTINUE TO PAYMENT';
+    } else {
+      leaderFields.style.display = 'none';
+      if (btn) btn.innerHTML = '<i class="fa-solid fa-check"></i> SUBMIT';
+      // clear pending invites if switched back to member
+      pendingInvites = [];
+      renderPendingInvites();
+    }
+  }
+}
+
+let pendingInvites = [];
+
+let searchTimeout;
+
+function handleInviteSearchInput() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    performInviteSearch();
+  }, 300);
+}
+
+let eventRegistrationsCache = null;
+let lastEventCached = null;
+
+async function performInviteSearch() {
+  const identifier = document.getElementById('r-invite-search').value.trim().toLowerCase();
+  const resultContainer = document.getElementById('r-search-result-container');
+  const user = auth.currentUser;
+  
+  if (!user) {
+    showToast("Please log in first to invite members.", "error");
+    return;
+  }
+  
+  if (!identifier) {
+    resultContainer.style.display = 'none';
+    resultContainer.innerHTML = '';
+    return;
+  }
+  
+  const maxSize = parseInt(document.getElementById('r-team-size').value) || 5;
+  if (pendingInvites.length >= (maxSize - 1)) {
+    resultContainer.style.display = 'block';
+    resultContainer.innerHTML = `<div style="color:var(--text-danger); font-size: 13px;">Team is full! You can only invite ${maxSize - 1} members.</div>`;
+    return;
+  }
+
+  resultContainer.style.display = 'block';
+  resultContainer.innerHTML = '<div style="font-size: 13px; color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Searching event registrations...</div>';
+
+  try {
+    // 1. Fetch/Cache event registrations
+    if (!eventRegistrationsCache || lastEventCached !== selectedEvent) {
+      const regsSnapshot = await db.collection('registrations').where('eventName', '==', selectedEvent).get();
+      eventRegistrationsCache = [];
+      regsSnapshot.forEach(doc => {
+        const data = doc.data();
+        eventRegistrationsCache.push({
+          email: data.email,
+          fullName: data.fullName || '',
+          role: data.role,
+          teamName: data.teamName
+        });
+      });
+      lastEventCached = selectedEvent;
+    }
+    
+    // 2. Filter locally by prefix
+    const matches = eventRegistrationsCache.filter(reg => 
+      (reg.email && reg.email.toLowerCase().startsWith(identifier)) ||
+      (reg.fullName && reg.fullName.toLowerCase().startsWith(identifier))
+    ).slice(0, 5);
+    
+    if (matches.length === 0) {
+      resultContainer.innerHTML = `<div style="color:var(--text-danger); font-size: 13px;">No users found registered for this event matching "${identifier}".</div>`;
+      return;
+    }
+    
+    // 3. Fetch their UIDs from users collection
+    const emailsToFetch = matches.map(m => m.email);
+    const usersQuery = await db.collection('users').where('email', 'in', emailsToFetch).get();
+    
+    const usersMap = {};
+    usersQuery.forEach(doc => {
+      usersMap[doc.data().email] = { uid: doc.id, ...doc.data() };
+    });
+    
+    // 4. Render HTML
+    let html = '';
+    matches.forEach(match => {
+      const userData = usersMap[match.email];
+      if (!userData) return;
+      
+      const receiverUid = userData.uid;
+      const receiverEmail = match.email;
+      const receiverUsername = userData.username || match.fullName || receiverEmail;
+      
+      let actionHtml = '';
+      if (receiverUid === user.uid) {
+        actionHtml = `<div style="color:var(--text-danger); font-size: 11px;">You</div>`;
+      } else if (match.role === 'leader' || match.teamName) {
+        actionHtml = `<div style="color:var(--text-danger); font-size: 11px;">Already in a team</div>`;
+      } else if (pendingInvites.some(inv => inv.uid === receiverUid)) {
+        actionHtml = `<div style="color:var(--color-amber); font-size: 11px;">Added</div>`;
+      } else {
+        actionHtml = `
+          <button type="button" class="btn-ghost" style="padding: 4px 12px; font-size: 12px; border: 1px solid var(--gold-primary); color: var(--gold-primary);" onclick="addInviteToList('${receiverUid}', '${receiverUsername}', '${receiverEmail}')">
+            <i class="fa-solid fa-paper-plane"></i> Invite
+          </button>
+        `;
+      }
+      
+      html += `
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+          <div>
+            <div style="font-weight: bold; color: var(--text-light); font-size: 14px;">${receiverUsername}</div>
+            <div style="color: var(--text-muted); font-size: 12px;">${receiverEmail}</div>
+          </div>
+          ${actionHtml}
+        </div>
+      `;
+    });
+    
+    if (!html) {
+       resultContainer.innerHTML = `<div style="color:var(--text-danger); font-size: 13px;">No valid invitees found.</div>`;
+    } else {
+       resultContainer.innerHTML = html;
+    }
+
+  } catch (error) {
+    console.error("Error searching user:", error);
+    resultContainer.innerHTML = '<div style="color:var(--text-danger); font-size: 13px;">Error searching for user.</div>';
+  }
+}
+
+function addInviteToList(uid, username, email) {
+  const maxSize = parseInt(document.getElementById('r-team-size').value) || 5;
+  if (pendingInvites.length >= (maxSize - 1)) {
+    showToast(`You can only invite ${maxSize - 1} members.`, "error");
+    return;
+  }
+  
+  pendingInvites.push({ uid, username, email });
+  document.getElementById('r-invite-search').value = '';
+  document.getElementById('r-search-result-container').style.display = 'none';
+  renderPendingInvites();
+}
+
+function removeInvite(uid) {
+  pendingInvites = pendingInvites.filter(inv => inv.uid !== uid);
+  renderPendingInvites();
+}
+
+function renderPendingInvites() {
+  const maxSize = parseInt(document.getElementById('r-team-size').value) || 4;
+  document.getElementById('r-invite-count').textContent = pendingInvites.length;
+  document.getElementById('r-invite-max').textContent = Math.max(0, maxSize - 1);
+  
+  const container = document.getElementById('r-selected-invites-list');
+  if (pendingInvites.length === 0) {
+    container.innerHTML = '<div style="font-size:12px; color:var(--text-muted); font-style:italic;">No members selected yet.</div>';
+    return;
+  }
+  
+  let html = '';
+  pendingInvites.forEach(inv => {
+    html += `
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: rgba(255,255,255,0.03); border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+        <div>
+          <div style="font-size: 13px; color: var(--text-light);">${inv.username}</div>
+          <div style="font-size: 11px; color: var(--text-muted);">${inv.email}</div>
+        </div>
+        <button type="button" style="background:none; border:none; color: var(--text-danger); cursor: pointer;" onclick="removeInvite('${inv.uid}')">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    `;
+  });
+  container.innerHTML = html;
+}
+
 
 // ─────────────────────────────────────────────────────────────
 // PAYMENT METHOD SWITCHER

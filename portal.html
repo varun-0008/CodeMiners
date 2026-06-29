@@ -37,20 +37,6 @@
     auth.onAuthStateChanged(function(user) {
       if (!user) {
         window.location.href = 'index.html';
-      } else {
-        // Pre-fill email field and lock it for secure querying
-        const fillEmail = () => {
-          const emailField = document.getElementById('r-email');
-          if (emailField) {
-            emailField.value = user.email;
-          }
-        };
-        
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', fillEmail);
-        } else {
-          fillEmail();
-        }
       }
     });
   </script>
@@ -109,7 +95,7 @@
 
       <!-- Hero -->
       <div class="hero">
-        <img src="mainlogo.png" alt="Code Miners Logo" style="height: 240px; width: auto; margin: 40px auto 16px auto; filter: drop-shadow(0 6px 16px rgba(240, 165, 0, 0.4));">
+        <img src="logo.png" alt="Code Miners Logo" style="height: 240px; width: auto; margin: 40px auto 16px auto;">
         <div class="hero-eyebrow"><i class="fa-solid fa-pickaxe"></i> OFFICIAL GUILD PORTAL</div>
         <h1 class="hero-title">
           Mine Your <span class="gradient-text">Potential</span><br>Build the Future
@@ -202,7 +188,7 @@
         <div class="footer-inner">
           <div class="footer-top">
             <div>
-              <img src="mainlogo.png" alt="Code Miners" class="footer-brand-logo">
+              <img src="logo.png" alt="Code Miners" class="footer-brand-logo">
               <p class="footer-brand-desc">Official student coding guild dedicated to mining excellence in software development through competitions, workshops, and collaborative projects.</p>
               <div class="footer-social" style="margin-top:18px;">
                 <a class="social-btn" href="https://www.youtube.com/@CodeMiners-2026" target="_blank" title="YouTube"><i class="fa-brands fa-youtube"></i></a>
@@ -420,15 +406,15 @@
             <div class="card-body">
               <form id="reg-details-form" style="display:flex;flex-direction:column;gap:18px;">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-                  <div><label class="input-label">USERNAME</label><div class="input-wrap"><i class="fa-solid fa-user input-ico"></i><input type="text" class="field-input" id="r-name" placeholder="Your username (like Insta)" required></div></div>
-                  <div><label class="input-label">EMAIL</label><div class="input-wrap" style="opacity:0.7;cursor:not-allowed;"><i class="fa-solid fa-envelope input-ico"></i><input type="email" class="field-input" id="r-email" placeholder="your@email.com" readonly required></div></div>
-                  <div><label class="input-label">PHONE</label><div class="input-wrap"><i class="fa-solid fa-phone input-ico"></i><input type="tel" class="field-input" id="r-phone" placeholder="+91 XXXXX XXXXX" required></div></div>
-                  <div><label class="input-label">COLLEGE / INSTITUTION</label><div class="input-wrap"><i class="fa-solid fa-building-columns input-ico"></i><input type="text" class="field-input" id="r-college" placeholder="Your college name" required></div></div>
+                  <div><label class="input-label">USERNAME</label><div class="input-wrap"><i class="fa-solid fa-user input-ico"></i><input type="text" class="field-input" id="r-name" required></div></div>
+                  <div><label class="input-label">EMAIL</label><div class="input-wrap"><i class="fa-solid fa-envelope input-ico"></i><input type="email" class="field-input" id="r-email" required></div></div>
+                  <div><label class="input-label">PHONE</label><div class="input-wrap"><i class="fa-solid fa-phone input-ico"></i><input type="tel" class="field-input" id="r-phone" required></div></div>
+                  <div><label class="input-label">COLLEGE / INSTITUTION</label><div class="input-wrap"><i class="fa-solid fa-building-columns input-ico"></i><input type="text" class="field-input" id="r-college" required></div></div>
                   <div>
                     <label class="input-label">STUDY YEAR</label>
                     <div class="input-wrap">
                       <i class="fa-solid fa-graduation-cap input-ico"></i>
-                      <select class="field-input select-field" id="r-year" onchange="toggleIdField()" style="background:transparent;border:none;color:var(--text-light);width:100%;height:100%;outline:none;padding-left:36px;cursor:pointer;">
+                      <select class="field-input select-field" id="r-year" onchange="toggleIdField()">
                         <option value="first" style="background:var(--dark-stone);">First Year</option>
                         <option value="second" style="background:var(--dark-stone);" selected>Second Year</option>
                         <option value="third" style="background:var(--dark-stone);">Third Year</option>
@@ -446,13 +432,60 @@
                     <label class="input-label">HALL TICKET NUMBER</label>
                     <div class="input-wrap">
                       <i class="fa-solid fa-hashtag input-ico"></i>
-                      <input type="text" class="field-input" id="r-hallticket" placeholder="Your hall ticket number">
+                      <input type="text" class="field-input" id="r-hallticket">
+                    </div>
+                  </div>
+                  <div style="grid-column: 1 / -1;">
+                    <label class="input-label">PARTICIPANT ROLE</label>
+                    <div class="input-wrap">
+                      <i class="fa-solid fa-user-group input-ico"></i>
+                      <select class="field-input select-field" id="r-role" onchange="toggleRoleFields()">
+                        <option value="member" style="background:var(--dark-stone);" selected>Team Member</option>
+                        <option value="leader" style="background:var(--dark-stone);">Team Leader</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <!-- Team Leader specific fields -->
+                  <div id="team-leader-fields" style="display:none; grid-column: 1 / -1; border-top: 1px solid var(--rock-border); padding-top: 16px; margin-top: 8px;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                      <div>
+                        <label class="input-label">TEAM NAME</label>
+                        <div class="input-wrap">
+                          <i class="fa-solid fa-users input-ico"></i>
+                          <input type="text" class="field-input" id="r-team-name" placeholder="Enter team name">
+                        </div>
+                      </div>
+                      <div>
+                        <label class="input-label">NUMBER OF MEMBERS (MAX 5)</label>
+                        <div class="input-wrap">
+                          <i class="fa-solid fa-list-ol input-ico"></i>
+                          <input type="number" class="field-input" id="r-team-size" min="1" max="5" value="5" onchange="renderPendingInvites()">
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div style="margin-top: 16px;">
+                      <label class="input-label">INVITE TEAM MEMBERS</label>
+                      <div class="input-wrap" style="margin-bottom: 12px;">
+                        <i class="fa-solid fa-magnifying-glass input-ico"></i>
+                        <input type="text" class="field-input" id="r-invite-search" placeholder="Type username or email..." oninput="handleInviteSearchInput()">
+                      </div>
+                      
+                      <!-- Search result -->
+                      <div id="r-search-result-container" style="display:none; padding: 12px; background: rgba(0,0,0,0.2); border: 1px solid var(--rock-border); border-radius: 8px; margin-bottom: 12px; max-height: 200px; overflow-y: auto;"></div>
+                      
+                      <!-- Selected members list -->
+                      <div id="r-selected-invites-container" style="display: flex; flex-direction: column; gap: 8px;">
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Selected for Invitation: <span id="r-invite-count">0</span> / <span id="r-invite-max">4</span></div>
+                        <div id="r-selected-invites-list"></div>
+                      </div>
                     </div>
                   </div>
                 </div>
                 <div style="display:flex;gap:14px;margin-top:6px;">
                   <button type="button" class="btn-ghost" onclick="regBack(2)"><i class="fa-solid fa-arrow-left"></i> Back</button>
-                  <button type="button" class="btn-gold" onclick="regNext(2)"><i class="fa-solid fa-arrow-right"></i> CONTINUE TO PAYMENT</button>
+                  <button type="button" class="btn-gold" id="reg-step-2-btn" onclick="regNext(2)"><i class="fa-solid fa-check"></i> SUBMIT</button>
                 </div>
               </form>
             </div>
@@ -1242,5 +1275,20 @@
     // Disable multiple clicks
     document.addEventListener('dblclick', (e) => e.preventDefault());
   </script>
+
+<script>
+  // Disable Ctrl, Shift, F12 and Right Click to prevent inspection
+  document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey || e.shiftKey || e.key === 'F12' || e.keyCode === 123) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+  }, true);
+  
+  document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+  }, true);
+</script>
 </body>
 </html>
