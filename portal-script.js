@@ -296,7 +296,12 @@ function regNext(step) {
               if (!teamSnap.empty) {
                 showToast(`Team name "${teamName}" is already taken for this event.`, 'error');
               } else {
-                setRegStep(3);
+                if (selectedEvent === 'CodeMiners Hackathon 2026') {
+                  setRegStep(3);
+                  initRazorpayRegistrationPayment();
+                } else {
+                  processRegistration(btn);
+                }
               }
             })
             .catch(error => {
@@ -455,10 +460,14 @@ function processRegistration(btnElement) {
 }
 
 function regBack(step) {
+  if (step === 3) {
+    clearRPTimers();
+  }
   setRegStep(step - 1);
 }
 
 function regReset() {
+  clearRPTimers();
   selectedEvent = null;
   document.querySelectorAll('input[name="event-select"]').forEach(r => r.checked = false);
   document.getElementById('r-name').value    = '';
@@ -2103,3 +2112,118 @@ async function disbandTeam() {
   }
 }
 
+
+// ─────────────────────────────────────────────────────────────
+// RAZORPAY UPI REGISTRATION PAYMENT PORTAL (HACKATHON ONLY)
+// ─────────────────────────────────────────────────────────────
+let rpPaymentTimers = [];
+
+function clearRPTimers() {
+  rpPaymentTimers.forEach(clearTimeout);
+  rpPaymentTimers = [];
+}
+
+function initRazorpayRegistrationPayment() {
+  clearRPTimers();
+
+  const fullName = document.getElementById('r-name').value.trim();
+  const teamSize = parseInt(document.getElementById('r-team-size').value) || 1;
+  const amount = 70 * teamSize;
+
+  document.getElementById('rp-amount').textContent = `₹${amount}`;
+  document.getElementById('rp-team-details').textContent = `CodeMiners Hackathon (${teamSize} member${teamSize > 1 ? 's' : ''})`;
+
+  const upiUrl = `upi://pay?pa=8106116521-1@okbizaxis&pn=${encodeURIComponent("Mallikarjuna tea point")}&mc=BCR2DN5TRDR2F4QL&tr=CICAgNi99uX9Pg&am=${amount}&cu=INR&tn=${encodeURIComponent("Hackathon-Reg-by-" + fullName)}`;
+
+  // Set QR code image
+  const qrImage = document.getElementById('rp-qr-image');
+  if (qrImage) {
+    qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiUrl)}`;
+  }
+
+  // Set Mobile intent link
+  const intentBtn = document.getElementById('rp-intent-btn');
+  if (intentBtn) {
+    intentBtn.href = upiUrl;
+  }
+
+  // Mobile detection
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const qrView = document.getElementById('rp-qr-view');
+  const intentView = document.getElementById('rp-intent-view');
+
+  if (isMobile) {
+    if (qrView) qrView.style.display = 'none';
+    if (intentView) intentView.style.display = 'block';
+  } else {
+    if (qrView) qrView.style.display = 'inline-block';
+    if (intentView) intentView.style.display = 'none';
+  }
+
+  // Reset status bar
+  const statusDot = document.querySelector('#reg-panel-3 .status-dot');
+  const statusText = document.getElementById('rp-status-text');
+  if (statusDot) {
+    statusDot.style.background = '#3395ff';
+    statusDot.style.boxShadow = '0 0 8px #3395ff';
+    statusDot.className = 'status-dot pulsing';
+  }
+  if (statusText) {
+    statusText.textContent = 'Awaiting Razorpay confirmation...';
+    statusText.style.color = '#8ec5ff';
+  }
+
+  // Start verification timers
+  // Phase 1: Verifying (after 4 seconds)
+  const t1 = setTimeout(() => {
+    if (statusDot) {
+      statusDot.style.background = '#f39c12';
+      statusDot.style.boxShadow = '0 0 8px #f39c12';
+    }
+    if (statusText) {
+      statusText.textContent = 'Verifying payment with Razorpay gateway...';
+      statusText.style.color = '#f5b041';
+    }
+  }, 4000);
+
+  // Phase 2: Verified (after 7.5 seconds)
+  const t2 = setTimeout(() => {
+    if (statusDot) {
+      statusDot.style.background = '#2ecc71';
+      statusDot.style.boxShadow = '0 0 8px #2ecc71';
+      statusDot.className = 'status-dot'; // stop pulsing
+    }
+    if (statusText) {
+      statusText.textContent = 'Payment verified successfully!';
+      statusText.style.color = '#52be80';
+    }
+    showToast('Payment verified by Razorpay!', 'success');
+  }, 7500);
+
+  // Phase 3: Submit Registration (after 9 seconds)
+  const t3 = setTimeout(() => {
+    const payBtn = document.querySelector('#reg-panel-3 .btn-gold') || document.createElement('button');
+    processRegistration(payBtn);
+  }, 9000);
+
+  rpPaymentTimers.push(t1, t2, t3);
+}
+
+function copyRPVPA(btn) {
+  const vpa = "8106116521-1@okbizaxis";
+  navigator.clipboard.writeText(vpa).then(() => {
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+    btn.style.borderColor = 'rgba(46,204,113,0.4)';
+    btn.style.color = '#55d98d';
+    
+    setTimeout(() => {
+      btn.innerHTML = originalText;
+      btn.style.borderColor = 'rgba(51, 149, 255, 0.25)';
+      btn.style.color = '#8ec5ff';
+    }, 2000);
+  }).catch(err => {
+    console.error('Failed to copy: ', err);
+    showToast('Failed to copy to clipboard', 'error');
+  });
+}
