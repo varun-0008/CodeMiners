@@ -9,7 +9,7 @@
 // Supabase Configuration
 const SUPABASE_URL = 'https://omxgqhwogkihrdnlonoq.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_UGnbbIMZrz-jZvLN8pS7jw_1LGAp3HP';
-const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
 // ─────────────────────────────────────────────────────────────
 // PAGE NAVIGATION
@@ -270,7 +270,7 @@ function regNext(step) {
 
     const idValue = year === 'first' ? hallticket.trim() : pin.trim();
 
-    supabase
+    supabaseClient
       .from('registrations')
       .select('*')
       .eq('id_value', idValue)
@@ -293,7 +293,7 @@ function regNext(step) {
         
         if (role === 'leader') {
           const teamName = document.getElementById('r-team-name').value.trim();
-          supabase
+          supabaseClient
             .from('registrations')
             .select('*')
             .eq('event_name', selectedEvent)
@@ -445,7 +445,7 @@ function processRegistration(btnElement, paymentId = null) {
   }
 
   // Insert into Supabase database first
-  supabase
+  supabaseClient
     .from('registrations')
     .insert(supabasePayload)
     .then(({ error: supabaseError }) => {
@@ -611,7 +611,7 @@ async function performInviteSearch() {
   try {
     // 1. Fetch/Cache event registrations
     if (!eventRegistrationsCache || lastEventCached !== selectedEvent) {
-      const { data: regsData, error: regsError } = await supabase
+      const { data: regsData, error: regsError } = await supabaseClient
         .from('registrations')
         .select('email, full_name, role, team_name')
         .eq('event_name', selectedEvent);
@@ -1319,7 +1319,7 @@ function viewParticipants(eventId, eventTitle) {
   `;
   
   try {
-    supabase
+    supabaseClient
       .from('registrations')
       .select('*')
       .eq('event_name', eventTitle)
