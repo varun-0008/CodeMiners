@@ -82,12 +82,10 @@ function playSectionAnimation(page) {
 // EMBER PARTICLE SYSTEM
 // ─────────────────────────────────────────────────────────────
 function initEmbers() {
-  if (window.innerWidth < 768) return; // Disable background particles on mobile to improve performance
-  
   const container = document.getElementById('embers');
   if (!container) return;
 
-  const EMBER_COUNT = window.innerWidth < 768 ? 20 : 40;
+  const EMBER_COUNT = window.innerWidth < 768 ? 8 : 40;
 
   for (let i = 0; i < EMBER_COUNT; i++) {
     const ember = document.createElement('div');
@@ -1012,8 +1010,6 @@ function initNavScroll() {
 // LIQUID GLASS ANIMATION
 // ─────────────────────────────────────────────────────────────
 function animateLiquidGlass() {
-  if (window.innerWidth < 768) return; // Disable SVG filter animation on mobile to prevent lag
-  
   const turbulence = document.getElementById('turbulence');
   const displacement = document.getElementById('displacement');
   
