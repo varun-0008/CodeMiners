@@ -1496,42 +1496,77 @@ function filterPastEvents() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  // 1. Filter registration selections
   const container = document.getElementById('event-select-container');
-  if (!container) return;
+  if (container) {
+    const options = container.querySelectorAll('.event-select-opt');
+    let visibleCount = 0;
 
-  const options = container.querySelectorAll('.event-select-opt');
-  let visibleCount = 0;
+    options.forEach(opt => {
+      const endDateStr = opt.getAttribute('data-end-date');
+      if (endDateStr) {
+        const parts = endDateStr.split('-');
+        const endDate = new Date(parts[0], parts[1] - 1, parts[2]);
+        endDate.setHours(0, 0, 0, 0);
 
-  options.forEach(opt => {
-    const endDateStr = opt.getAttribute('data-end-date');
-    if (endDateStr) {
-      const parts = endDateStr.split('-');
-      const endDate = new Date(parts[0], parts[1] - 1, parts[2]);
-      endDate.setHours(0, 0, 0, 0);
+        if (today > endDate) {
+          opt.style.display = 'none';
+        } else {
+          opt.style.display = 'flex';
+          visibleCount++;
+        }
+      }
+    });
 
-      if (today > endDate) {
-        opt.style.display = 'none';
-      } else {
-        opt.style.display = 'flex';
-        visibleCount++;
+    if (visibleCount === 0) {
+      let fallback = document.getElementById('no-events-fallback');
+      if (!fallback) {
+        fallback = document.createElement('div');
+        fallback.id = 'no-events-fallback';
+        fallback.style.cssText = 'text-align: center; padding: 24px; color: var(--text-muted); font-size: 14px;';
+        fallback.innerHTML = '<i class="fa-solid fa-calendar-xmark" style="font-size: 24px; margin-bottom: 12px; color: var(--text-muted); display: block;"></i> No active events are available for registration at this time.';
+        container.parentNode.insertBefore(fallback, container.nextSibling);
+      }
+      const nextBtn = document.querySelector('#reg-panel-1 .btn-gold');
+      if (nextBtn) {
+        nextBtn.disabled = true;
+        nextBtn.style.opacity = '0.5';
+        nextBtn.style.cursor = 'not-allowed';
       }
     }
-  });
+  }
 
-  if (visibleCount === 0) {
-    let fallback = document.getElementById('no-events-fallback');
-    if (!fallback) {
-      fallback = document.createElement('div');
-      fallback.id = 'no-events-fallback';
-      fallback.style.cssText = 'text-align: center; padding: 24px; color: var(--text-muted); font-size: 14px;';
-      fallback.innerHTML = '<i class="fa-solid fa-calendar-xmark" style="font-size: 24px; margin-bottom: 12px; color: var(--text-muted); display: block;"></i> No active events are available for registration at this time.';
-      container.parentNode.insertBefore(fallback, container.nextSibling);
-    }
-    const nextBtn = document.querySelector('#reg-panel-1 .btn-gold');
-    if (nextBtn) {
-      nextBtn.disabled = true;
-      nextBtn.style.opacity = '0.5';
-      nextBtn.style.cursor = 'not-allowed';
+  // 2. Filter upcoming event cards in dashboard
+  const previewGrid = document.querySelector('.events-preview-grid');
+  if (previewGrid) {
+    const cards = previewGrid.querySelectorAll('.event-card');
+    let visibleCards = 0;
+    
+    cards.forEach(card => {
+      const endDateStr = card.getAttribute('data-end-date');
+      if (endDateStr) {
+        const parts = endDateStr.split('-');
+        const endDate = new Date(parts[0], parts[1] - 1, parts[2]);
+        endDate.setHours(0, 0, 0, 0);
+
+        if (today > endDate) {
+          card.style.display = 'none';
+        } else {
+          card.style.display = 'flex';
+          visibleCards++;
+        }
+      }
+    });
+
+    if (visibleCards === 0) {
+      let fallback = document.getElementById('no-upcoming-fallback');
+      if (!fallback) {
+        fallback = document.createElement('div');
+        fallback.id = 'no-upcoming-fallback';
+        fallback.style.cssText = 'text-align: center; padding: 40px; color: var(--text-muted); grid-column: 1 / -1;';
+        fallback.innerHTML = '<i class="fa-solid fa-calendar-xmark" style="font-size: 32px; margin-bottom: 16px; color: var(--text-muted); display: block;"></i> No upcoming events scheduled.';
+        previewGrid.appendChild(fallback);
+      }
     }
   }
 }
