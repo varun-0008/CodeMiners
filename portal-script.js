@@ -6,6 +6,11 @@
 
 'use strict';
 
+// Supabase Configuration
+const SUPABASE_URL = 'https://omxgqhwogkihrdnlonoq.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_UGnbbIMZrz-jZvLN8pS7jw_1LGAp3HP';
+const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
 // ─────────────────────────────────────────────────────────────
 // PAGE NAVIGATION
 // ─────────────────────────────────────────────────────────────
@@ -263,20 +268,22 @@ function regNext(step) {
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking...';
     btn.disabled = true;
 
-    let idQuery;
-    if (year === 'first') {
-      idQuery = db.collection('registrations')
-        .where('hallTicket', '==', hallticket.trim())
-        .get();
-    } else {
-      idQuery = db.collection('registrations')
-        .where('pin', '==', pin.trim())
-        .get();
-    }
+    const idValue = year === 'first' ? hallticket.trim() : pin.trim();
 
-    idQuery
-      .then((snapshot) => {
-        if (!snapshot.empty) {
+    supabase
+      .from('registrations')
+      .select('*')
+      .eq('id_value', idValue)
+      .then(({ data: idData, error: idError }) => {
+        if (idError) {
+          console.error("Error checking registration:", idError);
+          btn.innerHTML = originalBtnText;
+          btn.disabled = false;
+          showToast('Error verifying registration. Try again.', 'error');
+          return;
+        }
+        
+        if (idData && idData.length > 0) {
           btn.innerHTML = originalBtnText;
           btn.disabled = false;
           const idType = year === 'first' ? 'Hall Ticket' : 'PIN';
@@ -286,14 +293,20 @@ function regNext(step) {
         
         if (role === 'leader') {
           const teamName = document.getElementById('r-team-name').value.trim();
-          db.collection('registrations')
-            .where('eventName', '==', selectedEvent)
-            .where('teamName', '==', teamName)
-            .get()
-            .then(teamSnap => {
+          supabase
+            .from('registrations')
+            .select('*')
+            .eq('event_name', selectedEvent)
+            .eq('team_name', teamName)
+            .then(({ data: teamData, error: teamError }) => {
               btn.innerHTML = originalBtnText;
               btn.disabled = false;
-              if (!teamSnap.empty) {
+              if (teamError) {
+                console.error("Error checking team name:", teamError);
+                showToast('Error verifying team name.', 'error');
+                return;
+              }
+              if (teamData && teamData.length > 0) {
                 showToast(`Team name "${teamName}" is already taken for this event.`, 'error');
               } else {
                 if (selectedEvent === 'CodeMiners Hackathon 2026') {
@@ -303,12 +316,6 @@ function regNext(step) {
                   processRegistration(btn);
                 }
               }
-            })
-            .catch(error => {
-              console.error("Error checking team name:", error);
-              btn.innerHTML = originalBtnText;
-              btn.disabled = false;
-              showToast('Error verifying team name.', 'error');
             });
         } else {
           btn.innerHTML = originalBtnText;
@@ -328,7 +335,7 @@ function regNext(step) {
   }
 }
 
-function processRegistration(btnElement) {
+function processRegistration(btnElement, paymentId = null) {
   const originalBtnText = btnElement.innerHTML;
   btnElement.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
   btnElement.disabled = true;
@@ -336,40 +343,52 @@ function processRegistration(btnElement) {
   const user = auth.currentUser;
   const role = document.getElementById('r-role').value;
   const teamName = document.getElementById('r-team-name') ? document.getElementById('r-team-name').value.trim() : '';
-  const fullName = document.getElementById('r-name').value;
-  const email = document.getElementById('r-email').value;
+  const fullName = document.getElementById('r-name').value.trim();
+  const email = document.getElementById('r-email').value.trim();
+  const studyYear = document.getElementById('r-year').value;
+  const idType = studyYear === 'first' ? 'hallticket' : 'pin';
+  const idValue = studyYear === 'first' ? document.getElementById('r-hallticket').value.trim() : document.getElementById('r-pin').value.trim();
 
-  const payload = {
-    eventName: selectedEvent,
-    fullName: fullName,
+  // Prepare payload for Supabase
+  const amountPaid = selectedEvent === 'CodeMiners Hackathon 2026' ? (70 * (parseInt(document.getElementById('r-team-size').value) || 1)) : 0;
+  const actualPaymentId = paymentId || (selectedEvent === 'CodeMiners Hackathon 2026' ? 'pay_client_' + Date.now() : 'free_reg');
+  const paymentStatus = selectedEvent === 'CodeMiners Hackathon 2026' ? 'captured' : 'free';
+
+  const supabasePayload = {
+    full_name: fullName,
     email: email,
-    phone: document.getElementById('r-phone').value,
-    college: document.getElementById('r-college').value,
-    studyYear: document.getElementById('r-year').value,
-    pin: document.getElementById('r-year').value === 'first' ? null : document.getElementById('r-pin').value,
-    hallTicket: document.getElementById('r-year').value === 'first' ? document.getElementById('r-hallticket').value : null,
+    phone: document.getElementById('r-phone').value.trim(),
+    college: document.getElementById('r-college').value.trim(),
+    year: studyYear,
+    id_type: idType,
+    id_value: idValue,
     role: role,
-    teamName: role === 'leader' ? teamName : null,
-    registrationDate: firebase.firestore.FieldValue.serverTimestamp()
+    event_name: selectedEvent,
+    team_name: role === 'leader' ? teamName : null,
+    team_size: role === 'leader' ? (parseInt(document.getElementById('r-team-size').value) || 1) : 1,
+    payment_id: actualPaymentId,
+    payment_status: paymentStatus,
+    amount_paid: amountPaid,
+    created_at: new Date().toISOString()
   };
 
   // Prepare data for Google Sheets
   const sheetData = new FormData();
-  sheetData.append('Event', payload.eventName);
-  sheetData.append('Name', payload.fullName);
-  sheetData.append('Email', payload.email);
-  sheetData.append('Phone', payload.phone);
-  sheetData.append('College', payload.college);
-  sheetData.append('Year', payload.studyYear);
-  sheetData.append('ID (PIN/Hall Ticket)', payload.pin || payload.hallTicket || '—');
-  sheetData.append('Role', payload.role);
-  sheetData.append('Team Name', payload.teamName || '—');
+  sheetData.append('Event', selectedEvent);
+  sheetData.append('Name', fullName);
+  sheetData.append('Email', email);
+  sheetData.append('Phone', document.getElementById('r-phone').value.trim());
+  sheetData.append('College', document.getElementById('r-college').value.trim());
+  sheetData.append('Year', studyYear);
+  sheetData.append('ID (PIN/Hall Ticket)', idValue || '—');
+  sheetData.append('Role', role);
+  sheetData.append('Team Name', teamName || '—');
+  sheetData.append('PaymentID', actualPaymentId);
+  sheetData.append('Status', paymentStatus === 'captured' ? 'Paid' : 'Free');
 
   const scriptURL = 'https://script.google.com/macros/s/AKfycbxz-7gHowiQ7B-MLiSHOO3U6qclqm7Hr4oKaChr8a8Wqw31Y2Y9TBBDBIaExXKGwJNl/exec';
 
   const batch = db.batch();
-  const regRef = db.collection('registrations').doc();
-  batch.set(regRef, payload);
 
   if (role === 'leader' && user) {
     const newTeamRef = db.collection('teams').doc();
@@ -425,37 +444,52 @@ function processRegistration(btnElement) {
     });
   }
 
-  Promise.all([
-    batch.commit(),
-    fetch(scriptURL, { method: 'POST', body: sheetData }).catch(e => console.warn('Sheet error:', e))
-  ])
-    .then(() => {
-      btnElement.innerHTML = originalBtnText;
-      btnElement.disabled  = false;
-
-      // Populate receipt
-      regCount++;
-      const receiptId = 'REG-CM-2026-' + String(regCount).padStart(4, '0');
-      
-      document.getElementById('receipt-id').textContent    = receiptId;
-      document.getElementById('receipt-event').textContent = selectedEvent || '—';
-      document.getElementById('receipt-name').textContent  = payload.fullName;
-      document.getElementById('receipt-email').textContent = payload.email;
-
-      setRegStep(4);
-      showToast('Registration confirmed! Saved to Firestore.', 'success');
-      
-      if (role === 'leader') {
-        showToast(`Team "${teamName}" created and invites sent!`, 'success');
-        // Refresh team data if they go to Teams tab
-        if (typeof syncTeamSection === 'function') syncTeamSection();
+  // Insert into Supabase database first
+  supabase
+    .from('registrations')
+    .insert(supabasePayload)
+    .then(({ error: supabaseError }) => {
+      if (supabaseError) {
+        console.error("Error saving registration to Supabase: ", supabaseError);
+        btnElement.innerHTML = originalBtnText;
+        btnElement.disabled = false;
+        showToast('Error saving registration. Please try again.', 'error');
+        return;
       }
-    })
-    .catch((error) => {
-      console.error("Error saving registration: ", error);
-      btnElement.innerHTML = originalBtnText;
-      btnElement.disabled  = false;
-      showToast('Error connecting to servers. Please try again.', 'error');
+
+      // Supabase insert succeeded, now commit Firebase batch and sync Google Sheet
+      Promise.all([
+        batch.commit(),
+        fetch(scriptURL, { method: 'POST', body: sheetData }).catch(e => console.warn('Sheet error:', e))
+      ])
+        .then(() => {
+          btnElement.innerHTML = originalBtnText;
+          btnElement.disabled  = false;
+
+          // Populate receipt
+          regCount++;
+          const receiptId = 'REG-CM-2026-' + String(regCount).padStart(4, '0');
+          
+          document.getElementById('receipt-id').textContent    = receiptId;
+          document.getElementById('receipt-event').textContent = selectedEvent || '—';
+          document.getElementById('receipt-name').textContent  = fullName;
+          document.getElementById('receipt-email').textContent = email;
+
+          setRegStep(4);
+          showToast('Registration confirmed! Saved to Supabase.', 'success');
+          
+          if (role === 'leader') {
+            showToast(`Team "${teamName}" created and invites sent!`, 'success');
+            // Refresh team data if they go to Teams tab
+            if (typeof syncTeamSection === 'function') syncTeamSection();
+          }
+        })
+        .catch((error) => {
+          console.error("Error completing registration pipeline: ", error);
+          btnElement.innerHTML = originalBtnText;
+          btnElement.disabled  = false;
+          showToast('Error finalizing registration pipeline.', 'error');
+        });
     });
 }
 
@@ -577,17 +611,24 @@ async function performInviteSearch() {
   try {
     // 1. Fetch/Cache event registrations
     if (!eventRegistrationsCache || lastEventCached !== selectedEvent) {
-      const regsSnapshot = await db.collection('registrations').where('eventName', '==', selectedEvent).get();
+      const { data: regsData, error: regsError } = await supabase
+        .from('registrations')
+        .select('email, full_name, role, team_name')
+        .eq('event_name', selectedEvent);
+      
+      if (regsError) throw regsError;
+      
       eventRegistrationsCache = [];
-      regsSnapshot.forEach(doc => {
-        const data = doc.data();
-        eventRegistrationsCache.push({
-          email: data.email,
-          fullName: data.fullName || '',
-          role: data.role,
-          teamName: data.teamName
+      if (regsData) {
+        regsData.forEach(item => {
+          eventRegistrationsCache.push({
+            email: item.email,
+            fullName: item.full_name || '',
+            role: item.role,
+            teamName: item.team_name
+          });
         });
-      });
+      }
       lastEventCached = selectedEvent;
     }
     
@@ -1278,26 +1319,30 @@ function viewParticipants(eventId, eventTitle) {
   `;
   
   try {
-    db.collection('registrations')
-      .where('eventName', '==', eventTitle)
-      .get()
-      .then((snapshot) => {
+    supabase
+      .from('registrations')
+      .select('*')
+      .eq('event_name', eventTitle)
+      .then(({ data, error }) => {
+        if (error) throw error;
+        
         fetchedMiners = [];
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          fetchedMiners.push({
-            id: doc.id,
-            name: data.fullName || 'Participant',
-            subtitle: data.college || '', 
-            year: data.studyYear || '',
-            role: 'Participant',
-            about: '', 
-            projects: [],
-            pin: data.pin || '',
-            participationType: data.participationType || 'Individual',
-            teamName: data.teamName || ''
+        if (data) {
+          data.forEach(item => {
+            fetchedMiners.push({
+              id: item.id,
+              name: item.full_name || 'Participant',
+              subtitle: item.college || '', 
+              year: item.year || '',
+              role: 'Participant',
+              about: '', 
+              projects: [],
+              pin: item.id_value || '',
+              participationType: 'Individual',
+              teamName: item.team_name || ''
+            });
           });
-        });
+        }
         
         renderMinersList('');
       })
@@ -2147,7 +2192,7 @@ function payWithRazorpaySDK(btnElement) {
       btnElement.innerHTML = originalBtnHtml;
       btnElement.disabled = false;
       
-      processRegistration(btnElement);
+      processRegistration(btnElement, response.razorpay_payment_id);
     },
     prefill: {
       name: fullName,
