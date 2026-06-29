@@ -4,6 +4,7 @@
    ============================================================ */
 
 require('dotenv').config();
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
@@ -33,6 +34,9 @@ const GOOGLE_SHEETS_URL = process.env.GOOGLE_SHEETS_WEBHOOK_URL || "https://scri
 
 // Enable CORS
 app.use(cors());
+
+// Serve static frontend files from local root directory
+app.use(express.static(__dirname));
 
 // Middleware to parse raw body buffer for cryptographical validation
 app.use(express.json({
