@@ -218,7 +218,8 @@ function regNext(step) {
 
       // Check if user is in an established team
       if (!currentTeamId || !currentTeamData) {
-        showToast('You must create or join a team first in the Team Management section below to register for the Hackathon.', 'error');
+        showToast('You must create or join a team first to register for the Hackathon. Redirecting to Team page...', 'warning');
+        navigate('teams');
         return;
       }
 
