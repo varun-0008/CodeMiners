@@ -1084,6 +1084,12 @@
         document.getElementById('edit-username').value = userUsername;
         document.getElementById('edit-fullname').value = userFullName;
 
+        // Pre-fill event registration fields
+        const regNameEl = document.getElementById('r-name');
+        const regEmailEl = document.getElementById('r-email');
+        if (regNameEl) regNameEl.value = userFullName;
+        if (regEmailEl) regEmailEl.value = user.email || '';
+
         try {
           const { data: profile, error: profileError } = await supabaseClient
             .from('profiles')
@@ -1103,6 +1109,8 @@
             if (profile.full_name && fullnameEl) {
               fullnameEl.textContent = profile.full_name;
               document.getElementById('edit-fullname').value = profile.full_name;
+              if (displayEl) displayEl.textContent = profile.full_name;
+              if (regNameEl) regNameEl.value = profile.full_name;
             } else if (fullnameEl) {
               fullnameEl.textContent = 'Not provided';
               document.getElementById('edit-fullname').value = '';
