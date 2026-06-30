@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    if (window.location.hostname === 'codeminer.web.app') {
+      window.location.replace(window.location.href.replace('codeminer.web.app', 'codeminer.firebaseapp.com'));
+    }
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CodeMiners Hackathon — Dashboard</title>
