@@ -487,12 +487,34 @@ DOM.authForm.addEventListener('submit', async (e) => {
       }
 
       const userCredential = await auth.signInWithEmailAndPassword(loginEmail, password);
+      const user = userCredential.user;
       
       // Check if email is verified
-      if (!userCredential.user.emailVerified) {
+      if (!user.emailVerified) {
         await auth.signOut();
         showMessage('Please verify your email address first.');
         return;
+      }
+
+      // Ensure profile exists in Supabase profiles
+      const { data: profile, error: fetchError } = await supabaseClient
+        .from('profiles')
+        .select('id')
+        .eq('id', user.uid)
+        .maybeSingle();
+
+      if (!profile) {
+        const username = (user.email ? user.email.split('@')[0] : 'miner').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const { error: insertError } = await supabaseClient
+          .from('profiles')
+          .insert({
+            id: user.uid,
+            email: user.email || '',
+            full_name: user.displayName || user.email.split('@')[0],
+            username: username,
+            created_at: new Date().toISOString()
+          });
+        if (insertError) throw insertError;
       }
       
       showSuccessOverlay();
@@ -531,7 +553,7 @@ DOM.btnGoogle.addEventListener('click', async () => {
         .insert({
           id: user.uid,
           email: user.email || '',
-          full_name: user.displayName || '',
+          full_name: user.displayName || user.email.split('@')[0],
           username: username,
           created_at: new Date().toISOString()
         });
@@ -572,7 +594,7 @@ DOM.btnGithub.addEventListener('click', async () => {
         .insert({
           id: user.uid,
           email: user.email || '',
-          full_name: user.displayName || '',
+          full_name: user.displayName || user.email.split('@')[0],
           username: username,
           created_at: new Date().toISOString()
         });
