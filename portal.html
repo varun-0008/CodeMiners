@@ -908,7 +908,10 @@
                   <label class="input-label">FULL NAME</label>
                   <div class="input-wrap">
                     <i class="fa-solid fa-user input-ico"></i>
-                    <input type="text" class="field-input" id="edit-fullname" placeholder="">
+                    <input type="text" class="field-input" id="edit-fullname" placeholder="" disabled title="Full Name cannot be changed. Contact support at codeminerscommunity@gmail.com.">
+                  </div>
+                  <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">
+                    Full Name cannot be changed. For corrections, contact <a href="mailto:codeminerscommunity@gmail.com" style="color: var(--gold-light); text-decoration: underline;">codeminerscommunity@gmail.com</a>
                   </div>
                 </div>
                 <div>
@@ -1088,14 +1091,14 @@
 
         let fullName = (profile && profile.full_name) ? profile.full_name.trim() : '';
         if (!fullName) {
-          fullName = prompt("Please enter your Full Name to complete registration:");
+          fullName = prompt("Enter your Full Name (NOTE: You cannot change this later. For corrections, contact support at codeminerscommunity@gmail.com):");
           while (!fullName || !fullName.trim()) {
             if (fullName === null) {
               await auth.signOut();
               window.location.href = 'index.html';
               return;
             }
-            fullName = prompt("Full Name is required. Please enter your Full Name:");
+            fullName = prompt("Full Name is required. Enter your Full Name (NOTE: You cannot change this later. For corrections, contact support at codeminerscommunity@gmail.com):");
           }
           fullName = fullName.trim();
           

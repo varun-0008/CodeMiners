@@ -529,13 +529,13 @@ async function ensureProfileWithFullName(user) {
     let fullName = (profile && profile.full_name) ? profile.full_name.trim() : '';
 
     if (!fullName) {
-      fullName = prompt("Please enter your Full Name to complete login/registration:");
+      fullName = prompt("Enter your Full Name (NOTE: You cannot change this later. For corrections, contact support at codeminerscommunity@gmail.com):");
       while (!fullName || !fullName.trim()) {
         if (fullName === null) {
           await auth.signOut();
           return false;
         }
-        fullName = prompt("Full Name is required. Please enter your Full Name:");
+        fullName = prompt("Full Name is required. Enter your Full Name (NOTE: You cannot change this later. For corrections, contact support at codeminerscommunity@gmail.com):");
       }
       
       fullName = fullName.trim();
