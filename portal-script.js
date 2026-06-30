@@ -216,40 +216,10 @@ function regNext(step) {
         return;
       }
 
-      // Check if user is in an established team
-      if (!currentTeamId || !currentTeamData) {
-        showToast('You must create or join a team first to register for the Hackathon. Redirecting to Team page...', 'warning');
-        navigate('teams');
-        return;
-      }
-
-      // Auto-fill team details and set role to leader
-      setTimeout(() => {
-        const roleEl = document.getElementById('r-role');
-        const teamNameEl = document.getElementById('r-team-name');
-        const teamSizeEl = document.getElementById('r-team-size');
-        
-        if (roleEl) {
-          roleEl.value = 'leader';
-          roleEl.disabled = true;
-          toggleRoleFields();
-        }
-        if (teamNameEl) {
-          teamNameEl.value = currentTeamData.name;
-          teamNameEl.readOnly = true;
-        }
-        if (teamSizeEl) {
-          teamSizeEl.value = currentTeamData.members.length;
-          teamSizeEl.readOnly = true;
-        }
-        
-        // Hide invitation elements since team is already established
-        const inviteSearchEl = document.getElementById('r-invite-search');
-        if (inviteSearchEl) {
-          const parent = inviteSearchEl.parentElement.parentElement;
-          if (parent) parent.style.display = 'none';
-        }
-      }, 50);
+      showToast('Registration & Payment for the Hackathon are managed directly from the Team Management tab. Redirecting...', 'warning');
+      navigate('teams');
+      return;
+    }
     } else {
       // Re-enable input controls for other events
       const roleEl = document.getElementById('r-role');
@@ -1837,8 +1807,6 @@ async function loadIncomingInvitations(user) {
     if (!invitesSnapshot || invitesSnapshot.length === 0) {
       container.innerHTML = '<p style="color:rgba(255,255,255,0.4); text-align:center; padding: 20px;">No pending invitations found.</p>';
       return;
-    }
-
     let invitesHtml = '';
     invitesSnapshot.forEach(invite => {
       invitesHtml += `
@@ -1959,7 +1927,7 @@ async function createTeam() {
   }
 }
 
-function renderTeamDashboard(user, teamId, teamData) {
+async function renderTeamDashboard(user, teamId, teamData) {
   document.getElementById('dash-team-name').textContent = teamData.name;
   document.getElementById('dash-team-desc').textContent = teamData.description || 'No description provided.';
   document.getElementById('dash-team-tech').textContent = teamData.techStack;
@@ -2002,6 +1970,239 @@ function renderTeamDashboard(user, teamId, teamData) {
       <button class="btn-ghost" style="flex: 1; padding: 14px 0; justify-content: center; border-color: rgba(255,255,255,0.1); color: var(--text-muted);" onclick="leaveTeam()"><i class="fa-solid fa-right-from-bracket"></i> LEAVE TEAM</button>
     `;
     document.getElementById('leader-invite-card').style.display = 'none';
+  }
+
+  // Hackathon Registration & Payment Section
+  const paymentCard = document.getElementById('team-payment-card');
+  const paymentCardBody = document.getElementById('team-payment-card-body');
+  if (paymentCard && paymentCardBody) {
+    paymentCard.style.display = 'block';
+    paymentCardBody.innerHTML = '<div style="text-align:center; padding:20px; color:rgba(255,255,255,0.4);"><i class="fa-solid fa-spinner fa-spin"></i> Checking registration status...</div>';
+
+    try {
+      const { data: reg, error: regError } = await supabaseClient
+        .from('registrations')
+        .select('*')
+        .eq('team_name', teamData.name)
+        .eq('event_name', 'CodeMiners Hackathon 2026')
+        .maybeSingle();
+
+      if (regError) throw regError;
+
+      if (reg) {
+        // Team is registered
+        paymentCardBody.innerHTML = `
+          <div style="text-align: center; padding: 12px 0;">
+            <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(76, 175, 80, 0.1); border: 2px solid rgba(76, 175, 80, 0.3); color: #4CAF50; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 16px auto;">
+              <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <h3 style="color: white; font-size: 18px; font-weight: 700; margin-bottom: 6px;">Team Registered Successfully!</h3>
+            <p style="color: var(--text-muted); font-size: 13.5px; margin-bottom: 20px; max-width: 480px; margin-left: auto; margin-right: auto; line-height: 1.5;">
+              Your team <strong>"${teamData.name}"</strong> has successfully registered for CodeMiners Hackathon 2026.
+            </p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 400px; margin: 0 auto; text-align: left; background: rgba(0,0,0,0.15); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.03);">
+              <div>
+                <span style="display: block; font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase;">Amount Paid</span>
+                <span style="font-weight: 700; color: var(--gold-light);">₹${reg.amount_paid}</span>
+              </div>
+              <div>
+                <span style="display: block; font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase;">Team Size</span>
+                <span style="font-weight: 700; color: var(--text-light);">${reg.team_size} Members</span>
+              </div>
+              <div style="grid-column: 1 / -1; margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
+                <span style="display: block; font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase;">Payment Transaction ID</span>
+                <span style="font-family: monospace; font-size: 11px; color: var(--text-light); word-break: break-all;">${reg.payment_id}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        // Team is NOT registered
+        if (isUserLeader) {
+          const rate = numMembers < 5 ? 70 : 50;
+          const totalAmount = rate * numMembers;
+          
+          const phoneVal = currentUserDoc?.phone || '';
+          const collegeVal = currentUserDoc?.college || '';
+          const yearVal = currentUserDoc?.year || 'second';
+          const pinVal = currentUserDoc?.pin || '';
+
+          paymentCardBody.innerHTML = `
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px; line-height: 1.5;">
+              Confirm your team details below and complete the hackathon registration payment. 
+              <strong>Fee Structure:</strong> ₹70 per head if team size is less than 5, or ₹50 per head if team size is exactly 5.
+            </p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+              <div>
+                <label class="input-label">CONTACT PHONE</label>
+                <div class="input-wrap">
+                  <i class="fa-solid fa-phone input-ico"></i>
+                  <input type="text" class="field-input" id="team-pay-phone" placeholder="Enter contact phone number" value="${phoneVal}">
+                </div>
+              </div>
+              <div>
+                <label class="input-label">COLLEGE NAME</label>
+                <div class="input-wrap">
+                  <i class="fa-solid fa-school input-ico"></i>
+                  <input type="text" class="field-input" id="team-pay-college" placeholder="Enter your college" value="${collegeVal}">
+                </div>
+              </div>
+              <div>
+                <label class="input-label">YEAR OF STUDY</label>
+                <div class="input-wrap">
+                  <i class="fa-solid fa-graduation-cap input-ico"></i>
+                  <select class="field-input select-field" id="team-pay-year" onchange="toggleTeamPayIdFields()" style="background:var(--dark-stone);">
+                    <option value="first" ${yearVal === 'first' ? 'selected' : ''}>First Year</option>
+                    <option value="second" ${yearVal === 'second' ? 'selected' : ''}>Second Year</option>
+                    <option value="third" ${yearVal === 'third' ? 'selected' : ''}>Third Year</option>
+                    <option value="fourth" ${yearVal === 'fourth' ? 'selected' : ''}>Fourth Year</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label class="input-label" id="team-pay-id-label">${yearVal === 'first' ? 'HALL TICKET NUMBER' : 'PIN NUMBER'}</label>
+                <div class="input-wrap">
+                  <i class="fa-solid fa-id-card input-ico"></i>
+                  <input type="text" class="field-input" id="team-pay-id-value" placeholder="${yearVal === 'first' ? 'Enter Hall Ticket number' : 'Enter PIN number'}" value="${pinVal}">
+                </div>
+              </div>
+            </div>
+            <div style="background: rgba(240, 165, 0, 0.05); border: 1px dashed var(--gold-primary); padding: 16px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-size: 14px; color: var(--text-light); font-weight: 600;">CodeMiners Hackathon 2026</div>
+                <div style="font-size: 12px; color: var(--text-muted);">${numMembers} member${numMembers > 1 ? 's' : ''} @ ₹${rate}/head</div>
+              </div>
+              <div style="font-size: 24px; color: var(--gold-primary); font-weight: 800;">₹${totalAmount}</div>
+            </div>
+            <button class="btn-gold" style="width: 100%; padding: 14px 0; font-size: 14px;" id="team-pay-submit-btn" onclick="payTeamRegistration()"><i class="fa-solid fa-credit-card"></i> CONFIRM TEAM & PAY REGISTRATION</button>
+          `;
+        } else {
+          paymentCardBody.innerHTML = `
+            <div style="text-align: center; padding: 12px 0;">
+              <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(255, 152, 0, 0.1); border: 2px solid rgba(255, 152, 0, 0.3); color: #FF9800; display: flex; align-items: center; justify-content: center; font-size: 22px; margin: 0 auto 12px auto;">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+              </div>
+              <h4 style="color: white; font-size: 15px; font-weight: 600; margin-bottom: 4px;">Awaiting Team Registration</h4>
+              <p style="color: var(--text-muted); font-size: 13px; line-height: 1.5; max-width: 400px; margin: 0 auto;">
+                Your team is not registered for the Hackathon yet. Waiting for your Team Leader to complete the registration and payment.
+              </p>
+            </div>
+          `;
+        }
+      }
+    } catch (err) {
+      console.error("Error loading team registration status:", err);
+      paymentCardBody.innerHTML = '<div style="color:#f44336; padding:10px;">Failed to verify registration status.</div>';
+    }
+  }
+}
+
+function toggleTeamPayIdFields() {
+  const yearSelect = document.getElementById('team-pay-year');
+  const label = document.getElementById('team-pay-id-label');
+  const input = document.getElementById('team-pay-id-value');
+  if (yearSelect && label && input) {
+    if (yearSelect.value === 'first') {
+      label.textContent = 'HALL TICKET NUMBER';
+      input.placeholder = 'Enter Hall Ticket number';
+    } else {
+      label.textContent = 'PIN NUMBER';
+      input.placeholder = 'Enter PIN number';
+    }
+  }
+}
+
+function payTeamRegistration() {
+  const phone = document.getElementById('team-pay-phone').value.trim();
+  const college = document.getElementById('team-pay-college').value.trim();
+  const studyYear = document.getElementById('team-pay-year').value;
+  const idValue = document.getElementById('team-pay-id-value').value.trim();
+
+  if (!phone || !college || !idValue) {
+    showToast('Please fill in all required fields.', 'error');
+    return;
+  }
+
+  const teamSize = currentTeamData ? currentTeamData.members.length : 1;
+  const rate = teamSize < 5 ? 70 : 50;
+  const amount = rate * teamSize;
+
+  const btnElement = document.getElementById('team-pay-submit-btn');
+  const originalBtnHtml = btnElement.innerHTML;
+  btnElement.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+  btnElement.disabled = true;
+
+  const options = {
+    key: 'rzp_live_T77jqjiWmPUazt',
+    amount: amount * 100, // in paise
+    currency: "INR",
+    name: "CodeMiners",
+    description: "Hackathon Team Registration Fee",
+    image: "logo.png",
+    handler: function (response) {
+      showToast("Payment Successful!", "success");
+      btnElement.innerHTML = originalBtnHtml;
+      btnElement.disabled = false;
+      
+      processTeamRegistration(response.razorpay_payment_id, phone, college, studyYear, idValue);
+    },
+    prefill: {
+      name: window.currentUser.displayName || '',
+      email: window.currentUser.email || '',
+      contact: phone
+    },
+    theme: {
+      color: "#F0A500"
+    }
+  };
+
+  const rzp = new Razorpay(options);
+  rzp.on('payment.failed', function (response) {
+    showToast("Payment Failed. Try again.", "error");
+    btnElement.innerHTML = originalBtnHtml;
+    btnElement.disabled = false;
+  });
+  rzp.open();
+}
+
+async function processTeamRegistration(paymentId, phone, college, studyYear, idValue) {
+  const user = window.currentUser;
+  const teamSize = currentTeamData.members.length;
+  const rate = teamSize < 5 ? 70 : 50;
+  const amountPaid = rate * teamSize;
+
+  const idType = studyYear === 'first' ? 'hallticket' : 'pin';
+
+  const supabasePayload = {
+    full_name: user.displayName || 'Leader',
+    email: user.email,
+    phone: phone,
+    college: college,
+    year: studyYear,
+    id_type: idType,
+    id_value: idValue,
+    role: 'leader',
+    event_name: 'CodeMiners Hackathon 2026',
+    team_name: currentTeamData.name,
+    team_size: teamSize,
+    payment_id: paymentId,
+    payment_status: 'captured',
+    amount_paid: amountPaid,
+    created_at: new Date().toISOString()
+  };
+
+  try {
+    const { error: insertError } = await supabaseClient
+      .from('registrations')
+      .insert(supabasePayload);
+
+    if (insertError) throw insertError;
+
+    showToast("Registration completed successfully!", "success");
+    syncTeamSection(); // Refresh team dashboard to show registered status card!
+  } catch (error) {
+    console.error("Error processing registration:", error);
+    showToast("Registration saved in payment, but failed to log. Contact support.", "error");
   }
 }
 
