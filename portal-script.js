@@ -219,7 +219,6 @@ function regNext(step) {
       showToast('Registration & Payment for the Hackathon are managed directly from the Team Management tab. Redirecting...', 'warning');
       navigate('teams');
       return;
-    }
     } else {
       // Re-enable input controls for other events
       const roleEl = document.getElementById('r-role');
