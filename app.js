@@ -4,22 +4,12 @@
    ============================================ */
 
 // ─────────────────────────────────────────────
-// Firebase Configuration
+// Supabase Configuration
 // ─────────────────────────────────────────────
-const firebaseConfig = {
-  apiKey:            "AIzaSyBPXWdCMkXUtubyOx5OGR6iPxcmqJDqex8",
-  authDomain:        "codeminer.firebaseapp.com",
-  projectId:         "codeminer",
-  storageBucket:     "codeminer.firebasestorage.app",
-  messagingSenderId: "904581344425",
-  appId:             "1:904581344425:web:37ae619d7d8403957f8db8",
-  measurementId:     "G-1P9T3KN8VJ"
-};
-
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+const SUPABASE_URL = 'https://omxgqhwogkihrdnlonoq.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_UGnbbIMZrz-jZvLN8pS7jw_1LGAp3HP';
+const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+const db = firebase.firestore(); // Keep db reference in case it is still referenced in trigger emails, though we will phase it out
 
 // ─────────────────────────────────────────────
 // DOM References
@@ -372,7 +362,7 @@ DOM.toggleBtn.addEventListener('click', (e) => {
       DOM.emailInput.placeholder = '';
       DOM.cardTitle.innerHTML = '<i class="fa-solid fa-fingerprint"></i> Welcome Back';
       DOM.cardSubtitle.textContent = 'Access your neural dashboard';
-      DOM.emailLabel.textContent = 'Username / Email Address';
+      DOM.emailLabel.textContent = 'Email Address';
       if (DOM.forgotBtn) DOM.forgotBtn.parentElement.style.display = 'block';
     }
 
@@ -407,36 +397,21 @@ if (DOM.forgotBtn) {
   DOM.forgotBtn.addEventListener('click', async () => {
     const inputVal = DOM.emailInput.value.trim();
     if (!inputVal) {
-      showMessage('Please enter your username or email address first.');
+      showMessage('Please enter your email address first.');
+      return;
+    }
+    if (!inputVal.includes('@')) {
+      showMessage('Please enter a valid email address.');
       return;
     }
 
     setLoading(true);
-    let resetEmail = inputVal;
 
     try {
-      if (!resetEmail.includes('@')) {
-        // It's a username, lookup email
-        const userRef = db.collection('users').where('username', '==', resetEmail);
-        const snapshot = await userRef.get();
-        if (snapshot.empty) {
-          showMessage('No account found with this username.');
-          setLoading(false);
-          return;
-        }
-        resetEmail = snapshot.docs[0].data().email;
-      } else {
-        // It's an email, check if it exists in our database first
-        const emailRef = db.collection('users').where('email', '==', resetEmail);
-        const snapshot = await emailRef.get();
-        if (snapshot.empty) {
-          showMessage('No account found with this email address.');
-          setLoading(false);
-          return;
-        }
-      }
-
-      await auth.sendPasswordResetEmail(resetEmail);
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(inputVal, {
+        redirectTo: window.location.origin + '/reset-password.html'
+      });
+      if (error) throw error;
       showMessage('Password reset link sent to your email!', 'success');
     } catch (error) {
       showMessage(error.message);
@@ -447,7 +422,7 @@ if (DOM.forgotBtn) {
 }
 
 // ─────────────────────────────────────────────
-// Firebase Auth — Email / Password
+// Supabase Auth — Email / Password
 // ─────────────────────────────────────────────
 DOM.authForm.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -471,70 +446,42 @@ DOM.authForm.addEventListener('submit', async (e) => {
   try {
     if (isSignUp) {
       const email = inputVal;
-      const name = DOM.nameInput.value.trim();
+      const fullName = DOM.nameInput.value.trim();
       
-      if (!name) {
-        showMessage('Please enter a username.');
-        setLoading(false);
-        return;
-      }
-      
-      if (name.includes('@')) {
-        showMessage('Username cannot contain @ symbol.');
+      if (!fullName) {
+        showMessage('Please enter your full name.');
         setLoading(false);
         return;
       }
 
-      // Check if username is taken
-      const userRef = db.collection('users').where('username', '==', name);
-      const snapshot = await userRef.get();
-      if (!snapshot.empty) {
-        showMessage('Username already taken. Please try a different one.');
-        setLoading(false);
-        return;
-      }
-
-      const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-      
-      if (name) {
-        await userCredential.user.updateProfile({ displayName: name });
-      }
-      
-      // Save mapping to Firestore
-      await db.collection('users').doc(userCredential.user.uid).set({
+      const { data, error } = await supabaseClient.auth.signUp({
         email: email,
-        username: name,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        password: password,
+        options: {
+          data: {
+            full_name: fullName,
+            username: email.split('@')[0]
+          }
+        }
       });
-      
-      // Send verification email and sign out
-      await userCredential.user.sendEmailVerification();
-      await auth.signOut();
+
+      if (error) throw error;
       
       showMessage('Account created! Verification link sent to your email.', 'success');
     } else {
-      let loginEmail = inputVal;
-      
-      // If it's a username (doesn't contain '@'), look up the email
+      const loginEmail = inputVal;
       if (!loginEmail.includes('@')) {
-        const userRef = db.collection('users').where('username', '==', loginEmail);
-        const snapshot = await userRef.get();
-        if (snapshot.empty) {
-          showMessage('Wrong credentials.');
-          setLoading(false);
-          return;
-        }
-        loginEmail = snapshot.docs[0].data().email;
+        showMessage('Please enter a valid email address.');
+        setLoading(false);
+        return;
       }
 
-      const userCredential = await auth.signInWithEmailAndPassword(loginEmail, password);
-      
-      // Check if email is verified
-      if (!userCredential.user.emailVerified) {
-        await auth.signOut();
-        showMessage('Please verify your email address first.');
-        return; // Stop execution, don't show success overlay
-      }
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email: loginEmail,
+        password: password
+      });
+
+      if (error) throw error;
       
       showSuccessOverlay();
       showMessage('Signed in successfully!', 'success');
@@ -543,113 +490,52 @@ DOM.authForm.addEventListener('submit', async (e) => {
       }, 800);
     }
   } catch (error) {
-    const messages = {
-      'auth/user-not-found':          'Wrong credentials.',
-      'auth/wrong-password':          'Wrong credentials.',
-      'auth/invalid-credential':      'Wrong credentials.',
-      'auth/email-already-in-use':    'Account already exists. Please sign in instead.',
-      'auth/weak-password':           'Password should be at least 6 characters.',
-      'auth/invalid-email':           'Please enter a valid email address.',
-      'auth/too-many-requests':       'Too many attempts. Please try again later.',
-      'auth/network-request-failed':  'Network error. Check your connection.',
-    };
-    showMessage(messages[error.code] || error.message);
+    showMessage(error.message);
   } finally {
     setLoading(false);
   }
 });
 
 // ─────────────────────────────────────────────
-// Firebase Auth — Google Sign-In
+// Supabase Auth — Google Sign-In
 // ─────────────────────────────────────────────
 DOM.btnGoogle.addEventListener('click', async () => {
-  const provider = new firebase.auth.GoogleAuthProvider();
   try {
-    const userCredential = await auth.signInWithPopup(provider);
-    
-    // Check if user exists in db, if not create them
-    const userDoc = await db.collection('users').doc(userCredential.user.uid).get();
-    if (!userDoc.exists) {
-      let baseUsername = (userCredential.user.email ? userCredential.user.email.split('@')[0] : 'miner').toLowerCase().replace(/[^a-z0-9]/g, '');
-      let username = baseUsername;
-      let counter = 1;
-      
-      // Ensure unique username
-      while(true) {
-        const usernameCheck = await db.collection('users').where('username', '==', username).get();
-        if (usernameCheck.empty) break;
-        username = baseUsername + counter;
-        counter++;
+    const { error } = await supabaseClient.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin + '/portal.html'
       }
-      
-      await db.collection('users').doc(userCredential.user.uid).set({
-        email: userCredential.user.email || '',
-        username: username,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    }
-
-    showMessage('Signed in with Google!', 'success');
-    setTimeout(() => {
-      window.location.href = 'portal.html';
-    }, 800);
+    });
+    if (error) throw error;
   } catch (error) {
-    if (error.code !== 'auth/popup-closed-by-user') {
-      showMessage(error.message);
-    }
+    showMessage(error.message);
   }
 });
 
 // ─────────────────────────────────────────────
-// Firebase Auth — GitHub Sign-In
+// Supabase Auth — GitHub Sign-In
 // ─────────────────────────────────────────────
 DOM.btnGithub.addEventListener('click', async () => {
-  const provider = new firebase.auth.GithubAuthProvider();
   try {
-    const userCredential = await auth.signInWithPopup(provider);
-    
-    // Check if user exists in db, if not create them
-    const userDoc = await db.collection('users').doc(userCredential.user.uid).get();
-    if (!userDoc.exists) {
-      let baseUsername = (userCredential.user.email ? userCredential.user.email.split('@')[0] : (userCredential.user.displayName ? userCredential.user.displayName.replace(/\s+/g, '') : 'miner')).toLowerCase().replace(/[^a-z0-9]/g, '');
-      if(!baseUsername) baseUsername = 'miner';
-      let username = baseUsername;
-      let counter = 1;
-      
-      // Ensure unique username
-      while(true) {
-        const usernameCheck = await db.collection('users').where('username', '==', username).get();
-        if (usernameCheck.empty) break;
-        username = baseUsername + counter;
-        counter++;
+    const { error } = await supabaseClient.auth.signInWithOAuth({
+      provider: 'github',
+      options: {
+        redirectTo: window.location.origin + '/portal.html'
       }
-      
-      await db.collection('users').doc(userCredential.user.uid).set({
-        email: userCredential.user.email || '',
-        username: username,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    }
-
-    showMessage('Signed in with GitHub!', 'success');
-    setTimeout(() => {
-      window.location.href = 'portal.html';
-    }, 800);
+    });
+    if (error) throw error;
   } catch (error) {
-    if (error.code !== 'auth/popup-closed-by-user') {
-      showMessage(error.message);
-    }
+    showMessage(error.message);
   }
 });
 
 // ─────────────────────────────────────────────
 // Auth State Observer
 // ─────────────────────────────────────────────
-auth.onAuthStateChanged((user) => {
-  if (user && window.location.pathname.endsWith('index.html') === false &&
-      window.location.pathname !== '/' &&
-      !window.location.pathname.endsWith('/')) {
-    // User is already signed in — handled by redirect in sign-in flow
+supabaseClient.auth.onAuthStateChange((event, session) => {
+  if (session?.user && (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/'))) {
+    window.location.href = 'portal.html';
   }
 });
 

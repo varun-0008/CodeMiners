@@ -19,6 +19,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <link rel="stylesheet" href="styles.css" />
 
@@ -110,18 +111,18 @@
         <!-- Email/Password Form -->
         <form class="auth-form" id="authForm" autocomplete="off">
           <div class="input-group" id="nameGroup" style="display: none;">
-            <label class="input-label" for="nameInput">Username</label>
+            <label class="input-label" for="nameInput">Full Name</label>
             <div class="input-wrapper">
               <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                 <circle cx="12" cy="7" r="4"/>
               </svg>
-              <input class="input-field" type="text" id="nameInput" placeholder="" />
+              <input class="input-field" type="text" id="nameInput" placeholder="Enter your full name" />
             </div>
           </div>
 
           <div class="input-group">
-            <label class="input-label" id="emailLabel" for="emailInput">Username / Email Address</label>
+            <label class="input-label" id="emailLabel" for="emailInput">Email Address</label>
             <div class="input-wrapper">
               <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="2" y="4" width="20" height="16" rx="2"/>

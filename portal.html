@@ -33,15 +33,17 @@
       measurementId:     "G-1P9T3KN8VJ"
     };
     firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
     const db = firebase.firestore();
 
     // Auth guard — redirect unauthenticated users back to login
-    auth.onAuthStateChanged(function(user) {
-      if (!user) {
+    const checkUser = async () => {
+      await new Promise(r => setTimeout(r, 100));
+      const session = localStorage.getItem('sb-omxgqhwogkihrdnlonoq-auth-token');
+      if (!session) {
         window.location.href = 'index.html';
       }
-    });
+    };
+    checkUser();
   </script>
 </head>
 <body>
@@ -876,7 +878,7 @@
                 </div>
 
                 <div style="text-align: right; margin-top: 20px;">
-                  <button class="btn-ghost" onclick="auth.signOut().then(()=>{ window.location.href='index.html'; });">
+                  <button class="btn-ghost" onclick="supabaseClient.auth.signOut().then(()=>{ window.location.href='index.html'; });">
                     <i class="fa-solid fa-right-from-bracket"></i> Sign Out
                   </button>
                 </div>
@@ -1055,8 +1057,10 @@
     // Global user doc reference
     let currentUserDoc = null;
 
-    // Populate profile section with Firebase user info
-    auth.onAuthStateChanged(async function(user) {
+    // Populate profile section with Supabase user info
+    supabaseClient.auth.onAuthStateChange(async (event, session) => {
+      const user = session?.user;
+      window.currentUser = user; // Set global user variable for portal-script.js
       if (user) {
         const displayEl  = document.getElementById('profile-display-name');
         const usernameEl = document.getElementById('profile-username');
@@ -1066,96 +1070,94 @@
         const aboutEl    = document.getElementById('profile-about');
         const projectsEl = document.getElementById('profile-projects');
 
-        if (displayEl) displayEl.textContent = user.displayName || 'CodeMiner';
-        if (usernameEl) usernameEl.textContent = user.displayName || '—';
+        const userFullName = user.user_metadata?.full_name || 'CodeMiner';
+        const userUsername = user.user_metadata?.username || user.email.split('@')[0];
+
+        if (displayEl) displayEl.textContent = userFullName;
+        if (usernameEl) usernameEl.textContent = userUsername;
         if (emailEl) emailEl.textContent = user.email || '—';
 
         // Pre-fill edit fields
         document.getElementById('edit-email').value = user.email || '';
-        document.getElementById('edit-username').value = user.displayName || '';
+        document.getElementById('edit-username').value = userUsername;
+        document.getElementById('edit-fullname').value = userFullName;
 
         try {
-          const userDoc = await db.collection('users').doc(user.uid).get();
-          if (userDoc.exists) {
-            const data = userDoc.data();
-            currentUserDoc = data;
+          const { data: profile, error: profileError } = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle();
+
+          if (profileError) throw profileError;
+
+          if (profile) {
+            currentUserDoc = profile;
             
-            if (data.username && usernameEl) {
-              usernameEl.textContent = data.username;
-              document.getElementById('edit-username').value = data.username;
+            if (profile.username && usernameEl) {
+              usernameEl.textContent = profile.username;
+              document.getElementById('edit-username').value = profile.username;
             }
-            if (data.fullName && fullnameEl) {
-              fullnameEl.textContent = data.fullName;
-              document.getElementById('edit-fullname').value = data.fullName;
+            if (profile.full_name && fullnameEl) {
+              fullnameEl.textContent = profile.full_name;
+              document.getElementById('edit-fullname').value = profile.full_name;
             } else if (fullnameEl) {
               fullnameEl.textContent = 'Not provided';
               document.getElementById('edit-fullname').value = '';
             }
             
-            if (data.pin && pinEl) {
-              pinEl.textContent = data.pin;
-              document.getElementById('edit-pin').value = data.pin;
+            if (profile.pin && pinEl) {
+              pinEl.textContent = profile.pin;
+              document.getElementById('edit-pin').value = profile.pin;
             } else if (pinEl) {
               pinEl.textContent = 'Not provided';
               document.getElementById('edit-pin').value = '';
             }
             
-            if (data.about && aboutEl) {
-              aboutEl.textContent = data.about;
-              document.getElementById('edit-about').value = data.about;
+            if (profile.about && aboutEl) {
+              aboutEl.textContent = profile.about;
+              document.getElementById('edit-about').value = profile.about;
             } else if (aboutEl) {
               aboutEl.textContent = 'Write a short bio about yourself...';
               document.getElementById('edit-about').value = '';
             }
             
-            if (data.projects) {
+            if (projectsEl) {
+              const projects = Array.isArray(profile.projects) ? profile.projects : [];
               const projectsContainer = document.getElementById('edit-projects-container');
               if (projectsContainer) projectsContainer.innerHTML = '';
               
-              let projectsArray = [];
-              if (Array.isArray(data.projects)) {
-                projectsArray = data.projects;
-              } else if (typeof data.projects === 'string') {
-                projectsArray = data.projects.split('\n').filter(l => l.trim()).map(l => ({ name: 'Project', link: l.trim() }));
-              }
-
-              if (projectsArray.length > 0) {
-                if(projectsEl) {
-                  projectsEl.innerHTML = projectsArray.map(p => `
-                    <div style="margin-bottom: 12px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.02);">
-                      <div style="color: var(--gold-light); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">${p.name || 'Untitled Project'}</div>
-                      ${p.link ? `<a href="${p.link}" target="_blank" style="color: var(--blue-accent); text-decoration: underline; font-size: 13px; word-break: break-all;"><i class="fa-solid fa-link" style="font-size: 11px; margin-right: 6px;"></i>${p.link}</a>` : ''}
-                    </div>
-                  `).join('');
-                }
-                projectsArray.forEach(p => addProjectField(p.name, p.link));
+              if (projects.length > 0) {
+                projectsEl.innerHTML = projects.map(p => `
+                  <div style="margin-bottom: 12px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.02);">
+                    <div style="color: var(--gold-light); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">${p.name || 'Untitled Project'}</div>
+                    ${p.link ? `<a href="${p.link}" target="_blank" style="color: var(--blue-accent); text-decoration: underline; font-size: 13px; word-break: break-all;"><i class="fa-solid fa-link" style="font-size: 11px; margin-right: 6px;"></i>${p.link}</a>` : ''}
+                  </div>
+                `).join('');
+                projects.forEach(p => addProjectField(p.name, p.link));
               } else {
-                if(projectsEl) projectsEl.innerHTML = 'No projects added yet...';
-                addProjectField();
-              }
-            } else {
-              if (projectsEl) projectsEl.innerHTML = 'No projects added yet...';
-              const projectsContainer = document.getElementById('edit-projects-container');
-              if (projectsContainer) {
-                projectsContainer.innerHTML = '';
+                projectsEl.innerHTML = 'No projects added yet...';
                 addProjectField();
               }
             }
-            
-            if (data.fullName && displayEl) displayEl.textContent = data.fullName;
           } else {
             if (fullnameEl) fullnameEl.textContent = 'Not provided';
             if (pinEl) pinEl.textContent = 'Not provided';
             if (aboutEl) aboutEl.textContent = 'Write a short bio about yourself...';
             if (projectsEl) projectsEl.innerHTML = 'No projects added yet...';
           }
-        } catch (error) {
-          console.error("Error fetching user details:", error);
+        } catch (err) {
+          console.error("Error loading Supabase profile info:", err);
           if (fullnameEl) fullnameEl.textContent = 'Not provided';
           if (pinEl) pinEl.textContent = 'Not provided';
           if (aboutEl) aboutEl.textContent = 'Write a short bio about yourself...';
           if (projectsEl) projectsEl.innerHTML = 'No projects added yet...';
         }
+        
+        // Sync team section once user session is loaded
+        syncTeamSection();
+      } else {
+        window.location.href = 'index.html';
       }
     });
 
@@ -1192,7 +1194,7 @@
     }
 
     async function saveProfile() {
-      const user = auth.currentUser;
+      const user = window.currentUser;
       if (!user) return;
 
       const newFullName = document.getElementById('edit-fullname').value.trim();
@@ -1215,18 +1217,30 @@
       btn.disabled = true;
 
       try {
-        await db.collection('users').doc(user.uid).set({
-          fullName: newFullName || null,
-          pin: newPin || null,
-          about: newAbout || null,
-          projects: newProjects.length > 0 ? newProjects : null
-        }, { merge: true });
+        const { error } = await supabaseClient
+          .from('profiles')
+          .update({
+            full_name: newFullName || null,
+            pin: newPin || null,
+            about: newAbout || null,
+            projects: newProjects
+          })
+          .eq('id', user.id);
 
-        // Optionally update Auth profile displayName if full name is provided
-        if (newFullName) {
-          await user.updateProfile({ displayName: newFullName });
-          document.getElementById('profile-display-name').textContent = newFullName;
+        if (error) throw error;
+
+        // Sync metadata full_name
+        const { error: metaError } = await supabaseClient.auth.updateUser({
+          data: { full_name: newFullName }
+        });
+        if (metaError) throw metaError;
+
+        // Update local session properties
+        if (window.currentUser.user_metadata) {
+          window.currentUser.user_metadata.full_name = newFullName;
         }
+
+        document.getElementById('profile-display-name').textContent = newFullName || 'CodeMiner';
 
         // Update UI View Mode
         document.getElementById('profile-fullname').textContent = newFullName || 'Not provided';

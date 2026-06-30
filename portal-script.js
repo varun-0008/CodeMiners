@@ -335,12 +335,12 @@ function regNext(step) {
   }
 }
 
-function processRegistration(btnElement, paymentId = null) {
+async function processRegistration(btnElement, paymentId = null) {
   const originalBtnText = btnElement.innerHTML;
   btnElement.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
   btnElement.disabled = true;
 
-  const user = auth.currentUser;
+  const user = window.currentUser;
   const role = document.getElementById('r-role').value;
   const teamName = document.getElementById('r-team-name') ? document.getElementById('r-team-name').value.trim() : '';
   const fullName = document.getElementById('r-name').value.trim();
@@ -403,14 +403,14 @@ function processRegistration(btnElement, paymentId = null) {
 
       let insertedTeamId = null;
       if (role === 'leader' && user) {
-        const username = user.displayName || fullName;
+        const username = user.user_metadata?.full_name || user.user_metadata?.username || fullName;
         const teamPayload = {
           name: teamName,
-          leader_id: user.uid,
+          leader_id: user.id || user.uid,
           leader_name: username,
           tech_stack: 'Not specified yet',
           description: 'Created during registration.',
-          members: [{ uid: user.uid, name: username, email: user.email, role: 'leader' }]
+          members: [{ uid: user.id || user.uid, name: username, email: user.email, role: 'leader' }]
         };
 
         const { data: teamData, error: teamError } = await supabaseClient
@@ -430,13 +430,16 @@ function processRegistration(btnElement, paymentId = null) {
         insertedTeamId = teamData.id;
 
         const batch = db.batch();
-        batch.update(db.collection('users').doc(user.uid), { teamId: insertedTeamId });
+        await supabaseClient
+          .from('profiles')
+          .update({ team_id: insertedTeamId })
+          .eq('id', user.id || user.uid);
 
         if (pendingInvites.length > 0) {
           const invitePayloads = pendingInvites.map(inv => ({
             team_id: insertedTeamId,
             team_name: teamName,
-            sender_id: user.uid,
+            sender_id: user.id || user.uid,
             sender_name: username,
             sender_email: user.email,
             receiver_email: inv.email,
@@ -599,7 +602,7 @@ let lastEventCached = null;
 async function performInviteSearch() {
   const identifier = document.getElementById('r-invite-search').value.trim().toLowerCase();
   const resultContainer = document.getElementById('r-search-result-container');
-  const user = auth.currentUser;
+  const user = window.currentUser;
   
   if (!user) {
     showToast("Please log in first to invite members.", "error");
@@ -657,14 +660,21 @@ async function performInviteSearch() {
       return;
     }
     
-    // 3. Fetch their UIDs from users collection
+    // 3. Fetch their UIDs from Supabase profiles table
     const emailsToFetch = matches.map(m => m.email);
-    const usersQuery = await db.collection('users').where('email', 'in', emailsToFetch).get();
+    const { data: profiles, error: profilesError } = await supabaseClient
+      .from('profiles')
+      .select('*')
+      .in('email', emailsToFetch);
     
+    if (profilesError) throw profilesError;
+
     const usersMap = {};
-    usersQuery.forEach(doc => {
-      usersMap[doc.data().email] = { uid: doc.id, ...doc.data() };
-    });
+    if (profiles) {
+      profiles.forEach(p => {
+        usersMap[p.email] = { uid: p.id, username: p.username || p.full_name, ...p };
+      });
+    }
     
     // 4. Render HTML
     let html = '';
@@ -677,7 +687,7 @@ async function performInviteSearch() {
       const receiverUsername = userData.username || match.fullName || receiverEmail;
       
       let actionHtml = '';
-      if (receiverUid === user.uid) {
+      if (receiverUid === (user.id || user.uid)) {
         actionHtml = `<div style="color:var(--text-danger); font-size: 11px;">You</div>`;
       } else if (match.role === 'leader' || match.teamName) {
         actionHtml = `<div style="color:var(--text-danger); font-size: 11px;">Already in a team</div>`;
@@ -1390,29 +1400,29 @@ function loadAllMiners() {
     </div>
   `;
   
-  // Fetch from Firebase Firestore - users collection
+  // Fetch from Supabase - profiles table
   try {
-    db.collection('users')
-      .get()
-      .then((snapshot) => {
+    supabaseClient
+      .from('profiles')
+      .select('*')
+      .then(({ data, error }) => {
+        if (error) throw error;
+        
         fetchedMiners = [];
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          let projectsArray = [];
-          if (Array.isArray(data.projects)) {
-            projectsArray = data.projects;
-          }
-          fetchedMiners.push({
-            id: doc.id,
-            name: data.username || 'Anonymous',
-            subtitle: data.fullName || '', 
-            year: '',
-            role: 'CodeMiner',
-            about: data.about || '',
-            projects: projectsArray,
-            pin: data.pin || ''
+        if (data) {
+          data.forEach(item => {
+            fetchedMiners.push({
+              id: item.id,
+              name: item.full_name || 'Anonymous',
+              subtitle: item.username || '', 
+              year: '',
+              role: 'CodeMiner',
+              about: item.about || '',
+              projects: Array.isArray(item.projects) ? item.projects : [],
+              pin: item.pin || ''
+            });
           });
-        });
+        }
         
         renderMinersList('');
       })
@@ -1563,6 +1573,80 @@ function viewMinerProfile(minerId) {
   `;
 }
 
+async function syncTeamSection() {
+  const user = window.currentUser;
+  if (!user) return;
+
+  const loadingView = document.getElementById('team-loading-view');
+  const noTeamView = document.getElementById('team-no-team-view');
+  const dashboardView = document.getElementById('team-dashboard-view');
+
+  if (loadingView) loadingView.style.display = 'block';
+  if (noTeamView) noTeamView.style.display = 'none';
+  if (dashboardView) dashboardView.style.display = 'none';
+
+  try {
+    const { data: profile, error: profileError } = await supabaseClient
+      .from('profiles')
+      .select('team_id')
+      .eq('id', user.id || user.uid)
+      .maybeSingle();
+
+    if (profileError) throw profileError;
+    const userData = profile ? { teamId: profile.team_id } : {};
+    
+    if (userData.teamId) {
+      const { data: teamData, error: teamError } = await supabaseClient
+        .from('teams')
+        .select('*')
+        .eq('id', userData.teamId)
+        .maybeSingle();
+
+      if (teamError) throw teamError;
+
+      if (teamData) {
+        currentTeamId = userData.teamId;
+        currentTeamData = teamData;
+        
+        // Map postgres snake_case keys back to the component-level expected camelCase keys
+        const formattedTeamData = {
+          name: teamData.name,
+          leaderId: teamData.leader_id,
+          leaderName: teamData.leader_name,
+          techStack: teamData.tech_stack,
+          description: teamData.description,
+          members: teamData.members
+        };
+
+        renderTeamDashboard(user, userData.teamId, formattedTeamData);
+        if (loadingView) loadingView.style.display = 'none';
+        if (dashboardView) {
+          dashboardView.style.display = 'grid';
+          if (window.innerWidth < 800) {
+            dashboardView.style.display = 'block';
+          }
+        }
+      } else {
+        // Team doc doesn't exist anymore, clean up user profile reference
+        await supabaseClient
+          .from('profiles')
+          .update({ team_id: null })
+          .eq('id', user.id || user.uid);
+        currentTeamId = null;
+        currentTeamData = null;
+        renderNoTeamView(user);
+      }
+    } else {
+      currentTeamId = null;
+      currentTeamData = null;
+      renderNoTeamView(user);
+    }
+  } catch (error) {
+    console.error("Error syncing team section:", error);
+    showToast("Failed to load team data.", "error");
+  }
+}
+
 function filterPastEvents() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -1656,74 +1740,7 @@ let currentTeamId = null;
 let currentTeamData = null;
 
 
-async function syncTeamSection() {
-  const user = auth.currentUser;
-  if (!user) return;
 
-  const loadingView = document.getElementById('team-loading-view');
-  const noTeamView = document.getElementById('team-no-team-view');
-  const dashboardView = document.getElementById('team-dashboard-view');
-
-  if (loadingView) loadingView.style.display = 'block';
-  if (noTeamView) noTeamView.style.display = 'none';
-  if (dashboardView) dashboardView.style.display = 'none';
-
-  try {
-    const userDoc = await db.collection('users').doc(user.uid).get();
-    const userData = userDoc.exists ? userDoc.data() : {};
-    
-    if (userData.teamId) {
-      const { data: teamData, error: teamError } = await supabaseClient
-        .from('teams')
-        .select('*')
-        .eq('id', userData.teamId)
-        .maybeSingle();
-
-      if (teamError) throw teamError;
-
-      if (teamData) {
-        currentTeamId = userData.teamId;
-        currentTeamData = teamData;
-        
-        // Map postgres snake_case keys back to the component-level expected camelCase keys
-        const formattedTeamData = {
-          name: teamData.name,
-          description: teamData.description,
-          techStack: teamData.tech_stack,
-          leaderId: teamData.leader_id,
-          leaderName: teamData.leader_name,
-          members: teamData.members,
-          createdAt: teamData.created_at
-        };
-        currentTeamData = formattedTeamData;
-
-        renderTeamDashboard(user, userData.teamId, formattedTeamData);
-        if (loadingView) loadingView.style.display = 'none';
-        if (dashboardView) {
-          dashboardView.style.display = 'grid';
-          if (window.innerWidth < 800) {
-            dashboardView.style.display = 'block';
-          }
-        }
-      } else {
-        // Team doc doesn't exist anymore, clean up user profile reference
-        await db.collection('users').doc(user.uid).update({ 
-          teamId: firebase.firestore.FieldValue.delete() 
-        });
-        currentTeamId = null;
-        currentTeamData = null;
-        renderNoTeamView(user);
-      }
-    } else {
-      currentTeamId = null;
-      currentTeamData = null;
-      renderNoTeamView(user);
-    }
-  } catch (error) {
-    console.error("Error syncing team section:", error);
-    showToast("Failed to load team data.", "error");
-  }
-}
 
 function renderNoTeamView(user) {
   const loadingView = document.getElementById('team-loading-view');
@@ -1789,7 +1806,7 @@ async function loadIncomingInvitations(user) {
 }
 
 async function createTeam() {
-  const user = auth.currentUser;
+  const user = window.currentUser;
   if (!user) return;
 
   const teamName = document.getElementById('new-team-name').value.trim();
@@ -1822,20 +1839,26 @@ async function createTeam() {
       return;
     }
 
-    // Retrieve username from user document
-    const userDoc = await db.collection('users').doc(user.uid).get();
-    const userData = userDoc.exists ? userDoc.data() : {};
-    const username = userData.username || user.displayName || user.email;
+    // Retrieve username from user profile
+    const { data: profile, error: profileError } = await supabaseClient
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id || user.uid)
+      .maybeSingle();
+
+    if (profileError) throw profileError;
+    const userData = profile || {};
+    const username = userData.full_name || userData.username || user.user_metadata?.full_name || user.email;
 
     const teamPayload = {
       name: teamName,
-      leader_id: user.uid,
+      leader_id: user.id || user.uid,
       leader_name: username,
       tech_stack: techStack,
       description: description || 'No description provided.',
       members: [
         {
-          uid: user.uid,
+          uid: user.id || user.uid,
           name: username,
           email: user.email,
           role: 'leader'
@@ -1851,8 +1874,12 @@ async function createTeam() {
 
     if (insertError) throw insertError;
 
+    await supabaseClient
+      .from('profiles')
+      .update({ team_id: teamData.id })
+      .eq('id', user.id || user.uid);
+
     const batch = db.batch();
-    batch.update(db.collection('users').doc(user.uid), { teamId: teamData.id });
     
     // Add document to 'mail' collection to send notification email (Trigger Email schema)
     const mailRef = db.collection('mail').doc();
@@ -1895,7 +1922,7 @@ function renderTeamDashboard(user, teamId, teamData) {
             <i class="fa-solid ${isLeader ? 'fa-crown' : 'fa-user'}"></i>
           </div>
           <div style="overflow: hidden;">
-            <div style="font-weight: 700; font-size: 13.5px; color: var(--text-light); text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${member.name} ${member.uid === user.uid ? '<span style="font-size:10px; color:var(--color-amber); font-weight:normal;">(You)</span>' : ''}</div>
+            <div style="font-weight: 700; font-size: 13.5px; color: var(--text-light); text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${member.name} ${member.uid === (user.id || user.uid) ? '<span style="font-size:10px; color:var(--color-amber); font-weight:normal;">(You)</span>' : ''}</div>
             <div style="font-size: 11px; color: var(--text-muted); text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${member.email}</div>
           </div>
         </div>
@@ -1905,7 +1932,7 @@ function renderTeamDashboard(user, teamId, teamData) {
   });
   membersList.innerHTML = membersHtml;
 
-  const isUserLeader = teamData.leaderId === user.uid;
+  const isUserLeader = teamData.leaderId === (user.id || user.uid);
   const actionsContainer = document.getElementById('team-management-actions');
   
   if (isUserLeader) {
@@ -1923,7 +1950,7 @@ function renderTeamDashboard(user, teamId, teamData) {
 }
 
 async function sendInvitation() {
-  const user = auth.currentUser;
+  const user = window.currentUser;
   if (!user || !currentTeamId || !currentTeamData) return;
 
   if (currentTeamData.members.length >= 4) {
@@ -1946,36 +1973,44 @@ async function sendInvitation() {
     let receiverUsername = "";
 
     const isEmail = identifier.includes('@');
-    let userQuery;
+    let profilesResult;
 
     if (isEmail) {
-      userQuery = await db.collection('users').where('email', '==', identifier).get();
+      profilesResult = await supabaseClient
+        .from('profiles')
+        .select('*')
+        .eq('email', identifier)
+        .maybeSingle();
     } else {
-      userQuery = await db.collection('users').where('username', '==', identifier).get();
+      profilesResult = await supabaseClient
+        .from('profiles')
+        .select('*')
+        .eq('username', identifier)
+        .maybeSingle();
     }
 
-    if (userQuery.empty) {
+    if (profilesResult.error) throw profilesResult.error;
+    const targetData = profilesResult.data;
+
+    if (!targetData) {
       showToast(`User "${identifier}" not found in our records.`, "error");
       btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> SEND INVITATION';
       btn.disabled = false;
       return;
     }
 
-    const targetUserDoc = userQuery.docs[0];
-    const targetData = targetUserDoc.data();
-
     receiverEmail = targetData.email;
-    receiverUid = targetUserDoc.id;
-    receiverUsername = targetData.username || receiverEmail;
+    receiverUid = targetData.id;
+    receiverUsername = targetData.full_name || targetData.username || receiverEmail;
 
-    if (targetData.teamId) {
+    if (targetData.team_id) {
       showToast(`"${receiverUsername}" is already in another team.`, "error");
       btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> SEND INVITATION';
       btn.disabled = false;
       return;
     }
 
-    if (receiverUid === user.uid) {
+    if (receiverUid === (user.id || user.uid)) {
       showToast("You cannot invite yourself.", "error");
       btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> SEND INVITATION';
       btn.disabled = false;
@@ -2001,7 +2036,7 @@ async function sendInvitation() {
     const invitePayload = {
       team_id: currentTeamId,
       team_name: currentTeamData.name,
-      sender_id: user.uid,
+      sender_id: user.id || user.uid,
       sender_name: currentTeamData.leaderName,
       sender_email: user.email,
       receiver_email: receiverEmail,
@@ -2095,7 +2130,7 @@ async function revokeInvitation(inviteId) {
 }
 
 async function acceptInvitation(inviteId, teamId) {
-  const user = auth.currentUser;
+  const user = window.currentUser;
   if (!user) return;
 
   try {
@@ -2118,12 +2153,18 @@ async function acceptInvitation(inviteId, teamId) {
       showToast("This team is already full.", "error"); return;
     }
 
-    const userDoc = await db.collection('users').doc(user.uid).get();
-    const userData = userDoc.exists ? userDoc.data() : {};
-    const username = userData.username || user.displayName || user.email;
+    const { data: profile, error: profileError } = await supabaseClient
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id || user.uid)
+      .maybeSingle();
+
+    if (profileError) throw profileError;
+    const userData = profile || {};
+    const username = userData.full_name || userData.username || user.user_metadata?.full_name || user.email;
 
     const newMember = {
-      uid: user.uid,
+      uid: user.id || user.uid,
       name: username,
       email: user.email,
       role: 'member'
@@ -2138,7 +2179,10 @@ async function acceptInvitation(inviteId, teamId) {
 
     if (updateTeamError) throw updateTeamError;
 
-    await db.collection('users').doc(user.uid).update({ teamId: teamId });
+    await supabaseClient
+      .from('profiles')
+      .update({ team_id: teamId })
+      .eq('id', user.id || user.uid);
 
     const { error: updateInviteError } = await supabaseClient
       .from('invitations')
@@ -2172,7 +2216,7 @@ async function acceptInvitation(inviteId, teamId) {
 }
 
 async function rejectInvitation(inviteId) {
-  const user = auth.currentUser;
+  const user = window.currentUser;
   if (!user) return;
   try {
     const { error } = await supabaseClient
@@ -2191,12 +2235,12 @@ async function rejectInvitation(inviteId) {
 }
 
 async function leaveTeam() {
-  const user = auth.currentUser;
+  const user = window.currentUser;
   if (!user || !currentTeamId || !currentTeamData) return;
 
   if (confirm("Are you sure you want to leave the team?")) {
     try {
-      const updatedMembers = currentTeamData.members.filter(m => m.uid !== user.uid);
+      const updatedMembers = currentTeamData.members.filter(m => m.uid !== (user.id || user.uid));
       
       const { error: updateError } = await supabaseClient
         .from('teams')
@@ -2205,9 +2249,10 @@ async function leaveTeam() {
 
       if (updateError) throw updateError;
 
-      await db.collection('users').doc(user.uid).update({ 
-        teamId: firebase.firestore.FieldValue.delete() 
-      });
+      await supabaseClient
+        .from('profiles')
+        .update({ team_id: null })
+        .eq('id', user.id || user.uid);
 
       showToast("You have left the team.", "success");
       syncTeamSection();
@@ -2219,21 +2264,16 @@ async function leaveTeam() {
 }
 
 async function disbandTeam() {
-  const user = auth.currentUser;
+  const user = window.currentUser;
   if (!user || !currentTeamId || !currentTeamData) return;
 
   if (confirm("WARNING: Are you sure you want to disband the team? All members will be removed and invitations revoked!")) {
     try {
-      const batch = db.batch();
       for (const member of currentTeamData.members) {
-        batch.update(db.collection('users').doc(member.uid), { 
-          teamId: firebase.firestore.FieldValue.delete() 
-        });
-      }
-      try {
-        await batch.commit();
-      } catch (e) {
-        console.warn("Error updating user profiles during disband:", e);
+        await supabaseClient
+          .from('profiles')
+          .update({ team_id: null })
+          .eq('id', member.uid);
       }
 
       const { error: inviteError } = await supabaseClient
