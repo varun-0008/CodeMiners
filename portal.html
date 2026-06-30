@@ -1064,6 +1064,51 @@
     auth.onAuthStateChanged(async function(user) {
       window.currentUser = user; // Set global user variable for portal-script.js
       if (user) {
+        // Ensure profile exists and has a validated Full Name
+        let profile = null;
+        try {
+          const { data: dbProfile, error: profileError } = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('id', user.uid)
+            .maybeSingle();
+          if (profileError) throw profileError;
+          profile = dbProfile;
+        } catch (err) {
+          console.error("Error reading profile:", err);
+        }
+
+        let fullName = (profile && profile.full_name) ? profile.full_name.trim() : '';
+        if (!fullName) {
+          fullName = prompt("Please enter your Full Name to complete registration:");
+          while (!fullName || !fullName.trim()) {
+            if (fullName === null) {
+              await auth.signOut();
+              window.location.href = 'index.html';
+              return;
+            }
+            fullName = prompt("Full Name is required. Please enter your Full Name:");
+          }
+          fullName = fullName.trim();
+          
+          const username = (user.email ? user.email.split('@')[0] : 'miner').toLowerCase().replace(/[^a-z0-9]/g, '');
+          const { error: upsertError } = await supabaseClient
+            .from('profiles')
+            .upsert({
+              id: user.uid,
+              email: user.email || '',
+              full_name: fullName,
+              username: username,
+              created_at: profile ? profile.created_at : new Date().toISOString()
+            });
+          if (upsertError) {
+            console.error("Error upserting profile:", upsertError);
+          } else {
+            // Reload page to display changes cleanly
+            window.location.reload();
+            return;
+          }
+        }
         const displayEl  = document.getElementById('profile-display-name');
         const usernameEl = document.getElementById('profile-username');
         const fullnameEl = document.getElementById('profile-fullname');

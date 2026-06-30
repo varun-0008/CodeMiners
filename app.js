@@ -496,25 +496,10 @@ DOM.authForm.addEventListener('submit', async (e) => {
         return;
       }
 
-      // Ensure profile exists in Supabase profiles
-      const { data: profile, error: fetchError } = await supabaseClient
-        .from('profiles')
-        .select('id')
-        .eq('id', user.uid)
-        .maybeSingle();
-
-      if (!profile) {
-        const username = (user.email ? user.email.split('@')[0] : 'miner').toLowerCase().replace(/[^a-z0-9]/g, '');
-        const { error: insertError } = await supabaseClient
-          .from('profiles')
-          .insert({
-            id: user.uid,
-            email: user.email || '',
-            full_name: user.displayName || user.email.split('@')[0],
-            username: username,
-            created_at: new Date().toISOString()
-          });
-        if (insertError) throw insertError;
+      const success = await ensureProfileWithFullName(user);
+      if (!success) {
+        showMessage('Login cancelled. Full name is required.');
+        return;
       }
       
       showSuccessOverlay();
@@ -530,6 +515,55 @@ DOM.authForm.addEventListener('submit', async (e) => {
   }
 });
 
+// Helper to ensure profile exists and has a validated Full Name (requires user input if missing)
+async function ensureProfileWithFullName(user) {
+  try {
+    const { data: profile, error: fetchError } = await supabaseClient
+      .from('profiles')
+      .select('*')
+      .eq('id', user.uid)
+      .maybeSingle();
+
+    if (fetchError) throw fetchError;
+
+    let fullName = (profile && profile.full_name) ? profile.full_name.trim() : '';
+
+    if (!fullName) {
+      fullName = prompt("Please enter your Full Name to complete login/registration:");
+      while (!fullName || !fullName.trim()) {
+        if (fullName === null) {
+          await auth.signOut();
+          return false;
+        }
+        fullName = prompt("Full Name is required. Please enter your Full Name:");
+      }
+      
+      fullName = fullName.trim();
+      const username = (user.email ? user.email.split('@')[0] : 'miner').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+      // Upsert the profile record
+      const { error: upsertError } = await supabaseClient
+        .from('profiles')
+        .upsert({
+          id: user.uid,
+          email: user.email || '',
+          full_name: fullName,
+          username: username,
+          created_at: profile ? profile.created_at : new Date().toISOString()
+        });
+
+      if (upsertError) throw upsertError;
+
+      // Sync display name in Firebase Auth
+      await user.updateProfile({ displayName: fullName });
+    }
+    return true;
+  } catch (err) {
+    console.error("Error verifying profile:", err);
+    throw err;
+  }
+}
+
 // ─────────────────────────────────────────────
 // Firebase Auth — Google Sign-In
 // ─────────────────────────────────────────────
@@ -539,25 +573,10 @@ DOM.btnGoogle.addEventListener('click', async () => {
     const userCredential = await auth.signInWithPopup(provider);
     const user = userCredential.user;
     
-    // Check if profile exists in Supabase profiles, if not create it
-    const { data: profile, error: fetchError } = await supabaseClient
-      .from('profiles')
-      .select('id')
-      .eq('id', user.uid)
-      .maybeSingle();
-
-    if (!profile) {
-      const username = (user.email ? user.email.split('@')[0] : 'miner').toLowerCase().replace(/[^a-z0-9]/g, '');
-      const { error: insertError } = await supabaseClient
-        .from('profiles')
-        .insert({
-          id: user.uid,
-          email: user.email || '',
-          full_name: user.displayName || user.email.split('@')[0],
-          username: username,
-          created_at: new Date().toISOString()
-        });
-      if (insertError) throw insertError;
+    const success = await ensureProfileWithFullName(user);
+    if (!success) {
+      showMessage('Login cancelled. Full name is required.');
+      return;
     }
 
     showMessage('Signed in with Google!', 'success');
@@ -580,25 +599,10 @@ DOM.btnGithub.addEventListener('click', async () => {
     const userCredential = await auth.signInWithPopup(provider);
     const user = userCredential.user;
     
-    // Check if profile exists in Supabase profiles, if not create it
-    const { data: profile, error: fetchError } = await supabaseClient
-      .from('profiles')
-      .select('id')
-      .eq('id', user.uid)
-      .maybeSingle();
-
-    if (!profile) {
-      const username = (user.email ? user.email.split('@')[0] : 'miner').toLowerCase().replace(/[^a-z0-9]/g, '');
-      const { error: insertError } = await supabaseClient
-        .from('profiles')
-        .insert({
-          id: user.uid,
-          email: user.email || '',
-          full_name: user.displayName || user.email.split('@')[0],
-          username: username,
-          created_at: new Date().toISOString()
-        });
-      if (insertError) throw insertError;
+    const success = await ensureProfileWithFullName(user);
+    if (!success) {
+      showMessage('Login cancelled. Full name is required.');
+      return;
     }
 
     showMessage('Signed in with GitHub!', 'success');
