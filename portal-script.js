@@ -1806,6 +1806,7 @@ async function loadIncomingInvitations(user) {
     if (!invitesSnapshot || invitesSnapshot.length === 0) {
       container.innerHTML = '<p style="color:rgba(255,255,255,0.4); text-align:center; padding: 20px;">No pending invitations found.</p>';
       return;
+    }
     let invitesHtml = '';
     invitesSnapshot.forEach(invite => {
       invitesHtml += `
