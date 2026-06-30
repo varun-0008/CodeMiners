@@ -215,6 +215,59 @@ function regNext(step) {
         showToast('Hackathon registration is only open from June 29th to July 5th.', 'error');
         return;
       }
+
+      // Check if user is in an established team
+      if (!currentTeamId || !currentTeamData) {
+        showToast('You must create or join a team first in the Team Management section below to register for the Hackathon.', 'error');
+        return;
+      }
+
+      // Auto-fill team details and set role to leader
+      setTimeout(() => {
+        const roleEl = document.getElementById('r-role');
+        const teamNameEl = document.getElementById('r-team-name');
+        const teamSizeEl = document.getElementById('r-team-size');
+        
+        if (roleEl) {
+          roleEl.value = 'leader';
+          roleEl.disabled = true;
+          toggleRoleFields();
+        }
+        if (teamNameEl) {
+          teamNameEl.value = currentTeamData.name;
+          teamNameEl.readOnly = true;
+        }
+        if (teamSizeEl) {
+          teamSizeEl.value = currentTeamData.members.length;
+          teamSizeEl.readOnly = true;
+        }
+        
+        // Hide invitation elements since team is already established
+        const inviteSearchEl = document.getElementById('r-invite-search');
+        if (inviteSearchEl) {
+          const parent = inviteSearchEl.parentElement.parentElement;
+          if (parent) parent.style.display = 'none';
+        }
+      }, 50);
+    } else {
+      // Re-enable input controls for other events
+      const roleEl = document.getElementById('r-role');
+      if (roleEl) {
+        roleEl.disabled = false;
+      }
+      const teamNameEl = document.getElementById('r-team-name');
+      if (teamNameEl) {
+        teamNameEl.readOnly = false;
+      }
+      const teamSizeEl = document.getElementById('r-team-size');
+      if (teamSizeEl) {
+        teamSizeEl.readOnly = false;
+      }
+      const inviteSearchEl = document.getElementById('r-invite-search');
+      if (inviteSearchEl) {
+        const parent = inviteSearchEl.parentElement.parentElement;
+        if (parent) parent.style.display = 'block';
+      }
     }
 
     setRegStep(2);
@@ -350,7 +403,9 @@ async function processRegistration(btnElement, paymentId = null) {
   const idValue = studyYear === 'first' ? document.getElementById('r-hallticket').value.trim() : document.getElementById('r-pin').value.trim();
 
   // Prepare payload for Supabase
-  const amountPaid = selectedEvent === 'CodeMiners Hackathon 2026' ? (70 * (parseInt(document.getElementById('r-team-size').value) || 1)) : 0;
+  const realTeamSize = (selectedEvent === 'CodeMiners Hackathon 2026' && currentTeamData) ? currentTeamData.members.length : 1;
+  const rate = realTeamSize < 5 ? 70 : 50;
+  const amountPaid = selectedEvent === 'CodeMiners Hackathon 2026' ? (rate * realTeamSize) : 0;
   const actualPaymentId = paymentId || (selectedEvent === 'CodeMiners Hackathon 2026' ? 'pay_client_' + Date.now() : 'free_reg');
   const paymentStatus = selectedEvent === 'CodeMiners Hackathon 2026' ? 'captured' : 'free';
 
@@ -365,7 +420,7 @@ async function processRegistration(btnElement, paymentId = null) {
     role: role,
     event_name: selectedEvent,
     team_name: role === 'leader' ? teamName : null,
-    team_size: role === 'leader' ? (parseInt(document.getElementById('r-team-size').value) || 1) : 1,
+    team_size: role === 'leader' ? realTeamSize : 1,
     payment_id: actualPaymentId,
     payment_status: paymentStatus,
     amount_paid: amountPaid,
@@ -402,7 +457,7 @@ async function processRegistration(btnElement, paymentId = null) {
       }
 
       let insertedTeamId = null;
-      if (role === 'leader' && user) {
+      if (role === 'leader' && user && selectedEvent !== 'CodeMiners Hackathon 2026') {
         const username = user.user_metadata?.full_name || user.user_metadata?.username || fullName;
         const teamPayload = {
           name: teamName,
@@ -1909,7 +1964,7 @@ function renderTeamDashboard(user, teamId, teamData) {
   document.getElementById('dash-team-tech').textContent = teamData.techStack;
   
   const numMembers = teamData.members.length;
-  document.getElementById('team-size-badge').textContent = `${numMembers} / 4 members`;
+  document.getElementById('team-size-badge').textContent = `${numMembers} / 5 members`;
 
   const membersList = document.getElementById('team-members-list');
   let membersHtml = '';
@@ -1953,8 +2008,8 @@ async function sendInvitation() {
   const user = window.currentUser;
   if (!user || !currentTeamId || !currentTeamData) return;
 
-  if (currentTeamData.members.length >= 4) {
-    showToast("Your team is already full (maximum 4 members).", "error"); return;
+  if (currentTeamData.members.length >= 5) {
+    showToast("Your team is already full (maximum 5 members).", "error"); return;
   }
 
   const identifier = document.getElementById('invite-identifier').value.trim();
@@ -2149,7 +2204,7 @@ async function acceptInvitation(inviteId, teamId) {
       return;
     }
 
-    if (teamData.members.length >= 4) {
+    if (teamData.members.length >= 5) {
       showToast("This team is already full.", "error"); return;
     }
 
@@ -2304,19 +2359,21 @@ async function disbandTeam() {
 // RAZORPAY SDK REGISTRATION PAYMENT PORTAL (HACKATHON ONLY)
 // ─────────────────────────────────────────────────────────────
 function initRazorpayRegistrationPayment() {
-  const teamSize = parseInt(document.getElementById('r-team-size').value) || 1;
-  const amount = 70 * teamSize;
+  const teamSize = currentTeamData ? currentTeamData.members.length : 1;
+  const rate = teamSize < 5 ? 70 : 50;
+  const amount = rate * teamSize;
 
   document.getElementById('rp-amount').textContent = `₹${amount}`;
-  document.getElementById('rp-team-details').textContent = `CodeMiners Hackathon (${teamSize} member${teamSize > 1 ? 's' : ''})`;
+  document.getElementById('rp-team-details').textContent = `CodeMiners Hackathon (${teamSize} member${teamSize > 1 ? 's' : ''} @ ₹${rate}/head)`;
 }
 
 function payWithRazorpaySDK(btnElement) {
   const fullName = document.getElementById('r-name').value.trim();
   const email = document.getElementById('r-email').value.trim();
   const phone = document.getElementById('r-phone').value.trim();
-  const teamSize = parseInt(document.getElementById('r-team-size').value) || 1;
-  const amount = 70 * teamSize;
+  const teamSize = currentTeamData ? currentTeamData.members.length : 1;
+  const rate = teamSize < 5 ? 70 : 50;
+  const amount = rate * teamSize;
 
   const originalBtnHtml = btnElement.innerHTML;
   btnElement.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
