@@ -292,11 +292,12 @@ function regNext(step) {
     btn.disabled = true;
 
     const idValue = year === 'first' ? hallticket.trim() : pin.trim();
+    const globalHash = CryptoJS.SHA256(idValue + 'CM_GlobalSalt_2026_Hash').toString();
 
     supabaseClient
       .from('registrations')
       .select('*')
-      .eq('id_value', idValue)
+      .like('id_value', `%"hash":"${globalHash}"%`)
       .then(({ data: idData, error: idError }) => {
         if (idError) {
           console.error("Error checking registration:", idError);
@@ -379,14 +380,18 @@ async function processRegistration(btnElement, paymentId = null) {
   const actualPaymentId = paymentId || (selectedEvent === 'CodeMiners Hackathon 2026' ? 'pay_client_' + Date.now() : 'free_reg');
   const paymentStatus = selectedEvent === 'CodeMiners Hackathon 2026' ? 'captured' : 'free';
 
+  const encryptedId = encryptIdValue(idValue, user.uid);
+  const encryptedPhone = encryptData(document.getElementById('r-phone').value.trim(), user.uid);
+  const encryptedCollege = encryptGlobal(document.getElementById('r-college').value.trim());
+
   const supabasePayload = {
     full_name: fullName,
     email: email,
-    phone: document.getElementById('r-phone').value.trim(),
-    college: document.getElementById('r-college').value.trim(),
+    phone: encryptedPhone,
+    college: encryptedCollege,
     year: studyYear,
     id_type: idType,
-    id_value: idValue,
+    id_value: encryptedId,
     role: role,
     event_name: selectedEvent,
     team_name: role === 'leader' ? teamName : null,
@@ -1380,16 +1385,21 @@ function viewParticipants(eventId, eventTitle) {
         
         fetchedMiners = [];
         if (data) {
+          const user = window.currentUser;
           data.forEach(item => {
+            const isOwner = user && (item.email === user.email);
+            const decryptedCollege = decryptGlobal(item.college);
+            const decryptedPin = isOwner ? decryptIdValue(item.id_value, user.uid) : 'Encrypted';
+
             fetchedMiners.push({
               id: item.id,
               name: item.full_name || 'Participant',
-              subtitle: item.college || '', 
+              subtitle: decryptedCollege || '', 
               year: item.year || '',
               role: 'Participant',
               about: '', 
               projects: [],
-              pin: item.id_value || '',
+              pin: decryptedPin || '',
               participationType: 'Individual',
               teamName: item.team_name || ''
             });
@@ -2022,10 +2032,11 @@ async function renderTeamDashboard(user, teamId, teamData) {
           const rate = numMembers < 5 ? 70 : 50;
           const totalAmount = rate * numMembers;
           
-          const phoneVal = currentUserDoc?.phone || '';
-          const collegeVal = currentUserDoc?.college || '';
+          const user = window.currentUser;
+          const phoneVal = currentUserDoc?.phone ? decryptData(currentUserDoc.phone, user.uid) : '';
+          const collegeVal = currentUserDoc?.college ? decryptGlobal(currentUserDoc.college) : '';
           const yearVal = currentUserDoc?.year || 'second';
-          const pinVal = currentUserDoc?.pin || '';
+          const pinVal = currentUserDoc?.pin ? decryptData(currentUserDoc.pin, user.uid) : '';
 
           paymentCardBody.innerHTML = `
             <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px; line-height: 1.5;">
@@ -2173,14 +2184,18 @@ async function processTeamRegistration(paymentId, phone, college, studyYear, idV
 
   const idType = studyYear === 'first' ? 'hallticket' : 'pin';
 
+  const encryptedId = encryptIdValue(idValue, user.uid);
+  const encryptedPhone = encryptData(phone, user.uid);
+  const encryptedCollege = encryptGlobal(college);
+
   const supabasePayload = {
     full_name: user.displayName || 'Leader',
     email: user.email,
-    phone: phone,
-    college: college,
+    phone: encryptedPhone,
+    college: encryptedCollege,
     year: studyYear,
     id_type: idType,
-    id_value: idValue,
+    id_value: encryptedId,
     role: 'leader',
     event_name: 'CodeMiners Hackathon 2026',
     team_name: currentTeamData.name,

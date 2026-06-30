@@ -6,6 +6,7 @@
       window.location.replace(window.location.href.replace('codeminer.web.app', 'codeminer.firebaseapp.com'));
     }
   </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Code Miners — Operations Portal</title>
@@ -1071,6 +1072,50 @@
     // Global user doc reference
     let currentUserDoc = null;
 
+    // Cryptographic Helpers (AES-CBC + SHA256 Blind Indexing)
+    const CRYPTO_SALT = 'CM_SecretSalt_2026_Key';
+    const GLOBAL_SALT = 'CM_GlobalSalt_2026_Hash';
+
+    function getDerivationKey(uid) {
+      return CryptoJS.SHA256(uid + CRYPTO_SALT).toString();
+    }
+
+    function encryptData(plainText, uid) {
+      if (!plainText) return '';
+      const key = getDerivationKey(uid);
+      return CryptoJS.AES.encrypt(String(plainText), key).toString();
+    }
+
+    function decryptData(cipherText, uid) {
+      if (!cipherText) return '';
+      const key = getDerivationKey(uid);
+      try {
+        const bytes = CryptoJS.AES.decrypt(cipherText, key);
+        const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+        return decrypted || cipherText;
+      } catch (err) {
+        return cipherText;
+      }
+    }
+
+    function encryptIdValue(idValue, uid) {
+      if (!idValue) return '';
+      const cipher = encryptData(idValue, uid);
+      const hash = CryptoJS.SHA256(idValue + GLOBAL_SALT).toString();
+      return JSON.stringify({ cipher, hash });
+    }
+
+    function decryptIdValue(jsonStr, uid) {
+      if (!jsonStr) return '';
+      try {
+        const data = JSON.parse(jsonStr);
+        if (data && data.cipher) {
+          return decryptData(data.cipher, uid);
+        }
+      } catch (e) {}
+      return jsonStr;
+    }
+
     // Populate profile section with Firebase user info
     auth.onAuthStateChanged(async function(user) {
       window.currentUser = user; // Set global user variable for portal-script.js
@@ -1172,24 +1217,36 @@
               document.getElementById('edit-fullname').value = '';
             }
             
-            if (profile.pin && pinEl) {
-              pinEl.textContent = profile.pin;
-              document.getElementById('edit-pin').value = profile.pin;
+            const decryptedPin = profile.pin ? decryptData(profile.pin, user.uid) : '';
+            const decryptedAbout = profile.about ? decryptData(profile.about, user.uid) : '';
+            let decryptedProjects = [];
+            try {
+              if (profile.projects) {
+                const decProjStr = decryptData(profile.projects, user.uid);
+                decryptedProjects = JSON.parse(decProjStr);
+              }
+            } catch (e) {
+              decryptedProjects = Array.isArray(profile.projects) ? profile.projects : [];
+            }
+
+            if (decryptedPin && pinEl) {
+              pinEl.textContent = decryptedPin;
+              document.getElementById('edit-pin').value = decryptedPin;
             } else if (pinEl) {
               pinEl.textContent = 'Not provided';
               document.getElementById('edit-pin').value = '';
             }
             
-            if (profile.about && aboutEl) {
-              aboutEl.textContent = profile.about;
-              document.getElementById('edit-about').value = profile.about;
+            if (decryptedAbout && aboutEl) {
+              aboutEl.textContent = decryptedAbout;
+              document.getElementById('edit-about').value = decryptedAbout;
             } else if (aboutEl) {
               aboutEl.textContent = 'Write a short bio about yourself...';
               document.getElementById('edit-about').value = '';
             }
             
             if (projectsEl) {
-              const projects = Array.isArray(profile.projects) ? profile.projects : [];
+              const projects = decryptedProjects;
               const projectsContainer = document.getElementById('edit-projects-container');
               if (projectsContainer) projectsContainer.innerHTML = '';
               
@@ -1290,14 +1347,18 @@
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> SAVING...';
       btn.disabled = true;
 
+      const encPin = encryptData(newPin, user.uid);
+      const encAbout = encryptData(newAbout, user.uid);
+      const encProjects = encryptData(JSON.stringify(newProjects), user.uid);
+
       try {
         const { error } = await supabaseClient
           .from('profiles')
           .update({
             full_name: newFullName || null,
-            pin: newPin || null,
-            about: newAbout || null,
-            projects: newProjects
+            pin: encPin || null,
+            about: encAbout || null,
+            projects: encProjects || null
           })
           .eq('id', user.uid);
 
