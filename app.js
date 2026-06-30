@@ -4,12 +4,17 @@
    ============================================ */
 
 // ─────────────────────────────────────────────
-// Supabase Configuration
+// Firebase and Supabase Configuration
 // ─────────────────────────────────────────────
+if (typeof firebaseConfig !== 'undefined') {
+  firebase.initializeApp(firebaseConfig);
+}
+const auth = firebase.auth();
+const db = firebase.firestore();
+
 const SUPABASE_URL = 'https://omxgqhwogkihrdnlonoq.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_UGnbbIMZrz-jZvLN8pS7jw_1LGAp3HP';
 const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
-const db = firebase.firestore(); // Keep db reference in case it is still referenced in trigger emails, though we will phase it out
 
 // ─────────────────────────────────────────────
 // DOM References
@@ -408,10 +413,7 @@ if (DOM.forgotBtn) {
     setLoading(true);
 
     try {
-      const { error } = await supabaseClient.auth.resetPasswordForEmail(inputVal, {
-        redirectTo: window.location.origin + '/reset-password.html'
-      });
-      if (error) throw error;
+      await auth.sendPasswordResetEmail(inputVal);
       showMessage('Password reset link sent to your email!', 'success');
     } catch (error) {
       showMessage(error.message);
@@ -422,7 +424,7 @@ if (DOM.forgotBtn) {
 }
 
 // ─────────────────────────────────────────────
-// Supabase Auth — Email / Password
+// Firebase Auth — Email / Password
 // ─────────────────────────────────────────────
 DOM.authForm.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -454,18 +456,26 @@ DOM.authForm.addEventListener('submit', async (e) => {
         return;
       }
 
-      const { data, error } = await supabaseClient.auth.signUp({
-        email: email,
-        password: password,
-        options: {
-          data: {
-            full_name: fullName,
-            username: email.split('@')[0]
-          }
-        }
-      });
+      const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+      
+      await userCredential.user.updateProfile({ displayName: fullName });
 
-      if (error) throw error;
+      // Save user profile directly to Supabase profiles table
+      const { error: profileError } = await supabaseClient
+        .from('profiles')
+        .insert({
+          id: userCredential.user.uid,
+          email: email,
+          full_name: fullName,
+          username: email.split('@')[0],
+          created_at: new Date().toISOString()
+        });
+
+      if (profileError) throw profileError;
+      
+      // Send verification email and sign out
+      await userCredential.user.sendEmailVerification();
+      await auth.signOut();
       
       showMessage('Account created! Verification link sent to your email.', 'success');
     } else {
@@ -476,12 +486,14 @@ DOM.authForm.addEventListener('submit', async (e) => {
         return;
       }
 
-      const { data, error } = await supabaseClient.auth.signInWithPassword({
-        email: loginEmail,
-        password: password
-      });
-
-      if (error) throw error;
+      const userCredential = await auth.signInWithEmailAndPassword(loginEmail, password);
+      
+      // Check if email is verified
+      if (!userCredential.user.emailVerified) {
+        await auth.signOut();
+        showMessage('Please verify your email address first.');
+        return;
+      }
       
       showSuccessOverlay();
       showMessage('Signed in successfully!', 'success');
@@ -497,44 +509,92 @@ DOM.authForm.addEventListener('submit', async (e) => {
 });
 
 // ─────────────────────────────────────────────
-// Supabase Auth — Google Sign-In
+// Firebase Auth — Google Sign-In
 // ─────────────────────────────────────────────
 DOM.btnGoogle.addEventListener('click', async () => {
+  const provider = new firebase.auth.GoogleAuthProvider();
   try {
-    const { error } = await supabaseClient.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: window.location.origin + '/portal.html'
-      }
-    });
-    if (error) throw error;
+    const userCredential = await auth.signInWithPopup(provider);
+    const user = userCredential.user;
+    
+    // Check if profile exists in Supabase profiles, if not create it
+    const { data: profile, error: fetchError } = await supabaseClient
+      .from('profiles')
+      .select('id')
+      .eq('id', user.uid)
+      .maybeSingle();
+
+    if (!profile) {
+      const username = (user.email ? user.email.split('@')[0] : 'miner').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const { error: insertError } = await supabaseClient
+        .from('profiles')
+        .insert({
+          id: user.uid,
+          email: user.email || '',
+          full_name: user.displayName || '',
+          username: username,
+          created_at: new Date().toISOString()
+        });
+      if (insertError) throw insertError;
+    }
+
+    showMessage('Signed in with Google!', 'success');
+    setTimeout(() => {
+      window.location.href = 'portal.html';
+    }, 800);
   } catch (error) {
-    showMessage(error.message);
+    if (error.code !== 'auth/popup-closed-by-user') {
+      showMessage(error.message);
+    }
   }
 });
 
 // ─────────────────────────────────────────────
-// Supabase Auth — GitHub Sign-In
+// Firebase Auth — GitHub Sign-In
 // ─────────────────────────────────────────────
 DOM.btnGithub.addEventListener('click', async () => {
+  const provider = new firebase.auth.GithubAuthProvider();
   try {
-    const { error } = await supabaseClient.auth.signInWithOAuth({
-      provider: 'github',
-      options: {
-        redirectTo: window.location.origin + '/portal.html'
-      }
-    });
-    if (error) throw error;
+    const userCredential = await auth.signInWithPopup(provider);
+    const user = userCredential.user;
+    
+    // Check if profile exists in Supabase profiles, if not create it
+    const { data: profile, error: fetchError } = await supabaseClient
+      .from('profiles')
+      .select('id')
+      .eq('id', user.uid)
+      .maybeSingle();
+
+    if (!profile) {
+      const username = (user.email ? user.email.split('@')[0] : 'miner').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const { error: insertError } = await supabaseClient
+        .from('profiles')
+        .insert({
+          id: user.uid,
+          email: user.email || '',
+          full_name: user.displayName || '',
+          username: username,
+          created_at: new Date().toISOString()
+        });
+      if (insertError) throw insertError;
+    }
+
+    showMessage('Signed in with GitHub!', 'success');
+    setTimeout(() => {
+      window.location.href = 'portal.html';
+    }, 800);
   } catch (error) {
-    showMessage(error.message);
+    if (error.code !== 'auth/popup-closed-by-user') {
+      showMessage(error.message);
+    }
   }
 });
 
 // ─────────────────────────────────────────────
 // Auth State Observer
 // ─────────────────────────────────────────────
-supabaseClient.auth.onAuthStateChange((event, session) => {
-  if (session?.user && (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/'))) {
+auth.onAuthStateChanged((user) => {
+  if (user && user.emailVerified && (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/'))) {
     window.location.href = 'portal.html';
   }
 });

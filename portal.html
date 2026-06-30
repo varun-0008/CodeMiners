@@ -33,17 +33,15 @@
       measurementId:     "G-1P9T3KN8VJ"
     };
     firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
     const db = firebase.firestore();
 
     // Auth guard — redirect unauthenticated users back to login
-    const checkUser = async () => {
-      await new Promise(r => setTimeout(r, 100));
-      const session = localStorage.getItem('sb-omxgqhwogkihrdnlonoq-auth-token');
-      if (!session) {
+    auth.onAuthStateChanged(function(user) {
+      if (!user) {
         window.location.href = 'index.html';
       }
-    };
-    checkUser();
+    });
   </script>
 </head>
 <body>
@@ -878,7 +876,7 @@
                 </div>
 
                 <div style="text-align: right; margin-top: 20px;">
-                  <button class="btn-ghost" onclick="supabaseClient.auth.signOut().then(()=>{ window.location.href='index.html'; });">
+                  <button class="btn-ghost" onclick="auth.signOut().then(()=>{ window.location.href='index.html'; });">
                     <i class="fa-solid fa-right-from-bracket"></i> Sign Out
                   </button>
                 </div>
@@ -1057,9 +1055,8 @@
     // Global user doc reference
     let currentUserDoc = null;
 
-    // Populate profile section with Supabase user info
-    supabaseClient.auth.onAuthStateChange(async (event, session) => {
-      const user = session?.user;
+    // Populate profile section with Firebase user info
+    auth.onAuthStateChanged(async function(user) {
       window.currentUser = user; // Set global user variable for portal-script.js
       if (user) {
         const displayEl  = document.getElementById('profile-display-name');
@@ -1070,8 +1067,8 @@
         const aboutEl    = document.getElementById('profile-about');
         const projectsEl = document.getElementById('profile-projects');
 
-        const userFullName = user.user_metadata?.full_name || 'CodeMiner';
-        const userUsername = user.user_metadata?.username || user.email.split('@')[0];
+        const userFullName = user.displayName || 'CodeMiner';
+        const userUsername = user.email.split('@')[0];
 
         if (displayEl) displayEl.textContent = userFullName;
         if (usernameEl) usernameEl.textContent = userUsername;
@@ -1086,7 +1083,7 @@
           const { data: profile, error: profileError } = await supabaseClient
             .from('profiles')
             .select('*')
-            .eq('id', user.id)
+            .eq('id', user.uid)
             .maybeSingle();
 
           if (profileError) throw profileError;
@@ -1141,10 +1138,18 @@
               }
             }
           } else {
-            if (fullnameEl) fullnameEl.textContent = 'Not provided';
-            if (pinEl) pinEl.textContent = 'Not provided';
-            if (aboutEl) aboutEl.textContent = 'Write a short bio about yourself...';
-            if (projectsEl) projectsEl.innerHTML = 'No projects added yet...';
+            // Profile doesn't exist yet, auto-create it in Supabase using Firebase user info
+            const { error: insertError } = await supabaseClient
+              .from('profiles')
+              .insert({
+                id: user.uid,
+                email: user.email,
+                full_name: userFullName,
+                username: userUsername,
+                created_at: new Date().toISOString()
+              });
+            if (insertError) console.error("Auto-create profile error:", insertError);
+            if (fullnameEl) fullnameEl.textContent = userFullName;
           }
         } catch (err) {
           console.error("Error loading Supabase profile info:", err);
@@ -1225,20 +1230,12 @@
             about: newAbout || null,
             projects: newProjects
           })
-          .eq('id', user.id);
+          .eq('id', user.uid);
 
         if (error) throw error;
 
-        // Sync metadata full_name
-        const { error: metaError } = await supabaseClient.auth.updateUser({
-          data: { full_name: newFullName }
-        });
-        if (metaError) throw metaError;
-
-        // Update local session properties
-        if (window.currentUser.user_metadata) {
-          window.currentUser.user_metadata.full_name = newFullName;
-        }
+        // Sync display name in Firebase Auth
+        await user.updateProfile({ displayName: newFullName });
 
         document.getElementById('profile-display-name').textContent = newFullName || 'CodeMiner';
 
