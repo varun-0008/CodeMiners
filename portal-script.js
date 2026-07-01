@@ -542,13 +542,13 @@ async function processRegistration(btnElement, paymentId = null) {
 
 function regBack(step) {
   if (step === 3) {
-    clearRPTimers();
+    if (typeof clearRPTimers === 'function') clearRPTimers();
   }
   setRegStep(step - 1);
 }
 
 function regReset() {
-  clearRPTimers();
+  if (typeof clearRPTimers === 'function') clearRPTimers();
   selectedEvent = null;
   document.querySelectorAll('input[name="event-select"]').forEach(r => r.checked = false);
   document.getElementById('r-name').value    = '';
@@ -1391,18 +1391,37 @@ function viewParticipants(eventId, eventTitle) {
             const decryptedCollege = decryptGlobal(item.college);
             const decryptedPin = isOwner ? decryptIdValue(item.id_value, user.uid) : 'Encrypted';
 
-            fetchedMiners.push({
-              id: item.id,
-              name: item.full_name || 'Participant',
-              subtitle: decryptedCollege || '', 
-              year: item.year || '',
-              role: 'Participant',
-              about: '', 
-              projects: [],
-              pin: decryptedPin || '',
-              participationType: 'Individual',
-              teamName: item.team_name || ''
-            });
+            if (item.team_name) {
+              let existingTeam = fetchedMiners.find(m => m.name === item.team_name && m.participationType === 'Team');
+              if (existingTeam) {
+                if (!existingTeam.teamMembers.includes(item.full_name)) {
+                  existingTeam.teamMembers.push(item.full_name);
+                }
+              } else {
+                fetchedMiners.push({
+                  id: item.team_name,
+                  name: item.team_name,
+                  subtitle: decryptedCollege || 'Team',
+                  participationType: 'Team',
+                  teamMembers: [item.full_name],
+                  teamProjectLink: item.project_link || '',
+                  projectName: item.project_name || ''
+                });
+              }
+            } else {
+              fetchedMiners.push({
+                id: item.id,
+                name: item.full_name || 'Participant',
+                subtitle: decryptedCollege || '', 
+                year: item.year || '',
+                role: 'Participant',
+                about: '', 
+                projects: item.project_link ? [{name: item.project_name || 'Project', link: item.project_link}] : [],
+                pin: decryptedPin || '',
+                participationType: '',
+                teamName: ''
+              });
+            }
           });
         }
         
@@ -1446,15 +1465,37 @@ function loadAllMiners() {
         fetchedMiners = [];
         if (data) {
           data.forEach(item => {
+            let projectsArr = [];
+            try {
+              if (item.projects) {
+                // If it's already an array, use it. If it's a string, try to decrypt and parse.
+                if (Array.isArray(item.projects)) {
+                  projectsArr = item.projects;
+                } else if (typeof item.projects === 'string') {
+                  const decProj = decryptData(item.projects, item.id);
+                  if (decProj) projectsArr = JSON.parse(decProj);
+                }
+              }
+            } catch (e) {
+              console.error("Failed to parse projects", e);
+            }
+
+            let decAbout = item.about;
+            let decPin = item.pin;
+            try {
+              if (item.about) decAbout = decryptData(item.about, item.id);
+              if (item.pin) decPin = decryptData(item.pin, item.id);
+            } catch (e) {}
+
             fetchedMiners.push({
               id: item.id,
               name: item.full_name || 'Anonymous',
               subtitle: item.username || '', 
               year: '',
               role: 'CodeMiner',
-              about: item.about || '',
-              projects: Array.isArray(item.projects) ? item.projects : [],
-              pin: item.pin || ''
+              about: decAbout || '',
+              projects: projectsArr,
+              pin: decPin || ''
             });
           });
         }
@@ -1499,7 +1540,7 @@ function renderMinersList(searchQuery = '') {
             <i class="fa-solid fa-user"></i>
           </div>
           <div>
-            <div style="font-weight: 700; color: white; margin-bottom:2px;">${m.name}</div>
+            <div style="font-weight: 700; color: var(--text-light); margin-bottom:2px;">${m.name}</div>
             <div style="font-size: 12px; color: var(--text-muted);">${m.subtitle}</div>
           </div>
           <i class="fa-solid fa-chevron-right" style="margin-left: auto; color: var(--text-muted);"></i>
@@ -1535,14 +1576,22 @@ function viewMinerProfile(minerId) {
         </div>
       </div>
     `;
-  } else if (m.participationType && m.teamProjectLink) {
+  } else if (m.participationType === 'Team') {
+    const safeId = btoa(unescape(encodeURIComponent(m.id))).replace(/=/g, '');
     projectsHtml = `
       <div style="background: rgba(0,0,0,0.2); border: 1.5px solid var(--rock-border); border-radius: 12px; padding: 20px; text-align: left; margin-top: 16px;">
-        <h3 style="margin-top:0; font-size: 15px; color: var(--text-light); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; margin-bottom: 12px;"><i class="fa-solid fa-rocket"></i> Team Project</h3>
+        <h3 style="margin-top:0; font-size: 15px; color: var(--text-light); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; margin-bottom: 12px;"><i class="fa-solid fa-rocket"></i> Team Project Link</h3>
         <div style="display: flex; flex-direction: column; gap: 8px;">
-            <a href="${m.teamProjectLink}" target="_blank" style="color: var(--gold-primary); text-decoration: none; font-size: 14px; background: rgba(240,165,0,0.1); padding: 8px 12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 8px;">
-              <i class="fa-solid fa-link" style="font-size: 12px;"></i> View Project
+          ${m.teamProjectLink ? `
+            <a href="${m.teamProjectLink}" target="_blank" style="color: var(--gold-primary); text-decoration: none; font-size: 14px; background: rgba(240,165,0,0.1); padding: 8px 12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+              <i class="fa-solid fa-link" style="font-size: 12px;"></i> ${m.teamProjectLink}
             </a>
+          ` : `<p style="color: var(--text-muted); font-size: 13px; margin: 0 0 8px 0;">No project link added yet.</p>`}
+          
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <input type="text" id="team-proj-link-${safeId}" placeholder="Enter project URL..." value="${m.teamProjectLink}" class="field-input" style="flex: 1; padding: 10px; font-size: 13px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 6px;">
+            <button class="btn-gold" style="padding: 10px 16px; font-size: 13px; border-radius: 6px;" onclick="updateTeamProjectLink(this, '${m.id}', '${safeId}')">Save</button>
+          </div>
         </div>
       </div>
     `;
@@ -1586,7 +1635,7 @@ function viewMinerProfile(minerId) {
       <div style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--gold-primary); margin: 0 auto 12px auto; box-shadow: 0 4px 16px rgba(240,165,0,0.2); background: rgba(240,165,0,0.1); display: flex; align-items: center; justify-content: center; color: var(--gold-primary); font-size: 40px;">
         <i class="fa-solid fa-user"></i>
       </div>
-      <h2 style="margin: 0 0 4px 0; color: white; font-size: 22px;">${m.name}</h2>
+      <h2 style="margin: 0 0 4px 0; color: var(--text-light); font-size: 22px;">${m.name}</h2>
       <div style="color: var(--gold-primary); font-weight: 600; font-size: 14px; margin-bottom: 16px;">${m.role}</div>
       
       ${m.subtitle || m.pin ? `
@@ -1606,6 +1655,43 @@ function viewMinerProfile(minerId) {
       ${projectsHtml}
     </div>
   `;
+}
+
+async function updateTeamProjectLink(btn, teamName, safeId) {
+  const inputEl = document.getElementById(`team-proj-link-${safeId}`);
+  if (!inputEl) return;
+  const url = inputEl.value.trim();
+  
+  if (!url) {
+    showToast("Please enter a valid URL.", "error");
+    return;
+  }
+  
+  const originalHtml = btn.innerHTML;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+  btn.disabled = true;
+
+  try {
+    const { error } = await supabaseClient
+      .from('registrations')
+      .update({ project_link: url })
+      .eq('team_name', teamName);
+      
+    if (error) throw error;
+    
+    showToast("Team project link updated!", "success");
+    const m = fetchedMiners.find(x => x.id === teamName);
+    if (m) {
+      m.teamProjectLink = url;
+    }
+    viewMinerProfile(teamName);
+  } catch (err) {
+    console.error("Error updating team project link:", err);
+    showToast("Failed to update link.", "error");
+  } finally {
+    btn.innerHTML = originalHtml;
+    btn.disabled = false;
+  }
 }
 
 async function syncTeamSection() {
@@ -1641,7 +1727,6 @@ async function syncTeamSection() {
 
       if (teamData) {
         currentTeamId = userData.teamId;
-        currentTeamData = teamData;
         
         // Map postgres snake_case keys back to the component-level expected camelCase keys
         const formattedTeamData = {
@@ -1652,6 +1737,8 @@ async function syncTeamSection() {
           description: teamData.description,
           members: teamData.members
         };
+
+        currentTeamData = formattedTeamData;
 
         renderTeamDashboard(user, userData.teamId, formattedTeamData);
         if (loadingView) loadingView.style.display = 'none';

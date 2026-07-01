@@ -316,7 +316,7 @@ img { max-width: 100%; display: block; }
 
 .card__subtitle {
   font-size: var(--fs-sm);
-  color: rgba(255, 255, 255, 0.5);
+  color: #000000;
   font-weight: 300;
 }
 
@@ -411,7 +411,7 @@ img { max-width: 100%; display: block; }
 
 .divider__text {
   font-size: var(--fs-xs);
-  color: rgba(255, 255, 255, 0.35);
+  color: #000000;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   white-space: nowrap;
@@ -492,7 +492,7 @@ img { max-width: 100%; display: block; }
   position: absolute;
   right: 12px;
   padding: 4px;
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(0, 0, 0, 0.4);
   transition: color var(--duration-fast) ease;
 }
 
@@ -512,7 +512,7 @@ img { max-width: 100%; display: block; }
 
 .forgot-password-btn {
   font-size: var(--fs-xs);
-  color: rgba(255, 255, 255, 0.5);
+  color: #000000;
   transition: color var(--duration-fast) ease;
 }
 
@@ -637,7 +637,7 @@ img { max-width: 100%; display: block; }
   text-align: center;
   margin-top: var(--space-lg);
   font-size: var(--fs-sm);
-  color: rgba(255, 255, 255, 0.45);
+  color: #000000;
 }
 
 .auth-toggle__btn {

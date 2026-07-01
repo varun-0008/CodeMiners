@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <script>
     if (window.location.hostname === 'codeminer.web.app') {
@@ -10,11 +11,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Code Miners — Operations Portal</title>
-  <meta name="description" content="Code Miners — Official operations portal for events, registrations, donations, and guild management.">
+  <meta name="description"
+    content="Code Miners — Official operations portal for events, registrations, donations, and guild management.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    crossorigin="anonymous">
   <link rel="stylesheet" href="portal-style.css">
 
   <!-- GSAP -->
@@ -30,26 +35,27 @@
   <script>
     // Firebase config — shared with login page
     const firebaseConfig = {
-      apiKey:            "AIzaSyBPXWdCMkXUtubyOx5OGR6iPxcmqJDqex8",
-      authDomain:        "codeminer.firebaseapp.com",
-      projectId:         "codeminer",
-      storageBucket:     "codeminer.firebasestorage.app",
+      apiKey: "AIzaSyBPXWdCMkXUtubyOx5OGR6iPxcmqJDqex8",
+      authDomain: "codeminer.firebaseapp.com",
+      projectId: "codeminer",
+      storageBucket: "codeminer.firebasestorage.app",
       messagingSenderId: "904581344425",
-      appId:             "1:904581344425:web:37ae619d7d8403957f8db8",
-      measurementId:     "G-1P9T3KN8VJ"
+      appId: "1:904581344425:web:37ae619d7d8403957f8db8",
+      measurementId: "G-1P9T3KN8VJ"
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
     // Auth guard — redirect unauthenticated users back to login
-    auth.onAuthStateChanged(function(user) {
+    auth.onAuthStateChanged(function (user) {
       if (!user) {
         window.location.href = 'index.html';
       }
     });
   </script>
 </head>
+
 <body>
 
   <!-- SVG Filters — Liquid Glass iOS 26 -->
@@ -64,7 +70,8 @@
       <!-- Lensing displacement/refraction filter -->
       <filter id="glassRefraction">
         <feTurbulence id="turbulence" type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="1" result="noise" />
-        <feDisplacementMap id="displacement" in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G" />
+        <feDisplacementMap id="displacement" in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R"
+          yChannelSelector="G" />
       </filter>
     </defs>
   </svg>
@@ -79,14 +86,23 @@
        CLOUD NAVIGATION BAR
        ═══════════════════════════════════════════════════════════ -->
   <nav class="cloud-nav" id="cloud-nav">
-    <a class="nav-link active" data-page="home"         onclick="navigate('home');return false;" href="#"><i class="fa-solid fa-house"></i> <span>Home</span></a>
-    <a class="nav-link" data-page="about"        onclick="navigate('about');return false;" href="#"><i class="fa-solid fa-users"></i> <span>About</span></a>
-    <a class="nav-link" data-page="registration" onclick="navigate('registration');return false;" href="#"><i class="fa-solid fa-id-card-clip"></i> <span>Registration</span></a>
-    <a class="nav-link" data-page="participants" onclick="navigate('participants');return false;" href="#"><i class="fa-solid fa-users-viewfinder"></i> <span>Participants</span></a>
-    <a class="nav-link" data-page="teams"        onclick="navigate('teams');return false;" href="#"><i class="fa-solid fa-people-group"></i> <span>Teams</span></a>
-    <a class="nav-link" data-page="donations"    onclick="navigate('donations');return false;" href="#"><i class="fa-solid fa-hand-holding-heart"></i> <span>Donations</span></a>
-    <a class="nav-link" data-page="contact"      onclick="navigate('contact');return false;" href="#"><i class="fa-solid fa-envelope"></i> <span>Contact</span></a>
-    <a class="nav-link" data-page="profile"      onclick="navigate('profile');return false;" href="#"><i class="fa-solid fa-circle-user"></i> <span>Profile</span></a>
+    <a class="nav-link active" data-page="home" onclick="navigate('home');return false;" href="#"><i
+        class="fa-solid fa-house"></i> <span>Home</span></a>
+    <a class="nav-link" data-page="about" onclick="navigate('about');return false;" href="#"><i
+        class="fa-solid fa-users"></i> <span>About</span></a>
+    <a class="nav-link" data-page="registration" onclick="navigate('registration');return false;" href="#"><i
+        class="fa-solid fa-id-card-clip"></i> <span>Registration</span></a>
+    <a class="nav-link" data-page="participants" onclick="navigate('participants');return false;" href="#"><i
+        class="fa-solid fa-users-viewfinder"></i> <span>Participants</span></a>
+    <a class="nav-link" data-page="teams" onclick="navigate('teams');return false;" href="#"><i
+        class="fa-solid fa-people-group"></i> <span>Teams</span></a>
+    <a class="nav-link" data-page="donations" onclick="navigate('donations');return false;" href="#"><i
+        class="fa-solid fa-hand-holding-heart"></i> <span>Donations</span></a>
+    <a class="nav-link" data-page="contact" onclick="navigate('contact');return false;" href="#"><i
+        class="fa-solid fa-envelope"></i> <span>Contact</span></a>
+    <a class="nav-link" data-page="profile" onclick="navigate('profile');return false;" href="#"><i
+        class="fa-solid fa-circle-user"></i> <span>Profile</span></a>
+
   </nav>
 
   <!-- Toast Container -->
@@ -109,9 +125,11 @@
         <h1 class="hero-title">
           Mine Your <span class="gradient-text">Potential</span><br>Build the Future
         </h1>
-        <p class="hero-desc" style="font-weight: 500; font-size: 1.15rem; text-shadow: 0 2px 8px rgba(0,0,0,0.9), 0 0 16px rgba(0,0,0,0.5);">
+        <p class="hero-desc"
+          style="font-weight: 500; font-size: 1.15rem; text-shadow: 0 2px 8px rgba(0,0,0,0.9), 0 0 16px rgba(0,0,0,0.5);">
           <strong style="font-weight: 800; font-size: 1.2rem; color: #fff;">Welcome to CodeMiners</strong><br>
-          <span style="color: #f0f2f5;">A community of innovators, developers, and problem-solvers dedicated to creating opportunities for students through workshops, hackathons, and technical events.</span>
+          <span style="color: #f0f2f5;">A community of innovators, developers, and problem-solvers dedicated to creating
+            opportunities for students through workshops, hackathons, and technical events.</span>
         </p>
       </div>
 
@@ -123,9 +141,13 @@
             <div class="home-about-text">
               <div class="section-tag"><i class="fa-solid fa-gem"></i> WHO WE ARE</div>
               <h2 class="section-title" style="margin-bottom:20px;">About <span class="accent">Code Miners</span></h2>
-              <p>Code Miners is a premier student-led organization built on the foundation of collaborative excellence. We dig deep into code, unearth hidden efficiencies, and forge developers into industry-ready engineers through real-world competitions and structured learning.</p>
-              <p>Founded in 2021, we have grown into a thriving community of over 200+ active members across multiple disciplines — from web development to systems programming.</p>
-              <button class="btn-outline" style="margin-top:8px;" onclick="navigate('about')"><i class="fa-solid fa-arrow-right"></i> LEARN MORE</button>
+              <p>Code Miners is a premier student-led organization built on the foundation of collaborative excellence.
+                We dig deep into code, unearth hidden efficiencies, and forge developers into industry-ready engineers
+                through real-world competitions and structured learning.</p>
+              <p>Founded in 2021, we have grown into a thriving community of over 200+ active members across multiple
+                disciplines — from web development to systems programming.</p>
+              <button class="btn-outline" style="margin-top:8px;" onclick="navigate('about')"><i
+                  class="fa-solid fa-arrow-right"></i> LEARN MORE</button>
             </div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
               <div class="achieve-card">
@@ -150,13 +172,15 @@
             <div class="section-tag"><i class="fa-solid fa-calendar-check"></i> UPCOMING EVENTS</div>
             <h2 class="section-title">Don't Miss <span class="accent">These</span></h2>
           </div>
-          <div class="events-preview-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+          <div class="events-preview-grid"
+            style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
             <div class="event-card" data-end-date="2026-06-28">
               <div class="event-card-top"></div>
               <div class="event-card-body">
                 <div class="event-date"><i class="fa-solid fa-calendar-day"></i> JUNE 28 , 2026</div>
                 <div class="event-title">CodeMiners Orientation</div>
-                <div class="event-desc">Welcome to the guild! Learn about our mission, upcoming events, and how you can get involved.</div>
+                <div class="event-desc">Welcome to the guild! Learn about our mission, upcoming events, and how you can
+                  get involved.</div>
                 <div class="event-footer">
                   <span class="badge badge-blue"><i class="fa-solid fa-users"></i> Kickoff</span>
                   <button class="btn-ghost" onclick="navigate('registration')">Register →</button>
@@ -168,7 +192,8 @@
               <div class="event-card-body">
                 <div class="event-date"><i class="fa-solid fa-calendar-day"></i> JULY 1, 2026</div>
                 <div class="event-title">Pre-Hackthon</div>
-                <div class="event-desc">Preparation and brainstorming session. Learn how to pitch, design, and plan your hackathon project successfully.</div>
+                <div class="event-desc">Preparation and brainstorming session. Learn how to pitch, design, and plan your
+                  hackathon project successfully.</div>
                 <div class="event-footer">
                   <span class="badge badge-purple"><i class="fa-solid fa-graduation-cap"></i> Prep Session</span>
                   <button class="btn-ghost" onclick="navigate('registration')">Register →</button>
@@ -180,7 +205,8 @@
               <div class="event-card-body">
                 <div class="event-date"><i class="fa-solid fa-calendar-day"></i> JULY 6, 2026</div>
                 <div class="event-title">CodeMiners Hackathon 2026</div>
-                <div class="event-desc">Our flagship 24-hour hackathon. Build, break, and innovate to win massive prizes!</div>
+                <div class="event-desc">Our flagship 24-hour hackathon. Build, break, and innovate to win massive
+                  prizes!</div>
                 <div class="event-footer">
                   <span class="badge badge-gold"><i class="fa-solid fa-fire"></i> Flagship</span>
                   <button class="btn-ghost" onclick="navigate('registration')">Register →</button>
@@ -195,10 +221,12 @@
         <div class="donate-cta" style="margin-bottom:72px;">
           <div class="donate-cta-left">
             <h2>Support the <span style="color:var(--gold-light)">Code Miners</span> Guild</h2>
-            <p>Your contribution helps us run larger events, provide better resources, and sponsor deserving students. Every rupee mined goes back into the community.</p>
+            <p>Your contribution helps us run larger events, provide better resources, and sponsor deserving students.
+              Every rupee mined goes back into the community.</p>
           </div>
           <div>
-            <button class="btn-gold" onclick="navigate('donations')"><i class="fa-solid fa-hand-holding-heart"></i> DONATE NOW</button>
+            <button class="btn-gold" onclick="navigate('donations')"><i class="fa-solid fa-hand-holding-heart"></i>
+              DONATE NOW</button>
           </div>
         </div>
 
@@ -210,12 +238,17 @@
           <div class="footer-top">
             <div>
               <img src="logo.png" alt="Code Miners" class="footer-brand-logo">
-              <p class="footer-brand-desc">Official student coding guild dedicated to mining excellence in software development through competitions, workshops, and collaborative projects.</p>
+              <p class="footer-brand-desc">Official student coding guild dedicated to mining excellence in software
+                development through competitions, workshops, and collaborative projects.</p>
               <div class="footer-social" style="margin-top:18px;">
-                <a class="social-btn" href="https://www.youtube.com/@CodeMiners-2026" target="_blank" title="YouTube"><i class="fa-brands fa-youtube"></i></a>
-                <a class="social-btn" href="https://www.linkedin.com/in/codeminers-community/" target="_blank" title="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
-                <a class="social-btn" href="https://www.instagram.com/code_miners?igsh=MXA3YTR2OWRwNjh0ag==" target="_blank" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
-                <a class="social-btn" href="https://chat.whatsapp.com/IotcXnOO81l07wY9Ft0QeC" target="_blank" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+                <a class="social-btn" href="https://www.youtube.com/@CodeMiners-2026" target="_blank" title="YouTube"><i
+                    class="fa-brands fa-youtube"></i></a>
+                <a class="social-btn" href="https://www.linkedin.com/in/codeminers-community/" target="_blank"
+                  title="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                <a class="social-btn" href="https://www.instagram.com/code_miners?igsh=MXA3YTR2OWRwNjh0ag=="
+                  target="_blank" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                <a class="social-btn" href="https://chat.whatsapp.com/IotcXnOO81l07wY9Ft0QeC" target="_blank"
+                  title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
               </div>
             </div>
             <div>
@@ -246,7 +279,8 @@
           </div>
           <div class="footer-bottom">
             <span class="footer-copy">© 2025 Code Miners. All rights reserved.</span>
-            <span class="footer-copy">Built with <i class="fa-solid fa-heart" style="color:var(--magma-primary)"></i> by the Guild</span>
+            <span class="footer-copy">Built with <i class="fa-solid fa-heart" style="color:var(--magma-primary)"></i> by
+              the Guild</span>
           </div>
         </div>
       </footer>
@@ -272,12 +306,21 @@
           <div class="mv-card" style="border: none;">
             <div class="mv-icon" style="border: none;"><i class="fa-solid fa-bullseye"></i></div>
             <div class="mv-title">Our Mission</div>
-            <div class="mv-text">To empower student developers through structured competitive events, professional mentorship, and a collaborative community that bridges the gap between academic learning and industry-level execution. We believe great software is mined — through effort, iteration, and teamwork.</div>
+            <div class="mv-text">To empower student developers through structured competitive events, professional
+              mentorship, and a collaborative community that bridges the gap between academic learning and
+              industry-level execution. We believe great software is mined — through effort, iteration, and teamwork.
+            </div>
           </div>
           <div class="mv-card" style="border: none;">
-            <div class="mv-icon" style="border: none;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" fill="currentColor" style="width: 1.125em; height: 1em; vertical-align: -0.125em;"><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.4 78.1-95.4 92.9-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.8-35.7-46.1-87.7-92.9-131.1C433.5 68.8 368.8 32 288 32zM128 256a160 160 0 1 1 320 0 160 160 0 1 1 -320 0zM288 368a112 112 0 1 0 0-224 112 112 0 1 0 0 224z"/></svg></div>
+            <div class="mv-icon" style="border: none;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"
+                fill="currentColor" style="width: 1.125em; height: 1em; vertical-align: -0.125em;">
+                <path
+                  d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.4 78.1-95.4 92.9-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.8-35.7-46.1-87.7-92.9-131.1C433.5 68.8 368.8 32 288 32zM128 256a160 160 0 1 1 320 0 160 160 0 1 1 -320 0zM288 368a112 112 0 1 0 0-224 112 112 0 1 0 0 224z" />
+              </svg></div>
             <div class="mv-title">Our Vision</div>
-            <div class="mv-text">To become the foremost student-run technology guild in the country — one where every member graduates not just with a degree, but with production-quality projects, a professional network, and the battle-tested confidence to build anything they imagine.</div>
+            <div class="mv-text">To become the foremost student-run technology guild in the country — one where every
+              member graduates not just with a degree, but with production-quality projects, a professional network, and
+              the battle-tested confidence to build anything they imagine.</div>
           </div>
         </div>
 
@@ -290,49 +333,57 @@
             <div class="team-avatar"><i class="fa-solid fa-user"></i></div>
             <div class="team-name">K.Varun</div>
             <div class="team-role">Student</div>
-            <a href="https://www.linkedin.com/in/kompelli-varun/" target="_blank" class="team-social-btn"><i class="fa-brands fa-linkedin-in"></i></a>
+            <a href="https://www.linkedin.com/in/kompelli-varun/" target="_blank" class="team-social-btn"><i
+                class="fa-brands fa-linkedin-in"></i></a>
           </div>
           <div class="team-card">
             <div class="team-avatar"><i class="fa-solid fa-user"></i></div>
             <div class="team-name">J.Anushka</div>
             <div class="team-role">Student</div>
-            <a href="https://www.linkedin.com/in/jogi-anushka-bb35553b2?utm_source=share_via&utm_content=profile&utm_medium=member_android" target="_blank" class="team-social-btn"><i class="fa-brands fa-linkedin-in"></i></a>
+            <a href="https://www.linkedin.com/in/jogi-anushka-bb35553b2?utm_source=share_via&utm_content=profile&utm_medium=member_android"
+              target="_blank" class="team-social-btn"><i class="fa-brands fa-linkedin-in"></i></a>
           </div>
           <div class="team-card">
             <div class="team-avatar"><i class="fa-solid fa-user"></i></div>
             <div class="team-name">A.Varshitha</div>
             <div class="team-role">Student</div>
-            <a href="https://www.linkedin.com/in/adula-varshitha-6b98a8346?utm_source=share_via&utm_content=profile&utm_medium=member_android" target="_blank" class="team-social-btn"><i class="fa-brands fa-linkedin-in"></i></a>
+            <a href="https://www.linkedin.com/in/adula-varshitha-6b98a8346?utm_source=share_via&utm_content=profile&utm_medium=member_android"
+              target="_blank" class="team-social-btn"><i class="fa-brands fa-linkedin-in"></i></a>
           </div>
           <div class="team-card">
             <div class="team-avatar"><i class="fa-solid fa-user"></i></div>
             <div class="team-name">M.vivek</div>
             <div class="team-role">Student</div>
-            <a href="https://www.linkedin.com/in/vivek-mothukuri-0a850b419?utm_source=share_via&utm_content=profile&utm_medium=member_android" target="_blank" class="team-social-btn"><i class="fa-brands fa-linkedin-in"></i></a>
+            <a href="https://www.linkedin.com/in/vivek-mothukuri-0a850b419?utm_source=share_via&utm_content=profile&utm_medium=member_android"
+              target="_blank" class="team-social-btn"><i class="fa-brands fa-linkedin-in"></i></a>
           </div>
           <div class="team-card">
             <div class="team-avatar"><i class="fa-solid fa-user"></i></div>
             <div class="team-name">B.Shiva Chaithanya</div>
             <div class="team-role">Student</div>
-            <a href="https://www.linkedin.com/in/shiva-chaithanya-dev/" target="_blank" class="team-social-btn"><i class="fa-brands fa-linkedin-in"></i></a>
+            <a href="https://www.linkedin.com/in/shiva-chaithanya-dev/" target="_blank" class="team-social-btn"><i
+                class="fa-brands fa-linkedin-in"></i></a>
           </div>
           <div class="team-card">
             <div class="team-avatar"><i class="fa-solid fa-user"></i></div>
             <div class="team-name">V.Goutham Krishna</div>
             <div class="team-role">Student</div>
-            <a href="https://www.linkedin.com/in/goutham-krishna-539010346?utm_source=share_via&utm_content=profile&utm_medium=member_android" target="_blank" class="team-social-btn"><i class="fa-brands fa-linkedin-in"></i></a>
+            <a href="https://www.linkedin.com/in/goutham-krishna-539010346?utm_source=share_via&utm_content=profile&utm_medium=member_android"
+              target="_blank" class="team-social-btn"><i class="fa-brands fa-linkedin-in"></i></a>
           </div>
           <div class="team-card">
             <div class="team-avatar"><i class="fa-solid fa-user"></i></div>
             <div class="team-name">B.Chanakya</div>
             <div class="team-role">Student</div>
-            <a href="https://www.linkedin.com/in/bavikadi-chanakya-ba307b2b1?utm_source=share_via&utm_content=profile&utm_medium=member_ios" target="_blank" class="team-social-btn"><i class="fa-brands fa-linkedin-in"></i></a>
+            <a href="https://www.linkedin.com/in/bavikadi-chanakya-ba307b2b1?utm_source=share_via&utm_content=profile&utm_medium=member_ios"
+              target="_blank" class="team-social-btn"><i class="fa-brands fa-linkedin-in"></i></a>
           </div>
           <div class="team-card">
             <div class="team-avatar"><i class="fa-solid fa-user"></i></div>
             <div class="team-name">K.Lalitha</div>
             <div class="team-role">Student</div>
-            <a href="https://www.linkedin.com/in/kavuri-lalitha-a01439385?utm_source=share_via&utm_content=profile&utm_medium=member_android" target="_blank" class="team-social-btn"><i class="fa-brands fa-linkedin-in"></i></a>
+            <a href="https://www.linkedin.com/in/kavuri-lalitha-a01439385?utm_source=share_via&utm_content=profile&utm_medium=member_android"
+              target="_blank" class="team-social-btn"><i class="fa-brands fa-linkedin-in"></i></a>
           </div>
         </div>
 
@@ -395,30 +446,51 @@
         <!-- Step 1: Select Event -->
         <div id="reg-panel-1">
           <div class="glass-card" style="max-width:720px;margin:0 auto;">
-            <div class="card-header"><div class="card-title"><i class="fa-solid fa-list-check"></i> Choose Your Event</div></div>
+            <div class="card-header">
+              <div class="card-title"><i class="fa-solid fa-list-check"></i> Choose Your Event</div>
+            </div>
             <div class="card-body">
               <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:24px;" id="event-select-container">
-                <label class="event-select-opt" data-end-date="2026-06-28" style="display:flex;align-items:center;gap:16px;padding:16px 18px;border:1.5px solid var(--rock-border);border-radius:10px;cursor:pointer;transition:var(--transition-smooth);" onmouseover="this.style.borderColor='rgba(240,165,0,0.3)'" onmouseout="this.style.borderColor='var(--rock-border)'">
-                  <input type="radio" name="event-select" value="orientation" style="accent-color:var(--gold-primary);width:18px;height:18px;" onchange="selectedEvent='CodeMiners Orientation'">
+                <label class="event-select-opt" data-end-date="2026-06-28"
+                  style="display:flex;align-items:center;gap:16px;padding:16px 18px;border:1.5px solid var(--rock-border);border-radius:10px;cursor:pointer;transition:var(--transition-smooth);"
+                  onmouseover="this.style.borderColor='rgba(240,165,0,0.3)'"
+                  onmouseout="this.style.borderColor='var(--rock-border)'">
+                  <input type="radio" name="event-select" value="orientation"
+                    style="accent-color:var(--gold-primary);width:18px;height:18px;"
+                    onchange="selectedEvent='CodeMiners Orientation'">
                   <div>
                     <div style="font-weight:700;color:var(--text-light);margin-bottom:4px;">CodeMiners Orientation</div>
-                    <div style="font-size:12px;color:var(--text-muted);">June 28, 2026 &nbsp;·&nbsp; Open to all &nbsp;·&nbsp; Free</div>
+                    <div style="font-size:12px;color:var(--text-muted);">June 28, 2026 &nbsp;·&nbsp; Open to all
+                      &nbsp;·&nbsp; Free</div>
                   </div>
                   <span class="badge badge-blue" style="margin-left:auto;">Kickoff</span>
                 </label>
-                <label class="event-select-opt" data-end-date="2026-07-01" style="display:flex;align-items:center;gap:16px;padding:16px 18px;border:1.5px solid var(--rock-border);border-radius:10px;cursor:pointer;transition:var(--transition-smooth);" onmouseover="this.style.borderColor='rgba(240,165,0,0.3)'" onmouseout="this.style.borderColor='var(--rock-border)'">
-                  <input type="radio" name="event-select" value="prehackathon" style="accent-color:var(--gold-primary);width:18px;height:18px;" onchange="selectedEvent='Pre-Hackthon'">
+                <label class="event-select-opt" data-end-date="2026-07-01"
+                  style="display:flex;align-items:center;gap:16px;padding:16px 18px;border:1.5px solid var(--rock-border);border-radius:10px;cursor:pointer;transition:var(--transition-smooth);"
+                  onmouseover="this.style.borderColor='rgba(240,165,0,0.3)'"
+                  onmouseout="this.style.borderColor='var(--rock-border)'">
+                  <input type="radio" name="event-select" value="prehackathon"
+                    style="accent-color:var(--gold-primary);width:18px;height:18px;"
+                    onchange="selectedEvent='Pre-Hackthon'">
                   <div>
                     <div style="font-weight:700;color:var(--text-light);margin-bottom:4px;">Pre-Hackthon</div>
-                    <div style="font-size:12px;color:var(--text-muted);">July 1, 2026 &nbsp;·&nbsp; Open to all &nbsp;·&nbsp; Free</div>
+                    <div style="font-size:12px;color:var(--text-muted);">July 1, 2026 &nbsp;·&nbsp; Open to all
+                      &nbsp;·&nbsp; Free</div>
                   </div>
                   <span class="badge badge-purple" style="margin-left:auto;">Prep</span>
                 </label>
-                <label class="event-select-opt" data-end-date="2026-07-06" style="display:flex;align-items:center;gap:16px;padding:16px 18px;border:1.5px solid var(--rock-border);border-radius:10px;cursor:pointer;transition:var(--transition-smooth);" onmouseover="this.style.borderColor='rgba(240,165,0,0.3)'" onmouseout="this.style.borderColor='var(--rock-border)'">
-                  <input type="radio" name="event-select" value="hackathon" style="accent-color:var(--gold-primary);width:18px;height:18px;" onchange="selectedEvent='CodeMiners Hackathon 2026'">
+                <label class="event-select-opt" data-end-date="2026-07-06"
+                  style="display:flex;align-items:center;gap:16px;padding:16px 18px;border:1.5px solid var(--rock-border);border-radius:10px;cursor:pointer;transition:var(--transition-smooth);"
+                  onmouseover="this.style.borderColor='rgba(240,165,0,0.3)'"
+                  onmouseout="this.style.borderColor='var(--rock-border)'">
+                  <input type="radio" name="event-select" value="hackathon"
+                    style="accent-color:var(--gold-primary);width:18px;height:18px;"
+                    onchange="selectedEvent='CodeMiners Hackathon 2026'">
                   <div>
-                    <div style="font-weight:700;color:var(--text-light);margin-bottom:4px;">CodeMiners Hackathon 2026</div>
-                    <div style="font-size:12px;color:var(--text-muted);">July 6, 2026 &nbsp;·&nbsp; Teams of 3–5 &nbsp;·&nbsp; ₹70/head</div>
+                    <div style="font-weight:700;color:var(--text-light);margin-bottom:4px;">CodeMiners Hackathon 2026
+                    </div>
+                    <div style="font-size:12px;color:var(--text-muted);">July 6, 2026 &nbsp;·&nbsp; Teams of 3–5
+                      &nbsp;·&nbsp; ₹70/head</div>
                   </div>
                   <span class="badge badge-gold" style="margin-left:auto;">Flagship</span>
                 </label>
@@ -431,14 +503,28 @@
         <!-- Step 2: Details -->
         <div id="reg-panel-2" style="display:none;">
           <div class="glass-card" style="max-width:720px;margin:0 auto;">
-            <div class="card-header"><div class="card-title"><i class="fa-solid fa-user-pen"></i> Registration Details</div></div>
+            <div class="card-header">
+              <div class="card-title"><i class="fa-solid fa-user-pen"></i> Registration Details</div>
+            </div>
             <div class="card-body">
               <form id="reg-details-form" style="display:flex;flex-direction:column;gap:18px;">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-                  <div><label class="input-label">FULL NAME</label><div class="input-wrap"><i class="fa-solid fa-user input-ico"></i><input type="text" class="field-input" id="r-name" placeholder="Enter your full name" required></div></div>
-                  <div><label class="input-label">EMAIL</label><div class="input-wrap"><i class="fa-solid fa-envelope input-ico"></i><input type="email" class="field-input" id="r-email" required></div></div>
-                  <div><label class="input-label">PHONE</label><div class="input-wrap"><i class="fa-solid fa-phone input-ico"></i><input type="tel" class="field-input" id="r-phone" required></div></div>
-                  <div><label class="input-label">COLLEGE / INSTITUTION</label><div class="input-wrap"><i class="fa-solid fa-building-columns input-ico"></i><input type="text" class="field-input" id="r-college" required></div></div>
+                  <div><label class="input-label">FULL NAME</label>
+                    <div class="input-wrap"><i class="fa-solid fa-user input-ico"></i><input type="text"
+                        class="field-input" id="r-name" placeholder="Enter your full name" required></div>
+                  </div>
+                  <div><label class="input-label">EMAIL</label>
+                    <div class="input-wrap"><i class="fa-solid fa-envelope input-ico"></i><input type="email"
+                        class="field-input" id="r-email" required></div>
+                  </div>
+                  <div><label class="input-label">PHONE</label>
+                    <div class="input-wrap"><i class="fa-solid fa-phone input-ico"></i><input type="tel"
+                        class="field-input" id="r-phone" required></div>
+                  </div>
+                  <div><label class="input-label">COLLEGE / INSTITUTION</label>
+                    <div class="input-wrap"><i class="fa-solid fa-building-columns input-ico"></i><input type="text"
+                        class="field-input" id="r-college" required></div>
+                  </div>
                   <div>
                     <label class="input-label">STUDY YEAR</label>
                     <div class="input-wrap">
@@ -474,9 +560,10 @@
                       </select>
                     </div>
                   </div>
-                  
+
                   <!-- Team Leader specific fields -->
-                  <div id="team-leader-fields" style="display:none; grid-column: 1 / -1; border-top: 1px solid var(--rock-border); padding-top: 16px; margin-top: 8px;">
+                  <div id="team-leader-fields"
+                    style="display:none; grid-column: 1 / -1; border-top: 1px solid var(--rock-border); padding-top: 16px; margin-top: 8px;">
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
                       <div>
                         <label class="input-label">TEAM NAME</label>
@@ -489,32 +576,43 @@
                         <label class="input-label">NUMBER OF MEMBERS (MAX 5)</label>
                         <div class="input-wrap">
                           <i class="fa-solid fa-list-ol input-ico"></i>
-                          <input type="number" class="field-input" id="r-team-size" min="1" max="5" value="5" onchange="renderPendingInvites()">
+                          <input type="number" class="field-input" id="r-team-size" min="1" max="5" value="5"
+                            onchange="renderPendingInvites()">
                         </div>
                       </div>
                     </div>
-                    
+
                     <div style="margin-top: 16px;">
                       <label class="input-label">INVITE TEAM MEMBERS</label>
+                      <div style="font-size: 11px; color: var(--color-amber); margin-bottom: 8px;">Note: All team
+                        members must be from the same year of study. Different branches are allowed.</div>
                       <div class="input-wrap" style="margin-bottom: 12px;">
                         <i class="fa-solid fa-magnifying-glass input-ico"></i>
-                        <input type="text" class="field-input" id="r-invite-search" placeholder="Type username or email..." oninput="handleInviteSearchInput()">
+                        <input type="text" class="field-input" id="r-invite-search"
+                          placeholder="Type username or email..." oninput="handleInviteSearchInput()">
                       </div>
-                      
+
                       <!-- Search result -->
-                      <div id="r-search-result-container" style="display:none; padding: 12px; background: rgba(0,0,0,0.2); border: 1px solid var(--rock-border); border-radius: 8px; margin-bottom: 12px; max-height: 200px; overflow-y: auto;"></div>
-                      
+                      <div id="r-search-result-container"
+                        style="display:none; padding: 12px; background: rgba(0,0,0,0.2); border: 1px solid var(--rock-border); border-radius: 8px; margin-bottom: 12px; max-height: 200px; overflow-y: auto;">
+                      </div>
+
                       <!-- Selected members list -->
                       <div id="r-selected-invites-container" style="display: flex; flex-direction: column; gap: 8px;">
-                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Selected for Invitation: <span id="r-invite-count">0</span> / <span id="r-invite-max">4</span></div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Selected for
+                          Invitation: <span id="r-invite-count">0</span> / <span id="r-invite-max">4</span></div>
                         <div id="r-selected-invites-list"></div>
                       </div>
                     </div>
                   </div>
                 </div>
-                <div style="display:flex;gap:14px;margin-top:6px;">
-                  <button type="button" class="btn-ghost" onclick="regBack(2)"><i class="fa-solid fa-arrow-left"></i> Back</button>
-                  <button type="button" class="btn-gold" id="reg-step-2-btn" onclick="regNext(2)"><i class="fa-solid fa-check"></i> SUBMIT</button>
+                <div style="display:flex; gap:14px; margin-top:16px;">
+                  <button type="button" class="btn-ghost"
+                    style="flex: 1; padding: 14px 0; justify-content: center; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: var(--text-light);"
+                    onclick="regBack(2)"><i class="fa-solid fa-arrow-left"></i> BACK</button>
+                  <button type="button" class="btn-gold"
+                    style="flex: 1; padding: 14px 0; justify-content: center; border-radius: 6px;" id="reg-step-2-btn"
+                    onclick="regNext(2)"><i class="fa-solid fa-check"></i> SUBMIT</button>
                 </div>
               </form>
             </div>
@@ -523,47 +621,65 @@
 
         <!-- Step 3: Payment -->
         <div id="reg-panel-3" style="display:none;">
-          <div class="glass-card razorpay-portal" style="max-width:550px;margin:0 auto; overflow: hidden; border: 1px solid rgba(51, 149, 255, 0.25); box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 20px rgba(51, 149, 255, 0.08);">
-            <div class="razorpay-header" style="background: rgba(12, 26, 48, 0.85); padding: 18px 24px; border-bottom: 1px solid rgba(51, 149, 255, 0.15); display: flex; align-items: center; justify-content: space-between;">
+          <div class="glass-card razorpay-portal"
+            style="max-width:550px;margin:0 auto; overflow: hidden; border: 1px solid rgba(51, 149, 255, 0.25); box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 20px rgba(51, 149, 255, 0.08);">
+            <div class="razorpay-header"
+              style="background: rgba(12, 26, 48, 0.85); padding: 18px 24px; border-bottom: 1px solid rgba(51, 149, 255, 0.15); display: flex; align-items: center; justify-content: space-between;">
               <div style="display: flex; align-items: center; gap: 8px;">
-                <svg width="22" height="22" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 0 6px #3395ff);">
-                  <path d="M430.2 284.2L276.8 448H395.8L512 284.2H430.2Z" fill="#3395ff"/>
-                  <path d="M266.2 448L112.8 284.2H31L147.2 448H266.2Z" fill="#3395ff"/>
-                  <path d="M327.4 64L245.6 151L341.2 253.2H423L327.4 64Z" fill="#00e5ff"/>
-                  <path d="M141.8 151L60 238.2H141.8L237.4 151H141.8Z" fill="#3395ff"/>
+                <svg width="22" height="22" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"
+                  style="filter: drop-shadow(0 0 6px #3395ff);">
+                  <path d="M430.2 284.2L276.8 448H395.8L512 284.2H430.2Z" fill="#3395ff" />
+                  <path d="M266.2 448L112.8 284.2H31L147.2 448H266.2Z" fill="#3395ff" />
+                  <path d="M327.4 64L245.6 151L341.2 253.2H423L327.4 64Z" fill="#00e5ff" />
+                  <path d="M141.8 151L60 238.2H141.8L237.4 151H141.8Z" fill="#3395ff" />
                 </svg>
                 <span style="font-weight: 800; font-size: 17px; letter-spacing: 0.5px; color: #fff;">razorpay</span>
               </div>
-              <span class="badge" style="background: rgba(51, 149, 255, 0.12); border: 1px solid rgba(51, 149, 255, 0.3); color: #8ec5ff; font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 4px;">SECURE CHECKOUT</span>
+              <span class="badge"
+                style="background: rgba(51, 149, 255, 0.12); border: 1px solid rgba(51, 149, 255, 0.3); color: #8ec5ff; font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 4px;">SECURE
+                CHECKOUT</span>
             </div>
-            
+
             <div class="card-body" style="padding: 24px;">
               <!-- Order Details Summary -->
-              <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); padding: 14px 16px; border-radius: 8px; margin-bottom: 24px;">
+              <div
+                style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); padding: 14px 16px; border-radius: 8px; margin-bottom: 24px;">
                 <div>
-                  <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">Registration Fee</div>
-                  <div id="rp-team-details" style="font-weight: 700; color: #fff; margin-top: 3px; font-size: 13px;">CodeMiners Hackathon</div>
+                  <div
+                    style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">
+                    Registration Fee</div>
+                  <div id="rp-team-details" style="font-weight: 700; color: #fff; margin-top: 3px; font-size: 13px;">
+                    CodeMiners Hackathon</div>
                 </div>
                 <div style="text-align: right;">
-                  <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">Amount Payable</div>
-                  <div id="rp-amount" style="font-size: 18px; font-weight: 800; color: #3395ff; margin-top: 3px; text-shadow: 0 0 10px rgba(51,149,255,0.25);">₹0</div>
+                  <div
+                    style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">
+                    Amount Payable</div>
+                  <div id="rp-amount"
+                    style="font-size: 18px; font-weight: 800; color: #3395ff; margin-top: 3px; text-shadow: 0 0 10px rgba(51,149,255,0.25);">
+                    ₹0</div>
                 </div>
               </div>
-              
+
               <!-- Payment Panel -->
               <div style="text-align: center; margin-bottom: 24px; padding: 10px 0;">
                 <div style="font-size: 13px; color: var(--text-light); margin-bottom: 16px; line-height: 1.5;">
                   Complete your checkout securely via Razorpay. Supports UPI, Cards, Net Banking, and Wallets.
                 </div>
-                <button onclick="payWithRazorpaySDK(this)" class="btn-gold" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; background: linear-gradient(135deg, #3395ff, #0077ff); color: white; border: none; font-weight: 700; height: 48px; border-radius: 8px; box-shadow: 0 4px 15px rgba(51, 149, 255, 0.3); font-size: 14px;">
+                <button onclick="payWithRazorpaySDK(this)" class="btn-gold"
+                  style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; background: linear-gradient(135deg, #3395ff, #0077ff); color: white; border: none; font-weight: 700; height: 48px; border-radius: 8px; box-shadow: 0 4px 15px rgba(51, 149, 255, 0.3); font-size: 14px;">
                   <i class="fa-solid fa-lock"></i> PAY WITH RAZORPAY
                 </button>
               </div>
 
               <!-- Footer / Go Back -->
-              <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 20px;">
-                <button class="btn-ghost" onclick="regBack(3)" style="border-color: rgba(255,255,255,0.08); color: var(--text-muted); padding: 6px 16px; font-size: 12px; border-radius: 4px;"><i class="fa-solid fa-arrow-left"></i> Back</button>
-                <div style="display: flex; align-items: center; gap: 4px; font-size: 10px; color: rgba(255,255,255,0.25);">
+              <div
+                style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 20px;">
+                <button type="button" class="btn-ghost"
+                  style="padding: 10px 16px; border: 1px solid rgba(255,255,255,0.2); color: var(--text-light); border-radius: 6px; font-size: 13px;"
+                  onclick="regBack(3)"><i class="fa-solid fa-arrow-left"></i> BACK</button>
+                <div
+                  style="display: flex; align-items: center; gap: 4px; font-size: 10px; color: rgba(255,255,255,0.25);">
                   <i class="fa-solid fa-shield-halved"></i> Secured by Razorpay API
                 </div>
               </div>
@@ -580,12 +696,25 @@
             <div class="receipt-title">Registration Confirmed!</div>
             <div class="receipt-id" id="receipt-id">REG-CM-2025-0001</div>
             <table class="receipt-table" style="margin-bottom:24px;">
-              <tr><td class="rt-label">Event</td><td class="rt-val" id="receipt-event">—</td></tr>
-              <tr><td class="rt-label">Name</td><td class="rt-val" id="receipt-name">—</td></tr>
-              <tr><td class="rt-label">Email</td><td class="rt-val" id="receipt-email">—</td></tr>
-              <tr><td class="rt-label">Status</td><td class="rt-val"><span class="badge badge-green">Confirmed</span></td></tr>
+              <tr>
+                <td class="rt-label">Event</td>
+                <td class="rt-val" id="receipt-event">—</td>
+              </tr>
+              <tr>
+                <td class="rt-label">Name</td>
+                <td class="rt-val" id="receipt-name">—</td>
+              </tr>
+              <tr>
+                <td class="rt-label">Email</td>
+                <td class="rt-val" id="receipt-email">—</td>
+              </tr>
+              <tr>
+                <td class="rt-label">Status</td>
+                <td class="rt-val"><span class="badge badge-green">Confirmed</span></td>
+              </tr>
             </table>
-            <button class="btn-gold" onclick="regReset()"><i class="fa-solid fa-rotate-right"></i> NEW REGISTRATION</button>
+            <button class="btn-gold" onclick="regReset()"><i class="fa-solid fa-rotate-right"></i> NEW
+              REGISTRATION</button>
           </div>
         </div>
 
@@ -600,30 +729,36 @@
         <div class="section-heading">
           <div class="section-tag"><i class="fa-solid fa-hand-holding-heart"></i> SUPPORT US</div>
           <h1 class="section-title">Make a <span class="accent">Donation</span></h1>
-          <p class="section-sub">Your contribution helps Code Miners grow, fund events, and support deserving student developers.</p>
+          <p class="section-sub">Your contribution helps Code Miners grow, fund events, and support deserving student
+            developers.</p>
         </div>
 
         <div class="why-donate-grid">
           <div class="why-card">
             <div class="why-ico"><i class="fa-solid fa-trophy"></i></div>
             <div class="why-title">Fund Prize Pools</div>
-            <div class="why-text">Help us offer bigger, more competitive prize pools that attract top talent and motivate participants to push their limits.</div>
+            <div class="why-text">Help us offer bigger, more competitive prize pools that attract top talent and
+              motivate participants to push their limits.</div>
           </div>
           <div class="why-card">
             <div class="why-ico"><i class="fa-solid fa-graduation-cap"></i></div>
             <div class="why-title">Sponsor Workshops</div>
-            <div class="why-text">Donations directly fund expert-led workshops and bootcamps that are offered free or at reduced cost to all members.</div>
+            <div class="why-text">Donations directly fund expert-led workshops and bootcamps that are offered free or at
+              reduced cost to all members.</div>
           </div>
           <div class="why-card">
             <div class="why-ico"><i class="fa-solid fa-server"></i></div>
             <div class="why-title">Infrastructure &amp; Tools</div>
-            <div class="why-text">Support cloud credits, development tools, and hardware resources that power our events and member projects.</div>
+            <div class="why-text">Support cloud credits, development tools, and hardware resources that power our events
+              and member projects.</div>
           </div>
         </div>
 
         <div style="max-width: 640px; margin: 0 auto;" id="donation-main-grid">
           <div class="glass-card" id="donation-form-card">
-            <div class="card-header"><div class="card-title"><i class="fa-solid fa-indian-rupee-sign"></i> Donation Portal</div></div>
+            <div class="card-header">
+              <div class="card-title"><i class="fa-solid fa-indian-rupee-sign"></i> Donation Portal</div>
+            </div>
             <div class="card-body">
               <div style="margin-bottom:20px;">
                 <label class="input-label" style="margin-bottom:12px;">SELECT AMOUNT</label>
@@ -636,14 +771,26 @@
               </div>
               <div style="margin-bottom:20px;">
                 <label class="input-label">CUSTOM AMOUNT (₹)</label>
-                <div class="input-wrap"><i class="fa-solid fa-indian-rupee-sign input-ico"></i><input type="number" class="field-input" id="custom-amount" placeholder="Enter custom amount" min="1"></div>
+                <div class="input-wrap"><i class="fa-solid fa-indian-rupee-sign input-ico"></i><input type="number"
+                    class="field-input" id="custom-amount" placeholder="Enter custom amount" min="1"></div>
               </div>
               <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:20px;">
-                <div><label class="input-label">YOUR NAME</label><div class="input-wrap"><i class="fa-solid fa-user input-ico"></i><input type="text" class="field-input" id="donor-name" placeholder="Full name (or Anonymous)"></div></div>
-                <div><label class="input-label">EMAIL</label><div class="input-wrap"><i class="fa-solid fa-envelope input-ico"></i><input type="email" class="field-input" id="donor-email" placeholder="your@email.com"></div></div>
-                <div><label class="input-label">MESSAGE (OPTIONAL)</label><div class="textarea-wrap"><textarea class="field-input" id="donor-msg" placeholder="Leave an inspiring message for the guild..." style="min-height:80px; resize: none;"></textarea></div></div>
+                <div><label class="input-label">YOUR NAME</label>
+                  <div class="input-wrap"><i class="fa-solid fa-user input-ico"></i><input type="text"
+                      class="field-input" id="donor-name" placeholder="Full name (or Anonymous)"></div>
+                </div>
+                <div><label class="input-label">EMAIL</label>
+                  <div class="input-wrap"><i class="fa-solid fa-envelope input-ico"></i><input type="email"
+                      class="field-input" id="donor-email" placeholder="your@email.com"></div>
+                </div>
+                <div><label class="input-label">MESSAGE (OPTIONAL)</label>
+                  <div class="textarea-wrap"><textarea class="field-input" id="donor-msg"
+                      placeholder="Leave an inspiring message for the guild..."
+                      style="min-height:80px; resize: none;"></textarea></div>
+                </div>
               </div>
-              <button class="btn-gold" style="width:100%;" onclick="handleDonation()"><i class="fa-solid fa-hand-holding-heart"></i> DONATE NOW</button>
+              <button class="btn-gold" style="width:100%;" onclick="handleDonation()"><i
+                  class="fa-solid fa-hand-holding-heart"></i> DONATE NOW</button>
             </div>
           </div>
         </div>
@@ -664,11 +811,13 @@
         <div class="section-heading">
           <div class="section-tag"><i class="fa-solid fa-envelope"></i> GET IN TOUCH</div>
           <h1 class="section-title">Contact <span class="accent">Us</span></h1>
-          <p class="section-sub">Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
+          <p class="section-sub">Have questions? We'd love to hear from you. Send us a message and we'll respond as soon
+            as possible.</p>
         </div>
-        
+
         <!-- Shared Container for the Morphing Canvas and Interactive Cards -->
-        <div class="glass-effect-container" id="contact-effect-container" style="max-width:1000px; margin:0 auto; padding: 20px; overflow: visible;">
+        <div class="glass-effect-container" id="contact-effect-container"
+          style="max-width:1000px; margin:0 auto; padding: 20px; overflow: visible;">
           <!-- The Morphing Canvas behind the cards -->
           <div class="glass-bg-canvas" id="contact-bg-canvas">
             <div class="glass-bg-blob" id="blob-card-email"></div>
@@ -677,83 +826,108 @@
             <div class="glass-bg-blob" id="blob-card-linkedin"></div>
             <div class="glass-bg-blob" id="blob-card-instagram"></div>
           </div>
-          
+
           <!-- The crisp foreground grid -->
-          <div class="contact-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:28px; position:relative; z-index:2; overflow: visible;">
-            
+          <div class="contact-grid"
+            style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:28px; position:relative; z-index:2; overflow: visible;">
+
             <!-- Card 1: Email -->
-            <a href="mailto:codeminerscommunity@gmail.com" class="glass-content-card contact-card" id="card-email" style="text-decoration:none; display:flex; align-items:center; gap:18px; padding:24px;">
+            <a href="mailto:codeminerscommunity@gmail.com" class="glass-content-card contact-card" id="card-email"
+              style="text-decoration:none; display:flex; align-items:center; gap:18px; padding:24px;">
               <div class="glass-shimmer"></div>
-              <div style="width:60px; height:60px; border-radius:14px; background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; box-shadow: inset 0 1px 1px rgba(255,255,255,0.15);">
+              <div
+                style="width:60px; height:60px; border-radius:14px; background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; box-shadow: inset 0 1px 1px rgba(255,255,255,0.15);">
                 <!-- Google Gmail Logo SVG -->
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="52 42 88 66" width="32" height="32" style="display:block;">
-                  <path fill="#4285f4" d="M58 108h14V74L52 59v43c0 3.32 2.69 6 6 6"/>
-                  <path fill="#34a853" d="M120 108h14c3.32 0 6-2.69 6-6V59l-20 15"/>
-                  <path fill="#fbbc04" d="M120 48v26l20-15v-8c0-7.42-8.47-11.65-14.4-7.2"/>
-                  <path fill="#ea4335" d="M72 74V48l24 18 24-18v26L96 92"/>
-                  <path fill="#c5221f" d="M52 51v8l20 15V48l-5.6-4.2c-5.94-4.45-14.4-.22-14.4 7.2"/>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="52 42 88 66" width="32" height="32"
+                  style="display:block;">
+                  <path fill="#4285f4" d="M58 108h14V74L52 59v43c0 3.32 2.69 6 6 6" />
+                  <path fill="#34a853" d="M120 108h14c3.32 0 6-2.69 6-6V59l-20 15" />
+                  <path fill="#fbbc04" d="M120 48v26l20-15v-8c0-7.42-8.47-11.65-14.4-7.2" />
+                  <path fill="#ea4335" d="M72 74V48l24 18 24-18v26L96 92" />
+                  <path fill="#c5221f" d="M52 51v8l20 15V48l-5.6-4.2c-5.94-4.45-14.4-.22-14.4 7.2" />
                 </svg>
               </div>
               <div style="flex:1; min-width: 0;">
                 <div class="vibrant-label" style="font-size:18px; margin-bottom:4px;">Email Us</div>
                 <div class="glass-text-plate" style="padding:4px 8px; margin-top:2px;">
-                  <div style="font-size:13px; color:rgba(255,255,255,0.75); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">codeminerscommunity@gmail.com</div>
+                  <div
+                    style="font-size:13px; color:rgba(255,255,255,0.75); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    codeminerscommunity@gmail.com</div>
                 </div>
               </div>
             </a>
 
             <!-- Card 2: WhatsApp -->
-            <a href="https://chat.whatsapp.com/IotcXnOO81l07wY9Ft0QeC" target="_blank" class="glass-content-card contact-card" id="card-whatsapp" style="text-decoration:none; display:flex; align-items:center; gap:18px; padding:24px;">
+            <a href="https://chat.whatsapp.com/IotcXnOO81l07wY9Ft0QeC" target="_blank"
+              class="glass-content-card contact-card" id="card-whatsapp"
+              style="text-decoration:none; display:flex; align-items:center; gap:18px; padding:24px;">
               <div class="glass-shimmer"></div>
-              <div style="width:60px; height:60px; border-radius:14px; background:rgba(37,211,102,0.12); display:flex; align-items:center; justify-content:center; font-size:28px; color:#25D366; box-shadow: inset 0 1px 1px rgba(255,255,255,0.15);">
+              <div
+                style="width:60px; height:60px; border-radius:14px; background:rgba(37,211,102,0.12); display:flex; align-items:center; justify-content:center; font-size:28px; color:#25D366; box-shadow: inset 0 1px 1px rgba(255,255,255,0.15);">
                 <i class="fa-brands fa-whatsapp"></i>
               </div>
               <div style="flex:1; min-width: 0;">
                 <div class="vibrant-label" style="font-size:18px; margin-bottom:4px;">WhatsApp</div>
                 <div class="glass-text-plate" style="padding:4px 8px; margin-top:2px;">
-                  <div style="font-size:13px; color:rgba(255,255,255,0.75); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Join our community group</div>
+                  <div
+                    style="font-size:13px; color:rgba(255,255,255,0.75); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    Join our community group</div>
                 </div>
               </div>
             </a>
 
             <!-- Card 3: YouTube -->
-            <a href="https://www.youtube.com/@CodeMiners-2026" target="_blank" class="glass-content-card contact-card" id="card-youtube" style="text-decoration:none; display:flex; align-items:center; gap:18px; padding:24px;">
+            <a href="https://www.youtube.com/@CodeMiners-2026" target="_blank" class="glass-content-card contact-card"
+              id="card-youtube" style="text-decoration:none; display:flex; align-items:center; gap:18px; padding:24px;">
               <div class="glass-shimmer"></div>
-              <div style="width:60px; height:60px; border-radius:14px; background:rgba(255,0,0,0.12); display:flex; align-items:center; justify-content:center; font-size:28px; color:#FF0000; box-shadow: inset 0 1px 1px rgba(255,255,255,0.15);">
+              <div
+                style="width:60px; height:60px; border-radius:14px; background:rgba(255,0,0,0.12); display:flex; align-items:center; justify-content:center; font-size:28px; color:#FF0000; box-shadow: inset 0 1px 1px rgba(255,255,255,0.15);">
                 <i class="fa-brands fa-youtube"></i>
               </div>
               <div style="flex:1; min-width: 0;">
                 <div class="vibrant-label" style="font-size:18px; margin-bottom:4px;">YouTube</div>
                 <div class="glass-text-plate" style="padding:4px 8px; margin-top:2px;">
-                  <div style="font-size:13px; color:rgba(255,255,255,0.75); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Watch our latest tutorials</div>
+                  <div
+                    style="font-size:13px; color:rgba(255,255,255,0.75); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    Watch our latest tutorials</div>
                 </div>
               </div>
             </a>
 
             <!-- Card 4: LinkedIn -->
-            <a href="https://www.linkedin.com/in/codeminers-community/" target="_blank" class="glass-content-card contact-card" id="card-linkedin" style="text-decoration:none; display:flex; align-items:center; gap:18px; padding:24px;">
+            <a href="https://www.linkedin.com/in/codeminers-community/" target="_blank"
+              class="glass-content-card contact-card" id="card-linkedin"
+              style="text-decoration:none; display:flex; align-items:center; gap:18px; padding:24px;">
               <div class="glass-shimmer"></div>
-              <div style="width:60px; height:60px; border-radius:14px; background:rgba(10,102,194,0.12); display:flex; align-items:center; justify-content:center; font-size:28px; color:#0A66C2; box-shadow: inset 0 1px 1px rgba(255,255,255,0.15);">
+              <div
+                style="width:60px; height:60px; border-radius:14px; background:rgba(10,102,194,0.12); display:flex; align-items:center; justify-content:center; font-size:28px; color:#0A66C2; box-shadow: inset 0 1px 1px rgba(255,255,255,0.15);">
                 <i class="fa-brands fa-linkedin-in"></i>
               </div>
               <div style="flex:1; min-width: 0;">
                 <div class="vibrant-label" style="font-size:18px; margin-bottom:4px;">LinkedIn</div>
                 <div class="glass-text-plate" style="padding:4px 8px; margin-top:2px;">
-                  <div style="font-size:13px; color:rgba(255,255,255,0.75); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Connect professionally</div>
+                  <div
+                    style="font-size:13px; color:rgba(255,255,255,0.75); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    Connect professionally</div>
                 </div>
               </div>
             </a>
 
             <!-- Card 5: Instagram -->
-            <a href="https://www.instagram.com/code_miners?igsh=MXA3YTR2OWRwNjh0ag==" target="_blank" class="glass-content-card contact-card" id="card-instagram" style="text-decoration:none; display:flex; align-items:center; gap:18px; padding:24px;">
+            <a href="https://www.instagram.com/code_miners?igsh=MXA3YTR2OWRwNjh0ag==" target="_blank"
+              class="glass-content-card contact-card" id="card-instagram"
+              style="text-decoration:none; display:flex; align-items:center; gap:18px; padding:24px;">
               <div class="glass-shimmer"></div>
-              <div style="width:60px; height:60px; border-radius:14px; background:rgba(225,48,108,0.12); display:flex; align-items:center; justify-content:center; font-size:28px; color:#E1306C; box-shadow: inset 0 1px 1px rgba(255,255,255,0.15);">
+              <div
+                style="width:60px; height:60px; border-radius:14px; background:rgba(225,48,108,0.12); display:flex; align-items:center; justify-content:center; font-size:28px; color:#E1306C; box-shadow: inset 0 1px 1px rgba(255,255,255,0.15);">
                 <i class="fa-brands fa-instagram"></i>
               </div>
               <div style="flex:1; min-width: 0;">
                 <div class="vibrant-label" style="font-size:18px; margin-bottom:4px;">Instagram</div>
                 <div class="glass-text-plate" style="padding:4px 8px; margin-top:2px;">
-                  <div style="font-size:13px; color:rgba(255,255,255,0.75); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Follow our updates</div>
+                  <div
+                    style="font-size:13px; color:rgba(255,255,255,0.75); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    Follow our updates</div>
                 </div>
               </div>
             </a>
@@ -774,30 +948,74 @@
           <p class="section-sub">View the list of registered participants for completed events.</p>
         </div>
         <style>
-          .participants-container { max-width: 960px; margin: 0 auto; display: grid; gap: 24px; }
-          .events-list-box { display: flex; flex-direction: column; gap: 12px; }
-          .event-item { padding: 16px; border: 1.5px solid var(--rock-border); border-radius: 10px; cursor: pointer; transition: var(--transition-smooth); background: rgba(0,0,0,0.2); }
-          .event-item:hover, .event-item.active { border-color: rgba(240,165,0,0.5); background: rgba(240,165,0,0.1); }
-          .event-item-title { font-weight: 700; color: var(--text-light); margin-bottom: 4px; }
-          .event-item-date { font-size: 12px; color: var(--text-muted); }
+          .participants-container {
+            max-width: 960px;
+            margin: 0 auto;
+            display: grid;
+            gap: 24px;
+          }
+
+          .events-list-box {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+          }
+
+          .event-item {
+            padding: 16px;
+            border: 1.5px solid var(--rock-border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            background: rgba(0, 0, 0, 0.2);
+          }
+
+          .event-item:hover,
+          .event-item.active {
+            border-color: rgba(240, 165, 0, 0.5);
+            background: rgba(240, 165, 0, 0.1);
+          }
+
+          .event-item-title {
+            font-weight: 700;
+            color: var(--text-light);
+            margin-bottom: 4px;
+          }
+
+          .event-item-date {
+            font-size: 12px;
+            color: var(--text-muted);
+          }
+
           @media(min-width: 800px) {
-            .participants-container { grid-template-columns: 1fr 1fr; }
-            .participants-box { height: 100%; overflow-y: auto; }
+            .participants-container {
+              grid-template-columns: 1fr 1fr;
+            }
+
+            .participants-box {
+              height: 100%;
+              overflow-y: auto;
+            }
           }
         </style>
         <div class="participants-container">
           <!-- Left Box: Events (9 ratio) -->
           <div class="glass-card no-tilt participants-box">
-            <div class="card-header"><div class="card-title"><i class="fa-solid fa-calendar-check"></i> Events</div></div>
+            <div class="card-header">
+              <div class="card-title"><i class="fa-solid fa-calendar-check"></i> Events</div>
+            </div>
             <div class="card-body" style="padding: 24px;" id="completed-events-list">
               <!-- Dynamically populated -->
             </div>
           </div>
           <!-- Right Box: Miners (16 ratio) -->
           <div class="glass-card no-tilt participants-box">
-            <div class="card-header"><div class="card-title" id="participants-list-title"><i class="fa-solid fa-users"></i> Miners List</div></div>
+            <div class="card-header">
+              <div class="card-title" id="participants-list-title"><i class="fa-solid fa-users"></i> Miners List</div>
+            </div>
             <div class="card-body" style="padding: 24px;" id="participants-list-content">
-              <p style="text-align: center; color: rgba(255,255,255,0.5); margin-top: 40px;">Select an event from the left to view its miners.</p>
+              <p style="text-align: center; color: rgba(255,255,255,0.5); margin-top: 40px;">Select an event from the
+                left to view its miners.</p>
             </div>
           </div>
         </div>
@@ -815,52 +1033,101 @@
           <p class="section-sub">Manage your account and view your event history.</p>
         </div>
         <style>
-          .profile-16-9 { max-width: 540px; margin: 0 auto; position: relative; }
-          .profile-grid { display: flex; flex-direction: column; gap: 16px; }
-          .profile-right { display: flex; flex-direction: column; height: 100%; }
+          .profile-16-9 {
+            max-width: 540px;
+            margin: 0 auto;
+            position: relative;
+          }
+
+          .profile-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+          }
+
+          .profile-right {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+          }
+
           @media(min-width: 800px) {
-            .profile-16-9 { max-width: 960px; aspect-ratio: 16/9; overflow: hidden; display: flex; flex-direction: column; }
-            .profile-16-9 .card-body { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
-            .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; height: 100%; align-items: stretch; }
+            .profile-16-9 {
+              max-width: 960px;
+              aspect-ratio: 16/9;
+              overflow: hidden;
+              display: flex;
+              flex-direction: column;
+            }
+
+            .profile-16-9 .card-body {
+              flex: 1;
+              display: flex;
+              flex-direction: column;
+              overflow-y: auto;
+            }
+
+            .profile-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 32px;
+              height: 100%;
+              align-items: stretch;
+            }
           }
         </style>
         <div class="glass-card profile-16-9 no-tilt" id="profile-card-main">
           <div class="card-body" style="padding: 56px 32px 40px 32px;">
             <!-- Edit Icon with ultra-large hit area -->
-            <button class="btn-icon" style="position: absolute; top: 12px; right: 12px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; color: var(--gold-primary); font-size: 18px; cursor:pointer; border-radius: 50%; background: transparent; z-index: 10;" onclick="toggleEditProfile()" id="edit-profile-btn" title="Edit Profile">
+            <button class="btn-icon"
+              style="position: absolute; top: 12px; right: 12px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; color: var(--gold-primary); font-size: 18px; cursor:pointer; border-radius: 50%; background: transparent; z-index: 10;"
+              onclick="toggleEditProfile()" id="edit-profile-btn" title="Edit Profile">
               <i class="fa-solid fa-pen-to-square"></i>
             </button>
-            
+
             <!-- VIEW MODE -->
             <div id="profile-view-mode" class="profile-grid">
               <!-- LEFT COLUMN: Avatar + Details -->
               <div class="profile-left" style="display:flex; flex-direction:column; gap: 16px;">
                 <div style="text-align:center;">
-                  <div style="width:80px;height:80px;border-radius:50%;background:rgba(240,165,0,0.12);border:2px solid rgba(240,165,0,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:32px;color:var(--gold-primary);" id="profile-avatar-icon">
+                  <div
+                    style="width:80px;height:80px;border-radius:50%;background:rgba(240,165,0,0.12);border:2px solid rgba(240,165,0,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:32px;color:var(--gold-primary);"
+                    id="profile-avatar-icon">
                     <i class="fa-solid fa-circle-user"></i>
                   </div>
-                  <div id="profile-display-name" style="font-size:22px;font-weight:700;color:var(--text-light);margin-bottom:24px;">Loading...</div>
+                  <div id="profile-display-name"
+                    style="font-size:22px;font-weight:700;color:var(--text-light);margin-bottom:24px;">Loading...</div>
                 </div>
 
-                <div style="display:flex; flex-direction:column; gap: 16px; text-align: left; background: rgba(0,0,0,0.15); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
-                  
-                  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px;">
-                    <span style="color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Username</span>
+                <div
+                  style="display:flex; flex-direction:column; gap: 16px; text-align: left; background: rgba(0,0,0,0.15); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+
+                  <div
+                    style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px;">
+                    <span
+                      style="color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Username</span>
                     <span id="profile-username" style="color: var(--text-light); font-weight: 500;">—</span>
                   </div>
 
-                  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px;">
-                    <span style="color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Full Name</span>
+                  <div
+                    style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px;">
+                    <span
+                      style="color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Full
+                      Name</span>
                     <span id="profile-fullname" style="color: var(--text-light); font-weight: 500;">—</span>
                   </div>
 
-                  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px;">
-                    <span style="color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Email</span>
+                  <div
+                    style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px;">
+                    <span
+                      style="color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Email</span>
                     <span id="profile-email" style="color: var(--text-light); font-weight: 500;">—</span>
                   </div>
 
                   <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">PIN Number</span>
+                    <span
+                      style="color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">PIN
+                      Number</span>
                     <span id="profile-pin" style="color: var(--text-light); font-weight: 500;">—</span>
                   </div>
                 </div>
@@ -868,17 +1135,28 @@
 
               <!-- RIGHT COLUMN: About + Projects + Sign out -->
               <div class="profile-right">
-                <div style="text-align: left; background: rgba(0,0,0,0.15); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px;">
-                  <span style="color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 8px;">About Me</span>
-                  <p id="profile-about" style="color: var(--text-light); font-size: 14px; line-height: 1.6; margin: 0; background: rgba(255,255,255,0.03); padding: 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">—</p>
+                <div
+                  style="text-align: left; background: rgba(0,0,0,0.15); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px;">
+                  <span
+                    style="color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 8px;">About
+                    Me</span>
+                  <p id="profile-about"
+                    style="color: var(--text-light); font-size: 14px; line-height: 1.6; margin: 0; background: rgba(255,255,255,0.03); padding: 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                    —</p>
                 </div>
-                
-                <div style="text-align: left; background: rgba(0,0,0,0.15); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); flex: 1; display: flex; flex-direction: column;">
-                  <div style="display:flex; align-items:center; gap: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px; margin-bottom: 12px;">
+
+                <div
+                  style="text-align: left; background: rgba(0,0,0,0.15); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); flex: 1; display: flex; flex-direction: column;">
+                  <div
+                    style="display:flex; align-items:center; gap: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px; margin-bottom: 12px;">
                     <i class="fa-solid fa-link" style="color: var(--gold-primary);"></i>
-                    <span style="color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Personal Projects</span>
+                    <span
+                      style="color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Personal
+                      Projects</span>
                   </div>
-                  <div id="profile-projects" style="color: var(--text-light); font-size: 14px; line-height: 1.6; margin: 0; word-break: break-all; flex: 1; overflow-y: auto;">—</div>
+                  <div id="profile-projects"
+                    style="color: var(--text-light); font-size: 14px; line-height: 1.6; margin: 0; word-break: break-all; flex: 1; overflow-y: auto;">
+                    —</div>
                 </div>
 
                 <div style="text-align: right; margin-top: 20px;">
@@ -894,7 +1172,8 @@
               <!-- LEFT COLUMN: Inputs -->
               <div class="profile-left" style="display:flex; flex-direction:column; gap: 14px;">
                 <div style="text-align:center; margin-bottom: 8px;">
-                  <div style="width:80px;height:80px;border-radius:50%;background:rgba(240,165,0,0.12);border:2px solid rgba(240,165,0,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:32px;color:var(--gold-primary);">
+                  <div
+                    style="width:80px;height:80px;border-radius:50%;background:rgba(240,165,0,0.12);border:2px solid rgba(240,165,0,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:32px;color:var(--gold-primary);">
                     <i class="fa-solid fa-circle-user"></i>
                   </div>
                 </div>
@@ -902,24 +1181,28 @@
                   <label class="input-label">USERNAME</label>
                   <div class="input-wrap">
                     <i class="fa-solid fa-at input-ico"></i>
-                    <input type="text" class="field-input" id="edit-username" placeholder="Your username" disabled title="Username cannot be changed currently">
+                    <input type="text" class="field-input" id="edit-username" placeholder="Your username" disabled
+                      title="Username cannot be changed currently">
                   </div>
                 </div>
                 <div>
                   <label class="input-label">FULL NAME</label>
                   <div class="input-wrap">
                     <i class="fa-solid fa-user input-ico"></i>
-                    <input type="text" class="field-input" id="edit-fullname" placeholder="" disabled title="Full Name cannot be changed. Contact support at codeminerscommunity@gmail.com.">
+                    <input type="text" class="field-input" id="edit-fullname" placeholder="" disabled
+                      title="Full Name cannot be changed. Contact support at codeminerscommunity@gmail.com.">
                   </div>
                   <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">
-                    Full Name cannot be changed. For corrections, contact <a href="mailto:codeminerscommunity@gmail.com" style="color: var(--gold-light); text-decoration: underline;">codeminerscommunity@gmail.com</a>
+                    Full Name cannot be changed. For corrections, contact <a href="mailto:codeminerscommunity@gmail.com"
+                      style="color: var(--gold-light); text-decoration: underline;">codeminerscommunity@gmail.com</a>
                   </div>
                 </div>
                 <div>
                   <label class="input-label">EMAIL</label>
                   <div class="input-wrap">
                     <i class="fa-solid fa-envelope input-ico"></i>
-                    <input type="email" class="field-input" id="edit-email" placeholder="john@example.com" disabled title="Email cannot be changed here">
+                    <input type="email" class="field-input" id="edit-email" placeholder="john@example.com" disabled
+                      title="Email cannot be changed here">
                   </div>
                 </div>
                 <div>
@@ -935,22 +1218,30 @@
               <div class="profile-right" style="display:flex; flex-direction:column; gap: 14px;">
                 <div style="flex:1; display:flex; flex-direction:column;">
                   <label class="input-label">ABOUT ME</label>
-                  <div class="textarea-wrap" style="flex:1; position: relative; background: var(--dark-stone); border: 1px solid var(--rock-border); border-radius: var(--radius-md); transition: all 0.3s ease;">
-                    <textarea class="field-input" id="edit-about" placeholder="Tell us a bit about yourself..." style="height:100%; min-height:90px; resize: none; border:none; padding:14px;"></textarea>
+                  <div class="textarea-wrap"
+                    style="flex:1; position: relative; background: var(--dark-stone); border: 1px solid var(--rock-border); border-radius: var(--radius-md); transition: all 0.3s ease;">
+                    <textarea class="field-input" id="edit-about" placeholder="Tell us a bit about yourself..."
+                      style="height:100%; min-height:90px; resize: none; border:none; padding:14px;"></textarea>
                   </div>
                 </div>
                 <div style="flex:1; display:flex; flex-direction:column;">
                   <label class="input-label">PERSONAL PROJECTS</label>
-                  <div id="edit-projects-container" style="flex:1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; padding-right: 4px; max-height: 200px;">
+                  <div id="edit-projects-container"
+                    style="flex:1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; padding-right: 4px; max-height: 200px;">
                     <!-- Project inputs injected here -->
                   </div>
-                  <button type="button" class="btn-ghost" style="border: 1px dashed rgba(255,255,255,0.2); justify-content: center; width: 100%; padding: 10px;" onclick="addProjectField()">
+                  <button type="button" class="btn-ghost"
+                    style="border: 1px dashed rgba(255,255,255,0.2); justify-content: center; width: 100%; padding: 10px;"
+                    onclick="addProjectField()">
                     <i class="fa-solid fa-plus"></i> Add Project
                   </button>
                 </div>
                 <div style="display:flex; gap:12px; margin-top: auto;">
-                  <button class="btn-ghost" style="flex:1; padding: 18px 0; justify-content: center; border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-md);" onclick="toggleEditProfile()">CANCEL</button>
-                  <button class="btn-gold" style="flex:1; padding: 18px 0; justify-content: center;" onclick="saveProfile()" id="save-profile-btn"><i class="fa-solid fa-check"></i> SAVE</button>
+                  <button class="btn-ghost"
+                    style="flex:1; padding: 18px 0; justify-content: center; border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-md);"
+                    onclick="toggleEditProfile()">CANCEL</button>
+                  <button class="btn-gold" style="flex:1; padding: 18px 0; justify-content: center;"
+                    onclick="saveProfile()" id="save-profile-btn"><i class="fa-solid fa-check"></i> SAVE</button>
                 </div>
               </div>
             </div>
@@ -973,46 +1264,61 @@
 
         <!-- State 1: Loading State -->
         <div id="team-loading-view" style="text-align: center; padding: 40px;">
-          <i class="fa-solid fa-spinner fa-spin" style="font-size: 32px; color: var(--color-amber); margin-bottom: 16px;"></i>
+          <i class="fa-solid fa-spinner fa-spin"
+            style="font-size: 32px; color: var(--color-amber); margin-bottom: 16px;"></i>
           <p style="color: var(--text-muted);">Loading team data...</p>
         </div>
 
         <!-- State 2: No Team View -->
-        <div id="team-no-team-view" style="display: none; max-width: 960px; margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 32px;">
+        <div id="team-no-team-view"
+          style="display: none; max-width: 960px; margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 32px;">
           <!-- Card 1: Create a Team -->
           <div class="glass-card" id="team-create-card">
-            <div class="card-header"><div class="card-title"><i class="fa-solid fa-plus"></i> Create a New Team</div></div>
+            <div class="card-header">
+              <div class="card-title"><i class="fa-solid fa-plus"></i> Create a New Team</div>
+            </div>
             <div class="card-body" style="padding: 24px;">
               <div style="margin-bottom: 16px;">
                 <label class="input-label">TEAM NAME</label>
-                <div class="input-wrap"><i class="fa-solid fa-signature input-ico"></i><input type="text" class="field-input" id="new-team-name" placeholder="Enter team name"></div>
+                <div class="input-wrap"><i class="fa-solid fa-signature input-ico"></i><input type="text"
+                    class="field-input" id="new-team-name" placeholder="Enter team name"></div>
               </div>
               <div style="margin-bottom: 16px;">
                 <label class="input-label">TECH STACK / SKILLS</label>
-                <div class="input-wrap"><i class="fa-solid fa-code input-ico"></i><input type="text" class="field-input" id="new-team-tech" placeholder="e.g. React, Node.js, Firebase"></div>
+                <div class="input-wrap"><i class="fa-solid fa-code input-ico"></i><input type="text" class="field-input"
+                    id="new-team-tech" placeholder="e.g. React, Node.js, Firebase"></div>
               </div>
               <div style="margin-bottom: 24px;">
                 <label class="input-label">TEAM DESCRIPTION (OPTIONAL)</label>
-                <div class="textarea-wrap"><textarea class="field-input" id="new-team-desc" placeholder="Describe your team goal or project idea..." style="min-height:80px; resize: none;"></textarea></div>
+                <div class="textarea-wrap"><textarea class="field-input" id="new-team-desc"
+                    placeholder="Describe your team goal or project idea..."
+                    style="min-height:80px; resize: none;"></textarea></div>
               </div>
-              <button class="btn-gold" style="width: 100%;" id="create-team-btn" onclick="createTeam()"><i class="fa-solid fa-circle-plus"></i> CREATE TEAM</button>
+              <button class="btn-gold" style="width: 100%;" id="create-team-btn" onclick="createTeam()"><i
+                  class="fa-solid fa-circle-plus"></i> CREATE TEAM</button>
             </div>
           </div>
 
           <!-- Card 2: Pending Invitations -->
           <div class="glass-card" id="team-invites-card">
-            <div class="card-header"><div class="card-title"><i class="fa-solid fa-envelope-open-text"></i> Pending Team Invitations</div></div>
-            <div class="card-body" style="padding: 24px; max-height: 400px; overflow-y: auto;" id="pending-invites-list">
+            <div class="card-header">
+              <div class="card-title"><i class="fa-solid fa-envelope-open-text"></i> Pending Team Invitations</div>
+            </div>
+            <div class="card-body" style="padding: 24px; max-height: 400px; overflow-y: auto;"
+              id="pending-invites-list">
               <!-- Populated via Javascript -->
             </div>
           </div>
         </div>
 
         <!-- State 3: Team Dashboard View -->
-        <div id="team-dashboard-view" style="display: none; max-width: 960px; margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 32px;">
+        <div id="team-dashboard-view"
+          style="display: none; max-width: 960px; margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 32px;">
           <!-- Hackathon Registration & Payment Card -->
           <div class="glass-card" id="team-payment-card" style="display: none;">
-            <div class="card-header"><div class="card-title"><i class="fa-solid fa-credit-card"></i> Hackathon Registration & Payment</div></div>
+            <div class="card-header">
+              <div class="card-title"><i class="fa-solid fa-credit-card"></i> Hackathon Registration & Payment</div>
+            </div>
             <div class="card-body" style="padding: 24px;" id="team-payment-card-body">
               <!-- Dynamically populated via javascript -->
             </div>
@@ -1020,24 +1326,34 @@
 
           <!-- Left: Team Details & Members -->
           <div class="glass-card" id="team-overview-card">
-            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <div class="card-header"
+              style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
               <div class="card-title"><i class="fa-solid fa-shield-halved"></i> Team Overview</div>
-              <span class="badge badge-green" id="team-size-badge" style="margin-left: auto; font-size: 11px; padding: 4px 10px;">1 / 4 members</span>
+              <span class="badge badge-green" id="team-size-badge"
+                style="margin-left: auto; font-size: 11px; padding: 4px 10px;">1 / 4 members</span>
             </div>
             <div class="card-body" style="padding: 24px;">
-              <h2 id="dash-team-name" style="font-size: 24px; color: var(--color-amber); font-weight: 800; margin-bottom: 8px; text-shadow: var(--shadow-amber);">—</h2>
-              <p id="dash-team-desc" style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px; line-height: 1.5;">—</p>
-              
-              <div style="margin-bottom: 24px; background: rgba(0,0,0,0.15); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.03);">
-                <div style="font-size: 11px; color: rgba(255,255,255,0.4); text-transform: uppercase; margin-bottom: 4px;">Tech Stack</div>
+              <h2 id="dash-team-name"
+                style="font-size: 24px; color: var(--color-amber); font-weight: 800; margin-bottom: 8px; text-shadow: var(--shadow-amber);">
+                —</h2>
+              <p id="dash-team-desc"
+                style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px; line-height: 1.5;">—</p>
+
+              <div
+                style="margin-bottom: 24px; background: rgba(0,0,0,0.15); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.03);">
+                <div
+                  style="font-size: 11px; color: rgba(255,255,255,0.4); text-transform: uppercase; margin-bottom: 4px;">
+                  Tech Stack</div>
                 <div id="dash-team-tech" style="font-weight: 600; color: var(--text-light);">—</div>
               </div>
 
-              <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; font-weight: 700;">Team Members</div>
+              <div
+                style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; font-weight: 700;">
+                Team Members</div>
               <div id="team-members-list" style="display: flex; flex-direction: column; gap: 12px;">
                 <!-- Populated via Javascript -->
               </div>
-              
+
               <div style="margin-top: 32px; display: flex; gap: 12px;" id="team-management-actions">
                 <!-- Leave or Disband button injected here -->
               </div>
@@ -1046,16 +1362,23 @@
 
           <!-- Right: Inviting Members -->
           <div class="glass-card" id="leader-invite-card">
-            <div class="card-header"><div class="card-title"><i class="fa-solid fa-paper-plane"></i> Recruit Members</div></div>
+            <div class="card-header">
+              <div class="card-title"><i class="fa-solid fa-paper-plane"></i> Recruit Members</div>
+            </div>
             <div class="card-body" style="padding: 24px;">
               <div style="margin-bottom: 20px;">
                 <label class="input-label">INVITE BY EMAIL OR USERNAME</label>
-                <div class="input-wrap"><i class="fa-solid fa-user-plus input-ico"></i><input type="text" class="field-input" id="invite-identifier" placeholder="Enter username or email address"></div>
+                <div class="input-wrap"><i class="fa-solid fa-user-plus input-ico"></i><input type="text"
+                    class="field-input" id="invite-identifier" placeholder="Enter username or email address"></div>
               </div>
-              <button class="btn-gold" style="width: 100%; margin-bottom: 24px;" id="send-invite-btn" onclick="sendInvitation()"><i class="fa-solid fa-paper-plane"></i> SEND INVITATION</button>
+              <button class="btn-gold" style="width: 100%; margin-bottom: 24px;" id="send-invite-btn"
+                onclick="sendInvitation()"><i class="fa-solid fa-paper-plane"></i> SEND INVITATION</button>
 
-              <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; font-weight: 700;">Sent Invitations</div>
-              <div id="sent-invites-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 200px; overflow-y: auto;">
+              <div
+                style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; font-weight: 700;">
+                Sent Invitations</div>
+              <div id="sent-invites-list"
+                style="display: flex; flex-direction: column; gap: 10px; max-height: 200px; overflow-y: auto;">
                 <!-- Populated via Javascript -->
               </div>
             </div>
@@ -1112,12 +1435,12 @@
         if (data && data.cipher) {
           return decryptData(data.cipher, uid);
         }
-      } catch (e) {}
+      } catch (e) { }
       return jsonStr;
     }
 
     // Populate profile section with Firebase user info
-    auth.onAuthStateChanged(async function(user) {
+    auth.onAuthStateChanged(async function (user) {
       window.currentUser = user; // Set global user variable for portal-script.js
       if (user) {
         // Ensure profile exists and has a validated Full Name
@@ -1134,7 +1457,40 @@
           console.error("Error reading profile:", err);
         }
 
+        let dbUsername = (profile && profile.username) ? profile.username.trim() : '';
         let fullName = (profile && profile.full_name) ? profile.full_name.trim() : '';
+
+        let needsUpsert = false;
+
+        if (!dbUsername) {
+          while (!dbUsername) {
+            let input = prompt("Enter your Username (letters, numbers, underscores only):");
+            if (input === null) {
+              await auth.signOut();
+              window.location.href = 'index.html';
+              return;
+            }
+            input = input.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+            if (!input) {
+              alert("Username is required and must contain valid characters.");
+              continue;
+            }
+
+            const { data: existing, error: err } = await supabaseClient
+              .from('profiles')
+              .select('id')
+              .eq('username', input)
+              .maybeSingle();
+
+            if (existing && existing.id !== user.uid) {
+              alert("That username is already taken. Please choose another.");
+            } else {
+              dbUsername = input;
+            }
+          }
+          needsUpsert = true;
+        }
+
         if (!fullName) {
           fullName = prompt("Enter your Full Name (NOTE: You cannot change this later. For corrections, contact support at codeminerscommunity@gmail.com):");
           while (!fullName || !fullName.trim()) {
@@ -1146,15 +1502,17 @@
             fullName = prompt("Full Name is required. Enter your Full Name (NOTE: You cannot change this later. For corrections, contact support at codeminerscommunity@gmail.com):");
           }
           fullName = fullName.trim();
-          
-          const username = (user.email ? user.email.split('@')[0] : 'miner').toLowerCase().replace(/[^a-z0-9]/g, '');
+          needsUpsert = true;
+        }
+
+        if (needsUpsert) {
           const { error: upsertError } = await supabaseClient
             .from('profiles')
             .upsert({
               id: user.uid,
               email: user.email || '',
               full_name: fullName,
-              username: username,
+              username: dbUsername,
               created_at: profile ? profile.created_at : new Date().toISOString()
             });
           if (upsertError) {
@@ -1165,12 +1523,12 @@
             return;
           }
         }
-        const displayEl  = document.getElementById('profile-display-name');
+        const displayEl = document.getElementById('profile-display-name');
         const usernameEl = document.getElementById('profile-username');
         const fullnameEl = document.getElementById('profile-fullname');
-        const emailEl    = document.getElementById('profile-email');
-        const pinEl      = document.getElementById('profile-pin');
-        const aboutEl    = document.getElementById('profile-about');
+        const emailEl = document.getElementById('profile-email');
+        const pinEl = document.getElementById('profile-pin');
+        const aboutEl = document.getElementById('profile-about');
         const projectsEl = document.getElementById('profile-projects');
 
         const userFullName = user.displayName || 'CodeMiner';
@@ -1202,7 +1560,7 @@
 
           if (profile) {
             currentUserDoc = profile;
-            
+
             if (profile.username && usernameEl) {
               usernameEl.textContent = profile.username;
               document.getElementById('edit-username').value = profile.username;
@@ -1216,7 +1574,7 @@
               fullnameEl.textContent = 'Not provided';
               document.getElementById('edit-fullname').value = '';
             }
-            
+
             const decryptedPin = profile.pin ? decryptData(profile.pin, user.uid) : '';
             const decryptedAbout = profile.about ? decryptData(profile.about, user.uid) : '';
             let decryptedProjects = [];
@@ -1236,7 +1594,7 @@
               pinEl.textContent = 'Not provided';
               document.getElementById('edit-pin').value = '';
             }
-            
+
             if (decryptedAbout && aboutEl) {
               aboutEl.textContent = decryptedAbout;
               document.getElementById('edit-about').value = decryptedAbout;
@@ -1244,12 +1602,12 @@
               aboutEl.textContent = 'Write a short bio about yourself...';
               document.getElementById('edit-about').value = '';
             }
-            
+
             if (projectsEl) {
               const projects = decryptedProjects;
               const projectsContainer = document.getElementById('edit-projects-container');
               if (projectsContainer) projectsContainer.innerHTML = '';
-              
+
               if (projects.length > 0) {
                 projectsEl.innerHTML = projects.map(p => `
                   <div style="margin-bottom: 12px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.02);">
@@ -1284,7 +1642,7 @@
           if (aboutEl) aboutEl.textContent = 'Write a short bio about yourself...';
           if (projectsEl) projectsEl.innerHTML = 'No projects added yet...';
         }
-        
+
         // Sync team section once user session is loaded
         syncTeamSection();
       } else {
@@ -1296,7 +1654,7 @@
       const viewMode = document.getElementById('profile-view-mode');
       const editMode = document.getElementById('profile-edit-mode');
       const editBtn = document.getElementById('edit-profile-btn');
-      
+
       if (viewMode.style.display === 'none') {
         viewMode.style.display = '';
         editMode.style.display = 'none';
@@ -1331,7 +1689,7 @@
       const newFullName = document.getElementById('edit-fullname').value.trim();
       const newPin = document.getElementById('edit-pin').value.trim();
       const newAbout = document.getElementById('edit-about').value.trim();
-      
+
       const projectItems = document.querySelectorAll('.project-edit-item');
       const newProjects = [];
       projectItems.forEach(item => {
@@ -1341,7 +1699,7 @@
           newProjects.push({ name: name || 'Untitled Project', link });
         }
       });
-      
+
       const btn = document.getElementById('save-profile-btn');
       const originalText = btn.innerHTML;
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> SAVING...';
@@ -1373,7 +1731,7 @@
         document.getElementById('profile-fullname').textContent = newFullName || 'Not provided';
         document.getElementById('profile-pin').textContent = newPin || 'Not provided';
         document.getElementById('profile-about').textContent = newAbout || 'Write a short bio about yourself...';
-        
+
         const projectsEl = document.getElementById('profile-projects');
         if (newProjects.length > 0 && projectsEl) {
           projectsEl.innerHTML = newProjects.map(p => `
@@ -1385,7 +1743,7 @@
         } else if (projectsEl) {
           projectsEl.innerHTML = 'No projects added yet...';
         }
-        
+
         showToast('Profile updated successfully!', 'success');
         toggleEditProfile();
       } catch (error) {
@@ -1401,16 +1759,20 @@
   <!-- ── GPay & UPI Payment Portal Modal ── -->
   <div class="payment-modal-overlay" id="paymentModal">
     <div class="payment-modal-card glass-card liquid-glass-regular" id="paymentModalCard">
-      <div class="card-header" style="border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 12px; margin-bottom: 16px;">
-        <div class="card-title" style="font-size: 16px;"><i class="fa-solid fa-credit-card"></i> UPI Payment Portal</div>
+      <div class="card-header"
+        style="border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 12px; margin-bottom: 16px;">
+        <div class="card-title" style="font-size: 16px;"><i class="fa-solid fa-credit-card"></i> UPI Payment Portal
+        </div>
       </div>
-      
-      <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px;">Amount to Pay</div>
+
+      <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px;">Amount
+        to Pay</div>
       <div class="payment-amount-display" id="paymentAmountDisplay">₹500</div>
-      
+
       <!-- QR Code scanner for desktop -->
       <div id="desktopPaymentArea">
-        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Scan the QR code below using Google Pay or any other UPI app</p>
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Scan the QR code below using Google
+          Pay or any other UPI app</p>
         <div class="payment-qrcode-wrap">
           <img id="paymentQRCode" src="" alt="UPI QR Code">
         </div>
@@ -1418,10 +1780,13 @@
 
       <!-- Quick Launch for Mobile Devices -->
       <div id="mobilePaymentArea" style="display: none; margin: 16px 0;">
-        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Tap below to launch Google Pay or any UPI payment app on your device</p>
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Tap below to launch Google Pay or any
+          UPI payment app on your device</p>
       </div>
 
-      <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-top: 10px;">Payee Details</div>
+      <div
+        style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-top: 10px;">
+        Payee Details</div>
       <div class="upi-details-box">
         <div style="text-align: left; overflow: hidden;">
           <div style="font-size: 9px; color: rgba(255,255,255,0.4); text-transform: uppercase;">UPI ID</div>
@@ -1432,7 +1797,8 @@
 
       <div class="payment-badge-row">
         <span class="payment-badge"><i class="fa-solid fa-shield-halved" style="color:#00e676;"></i> Secure UPI</span>
-        <span class="payment-badge"><i class="fa-brands fa-google-pay" style="color:#4285f4; font-size:16px;"></i> Google Pay</span>
+        <span class="payment-badge"><i class="fa-brands fa-google-pay" style="color:#4285f4; font-size:16px;"></i>
+          Google Pay</span>
       </div>
 
       <!-- Live Payment Verification Simulator -->
@@ -1442,10 +1808,12 @@
       </div>
 
       <div class="payment-actions-vertical">
-        <a id="mobileGPayBtn" href="#" class="btn btn-gold payment-btn-gpay" style="display: none; width: 100%; text-decoration: none; justify-content: center; align-items: center; gap: 8px;">
+        <a id="mobileGPayBtn" href="#" class="btn btn-gold payment-btn-gpay"
+          style="display: none; width: 100%; text-decoration: none; justify-content: center; align-items: center; gap: 8px;">
           <i class="fa-brands fa-google-pay" style="font-size: 20px;"></i> PAY WITH GPAY
         </a>
-        <button class="btn-text" style="color: rgba(255,255,255,0.6);" onclick="closePaymentModal()"><i class="fa-solid fa-xmark"></i> Cancel</button>
+        <button class="btn-text" style="color: rgba(255,255,255,0.6);" onclick="closePaymentModal()"><i
+            class="fa-solid fa-xmark"></i> Cancel</button>
       </div>
     </div>
   </div>
@@ -1453,34 +1821,30 @@
   <script>
     // Disable right-click
     document.addEventListener('contextmenu', (e) => e.preventDefault());
-    
+
     // Disable multiple clicks
     document.addEventListener('dblclick', (e) => e.preventDefault());
   </script>
 
-<script>
+  <script>
     // Disable Ctrl, Shift shortcuts (F12, Ctrl+Shift+I/C/J, Ctrl+U) and Right Click to prevent inspection
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'F12' || e.keyCode === 123) {
-      e.preventDefault();
-      e.stopPropagation();
-      return false;
-    }
-    if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'C' || e.key === 'c' || e.key === 'J' || e.key === 'j' || e.keyCode === 73 || e.keyCode === 67 || e.keyCode === 74)) {
-      e.preventDefault();
-      e.stopPropagation();
-      return false;
-    }
-    if (e.ctrlKey && (e.key === 'U' || e.key === 'u' || e.keyCode === 85)) {
-      e.preventDefault();
-      e.stopPropagation();
-      return false;
-    }
-  }, true);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'F12' || e.keyCode === 123) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+      if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'C' || e.key === 'c' || e.key === 'J' || e.key === 'j' || e.keyCode === 73 || e.keyCode === 67 || e.keyCode === 74)) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+      if (e.ctrlKey && (e.key === 'U' || e.key === 'u' || e.keyCode === 85)) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    }, true);
   
-  document.addEventListener('contextmenu', function(e) {
-    e.preventDefault();
-  }, true);
-</script>
-</body>
-</html>
+</body >
+</html >

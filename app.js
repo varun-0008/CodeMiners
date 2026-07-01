@@ -527,6 +527,37 @@ async function ensureProfileWithFullName(user) {
     if (fetchError) throw fetchError;
 
     let fullName = (profile && profile.full_name) ? profile.full_name.trim() : '';
+    let dbUsername = (profile && profile.username) ? profile.username.trim() : '';
+
+    let needsUpsert = false;
+
+    if (!dbUsername) {
+      while (!dbUsername) {
+        let input = prompt("Enter your Username (letters, numbers, underscores only):");
+        if (input === null) {
+          await auth.signOut();
+          return false;
+        }
+        input = input.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+        if (!input) {
+          alert("Username is required and must contain valid characters.");
+          continue;
+        }
+        
+        const { data: existing, error: err } = await supabaseClient
+          .from('profiles')
+          .select('id')
+          .eq('username', input)
+          .maybeSingle();
+          
+        if (existing && existing.id !== user.uid) {
+          alert("That username is already taken. Please choose another.");
+        } else {
+          dbUsername = input;
+        }
+      }
+      needsUpsert = true;
+    }
 
     if (!fullName) {
       fullName = prompt("Enter your Full Name (NOTE: You cannot change this later. For corrections, contact support at codeminerscommunity@gmail.com):");
@@ -537,10 +568,11 @@ async function ensureProfileWithFullName(user) {
         }
         fullName = prompt("Full Name is required. Enter your Full Name (NOTE: You cannot change this later. For corrections, contact support at codeminerscommunity@gmail.com):");
       }
-      
       fullName = fullName.trim();
-      const username = (user.email ? user.email.split('@')[0] : 'miner').toLowerCase().replace(/[^a-z0-9]/g, '');
+      needsUpsert = true;
+    }
 
+    if (needsUpsert) {
       // Upsert the profile record
       const { error: upsertError } = await supabaseClient
         .from('profiles')
@@ -548,7 +580,7 @@ async function ensureProfileWithFullName(user) {
           id: user.uid,
           email: user.email || '',
           full_name: fullName,
-          username: username,
+          username: dbUsername,
           created_at: profile ? profile.created_at : new Date().toISOString()
         });
 
