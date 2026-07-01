@@ -11,6 +11,9 @@ const SUPABASE_URL = 'https://omxgqhwogkihrdnlonoq.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_UGnbbIMZrz-jZvLN8pS7jw_1LGAp3HP';
 const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
+// Global reference for the logged in user's profile database document
+let currentUserDoc = null;
+
 
 
 // ─────────────────────────────────────────────────────────────
@@ -1723,11 +1726,12 @@ async function syncTeamSection() {
   try {
     const { data: profile, error: profileError } = await supabaseClient
       .from('profiles')
-      .select('team_id')
+      .select('*')
       .eq('id', user.id || user.uid)
       .maybeSingle();
 
     if (profileError) throw profileError;
+    currentUserDoc = profile;
     const userData = profile ? { teamId: profile.team_id } : {};
     
     if (userData.teamId) {
@@ -2172,7 +2176,7 @@ async function renderTeamDashboard(user, teamId, teamData) {
               </div>
               <div style="font-size: 24px; color: var(--gold-primary); font-weight: 800;">₹${totalAmount}</div>
             </div>
-            <button class="btn-gold" style="width: 100%; padding: 14px 0; font-size: 14px;" id="team-pay-submit-btn" onclick="payTeamRegistration()"><i class="fa-solid fa-credit-card"></i> CONFIRM TEAM & PAY REGISTRATION</button>
+            <button class="btn-gold" style="width: 100%; padding: 14px 0; font-size: 14px;" id="team-pay-submit-btn" onclick="payTeamRegistration()"><i class="fa-solid fa-credit-card"></i> CONFIRM & PAY TEAM</button>
           `;
         } else {
           paymentCardBody.innerHTML = `
