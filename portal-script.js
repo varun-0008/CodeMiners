@@ -2041,14 +2041,14 @@ async function renderTeamDashboard(user, teamId, teamData) {
   teamData.members.forEach(member => {
     const isLeader = member.role === 'leader';
     membersHtml += `
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: rgba(255,255,255,0.85); border: 1.5px solid #111111; border-radius: 8px;">
         <div style="display:flex; align-items:center; gap: 12px; overflow: hidden;">
-          <div style="width: 36px; height: 36px; border-radius: 50%; background: ${isLeader ? 'rgba(240,165,0,0.1)' : 'rgba(255,255,255,0.04)'}; border: 1px solid ${isLeader ? 'rgba(240,165,0,0.3)' : 'rgba(255,255,255,0.1)'}; display:flex; align-items:center; justify-content:center; color: ${isLeader ? 'var(--color-amber)' : 'var(--text-muted)'}; flex-shrink:0;">
+          <div style="width: 36px; height: 36px; border-radius: 50%; background: ${isLeader ? 'rgba(197,155,39,0.12)' : 'rgba(0,0,0,0.05)'}; border: 1.5px solid ${isLeader ? 'var(--gold-primary)' : '#aaaaaa'}; display:flex; align-items:center; justify-content:center; color: ${isLeader ? 'var(--gold-primary)' : '#555555'}; flex-shrink:0;">
             <i class="fa-solid ${isLeader ? 'fa-crown' : 'fa-user'}"></i>
           </div>
           <div style="overflow: hidden;">
-            <div style="font-weight: 700; font-size: 13.5px; color: var(--text-light); text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${member.name} ${member.uid === (user.id || user.uid) ? '<span style="font-size:10px; color:var(--color-amber); font-weight:normal;">(You)</span>' : ''}</div>
-            <div style="font-size: 11px; color: var(--text-muted); text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${member.email}</div>
+            <div style="font-weight: 700; font-size: 13.5px; color: #111111; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${member.name} ${member.uid === (user.id || user.uid) ? '<span style="font-size:10px; color:var(--gold-primary); font-weight:normal;">(You)</span>' : ''}</div>
+            <div style="font-size: 11px; color: #555555; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${member.email}</div>
           </div>
         </div>
         <span class="badge ${isLeader ? 'badge-gold' : 'badge-blue'}">${isLeader ? 'Leader' : 'Member'}</span>
