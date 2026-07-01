@@ -22,8 +22,7 @@ const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_U
 const DOM = {
   // Hero
   heroBadge:    document.getElementById('heroBadge'),
-  heroTitle:    document.querySelectorAll('.hero__title-line'),
-  heroSubtitle: document.getElementById('heroSubtitle'),
+  heroContainer:document.getElementById('hero'),
 
   // Glass Card
   glassCard:    document.getElementById('glassCard'),
@@ -55,7 +54,7 @@ const DOM = {
   forgotBtn:    document.getElementById('forgotBtn'),
 
   // Particles
-  particlesContainer: document.getElementById('particles-container'),
+  particlesContainer: document.getElementById('network-canvas'),
 
   // SVG filter elements
   turbulence:   document.getElementById('turbulence'),
@@ -71,38 +70,90 @@ let isLoading = false;
 // ─────────────────────────────────────────────
 // Particles System
 // ─────────────────────────────────────────────
-function createParticles() {
-  const count = window.innerWidth < 640 ? 18 : 35;
-
-  for (let i = 0; i < count; i++) {
-    const particle = document.createElement('div');
-    const isAmber = Math.random() > 0.4;
-    const size = Math.random() * 6 + 2;
-
-    particle.classList.add('particle', isAmber ? 'particle--amber' : 'particle--white');
-    particle.style.width  = `${size}px`;
-    particle.style.height = `${size}px`;
-    particle.style.left   = `${Math.random() * 100}%`;
-    particle.style.bottom = `-20px`; // start below screen
-    particle.style.opacity = '0';
-
-    DOM.particlesContainer.appendChild(particle);
-
-    // Animate each particle to rise like fire embers
-    const dur = Math.random() * 7 + 4; // 4 to 11 seconds rise time
-    const drift = (Math.random() - 0.5) * 200;
-
-    gsap.timeline({ repeat: -1, delay: Math.random() * 5 })
-      .to(particle, { opacity: Math.random() * 0.7 + 0.3, duration: 0.5 })
-      .to(particle, {
-        y: () => `-${window.innerHeight + 100}px`,
-        x: () => `${drift}px`,
-        scale: Math.random() * 0.4 + 0.1,
-        duration: dur,
-        ease: 'none'
-      }, "<")
-      .to(particle, { opacity: 0, duration: 1.5 }, "-=1.5");
+function initNetworkCanvas() {
+  const canvas = document.getElementById('network-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let width, height;
+  let particles = [];
+  
+  function initCanvas() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+    
+    particles = [];
+    const numParticles = Math.floor((width * height) / 10000); 
+    
+    for (let i = 0; i < numParticles; i++) {
+      const isLarge = Math.random() > 0.9;
+      particles.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        vx: (Math.random() - 0.5) * (isLarge ? 0.2 : 0.6),
+        vy: (Math.random() - 0.5) * (isLarge ? 0.2 : 0.6),
+        radius: isLarge ? Math.random() * 3 + 3.5 : Math.random() * 2.0 + 1.5,
+        isLarge: isLarge
+      });
+    }
   }
+  
+  window.addEventListener('resize', initCanvas);
+  initCanvas();
+
+  function drawNetwork() {
+    ctx.clearRect(0, 0, width, height);
+    
+    for (let i = 0; i < particles.length; i++) {
+      let p = particles[i];
+      
+      // Motion
+      p.x += p.vx;
+      p.y += p.vy;
+      
+      // Screen boundaries bounce
+      if (p.x < 0 || p.x > width) p.vx *= -1;
+      if (p.y < 0 || p.y > height) p.vy *= -1;
+      
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+      const maxNodeOpacity = p.isLarge ? 0.25 : 0.75; 
+      ctx.fillStyle = `rgba(240, 165, 0, ${maxNodeOpacity})`;
+      ctx.fill();
+    }
+    
+    // Connect nearby particles
+    const connectionDistance = 160;
+    
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        let p1 = particles[i];
+        let p2 = particles[j];
+        
+        const dx = p1.x - p2.x;
+        const dy = p1.y - p2.y;
+        const distSq = dx * dx + dy * dy;
+        
+        if (distSq < connectionDistance * connectionDistance) {
+          const dist = Math.sqrt(distSq);
+          const baseOpacity = 1 - (dist / connectionDistance);
+          const finalOpacity = baseOpacity * 0.45;
+          
+          if (finalOpacity > 0) {
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = `rgba(240, 165, 0, ${finalOpacity})`;
+            ctx.lineWidth = 0.6;
+            ctx.stroke();
+          }
+        }
+      }
+    }
+    
+    requestAnimationFrame(drawNetwork);
+  }
+  
+  drawNetwork();
 }
 
 // ─────────────────────────────────────────────
@@ -146,28 +197,14 @@ function animateLiquidGlass() {
 function playEntranceAnimation() {
   const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
 
-  // Hero badge
-  tl.from(DOM.heroBadge, {
+  // Glass container header entrance
+  tl.from(DOM.heroContainer, {
     opacity: 0,
-    y: -15,
-    duration: 0.6,
-  }, 0);
-
-  // Hero title letters stagger
-  tl.from(DOM.heroTitle, {
-    opacity: 0,
-    yPercent: 100,
-    duration: 0.8,
-    stagger: 0.12,
-    ease: 'power4.out',
-  }, 0.15);
-
-  // Subtitle
-  tl.from(DOM.heroSubtitle, {
-    opacity: 0,
-    y: 10,
-    duration: 0.7,
-  }, 0.5);
+    y: -30,
+    scale: 0.9,
+    duration: 1,
+    ease: 'back.out(1.2)'
+  }, 0.1);
 
   // Glass card
   tl.from(DOM.glassCard, {
@@ -645,7 +682,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function init() {
-  createParticles();
+  initNetworkCanvas();
   playEntranceAnimation();
   setupInputAnimations();
   setupButtonAnimations();

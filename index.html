@@ -84,24 +84,18 @@
   <!-- ============================================ -->
   <!-- Ambient floating particles                   -->
   <!-- ============================================ -->
-  <div id="particles-container" aria-hidden="true"></div>
+  <div class="glow"></div>
+  <canvas id="network-canvas"></canvas>
 
   <!-- ============================================ -->
   <!-- Main Scene                                   -->
   <!-- ============================================ -->
   <main class="scene">
 
-    <!-- Hero Header -->
-    <header class="hero" id="hero">
-      <div class="hero__grid-overlay" aria-hidden="true"></div>
-      <div class="hero__content">
-        <h1 class="hero__title" id="heroTitle">
-          <span class="hero__title-line">Code</span><span class="hero__title-line accent">Miners</span>
-        </h1>
-        <p class="hero__subtitle" id="heroSubtitle">Build. Collaborate. Innovate.</p>
-      </div>
-      <div class="hero__glow" aria-hidden="true"></div>
-    </header>
+    <!-- Glassy Bubble Header -->
+    <div class="glass-container" id="hero">
+        <h1 id="heroTitle">Code <span style="color: var(--gold-primary); font-weight: 400;">Miners</span></h1>
+    </div>
 
     <!-- Login Section -->
     <section class="auth-section" id="authSection">
