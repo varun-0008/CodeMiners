@@ -116,8 +116,8 @@ function initNetworkCanvas() {
       
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-      const maxNodeOpacity = p.isLarge ? 0.25 : 0.75; 
-      ctx.fillStyle = `rgba(240, 165, 0, ${maxNodeOpacity})`;
+      const maxNodeOpacity = p.isLarge ? 0.3 : 0.9; 
+      ctx.fillStyle = `rgba(20, 20, 20, ${maxNodeOpacity})`;
       ctx.fill();
     }
     
@@ -136,13 +136,13 @@ function initNetworkCanvas() {
         if (distSq < connectionDistance * connectionDistance) {
           const dist = Math.sqrt(distSq);
           const baseOpacity = 1 - (dist / connectionDistance);
-          const finalOpacity = baseOpacity * 0.45;
+          const finalOpacity = baseOpacity * 0.7;
           
           if (finalOpacity > 0) {
             ctx.beginPath();
             ctx.moveTo(p1.x, p1.y);
             ctx.lineTo(p2.x, p2.y);
-            ctx.strokeStyle = `rgba(240, 165, 0, ${finalOpacity})`;
+            ctx.strokeStyle = `rgba(20, 20, 20, ${finalOpacity})`;
             ctx.lineWidth = 0.6;
             ctx.stroke();
           }

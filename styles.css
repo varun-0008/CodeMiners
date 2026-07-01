@@ -131,7 +131,7 @@ img { max-width: 100%; display: block; }
   transform: translate(-50%, -50%);
   width: 700px;
   height: 700px;
-  background: radial-gradient(circle, rgba(240, 165, 0, 0.22) 0%, rgba(240, 165, 0, 0.06) 45%, rgba(0, 0, 0, 0) 70%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.4) 30%, rgba(255, 255, 255, 0) 60%);
   z-index: 1;
   pointer-events: none;
 }
@@ -215,13 +215,7 @@ img { max-width: 100%; display: block; }
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  /* Seamless grid pattern + dark stone tint + homepage background image */
-  background: 
-    linear-gradient(rgba(243, 156, 18, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(243, 156, 18, 0.04) 1px, transparent 1px),
-    linear-gradient(rgba(23, 27, 31, 0.72), rgba(23, 27, 31, 0.72)),
-    url('background.png') no-repeat center center fixed;
-  background-size: 52px 52px, 52px 52px, 100% 100%, cover;
+  background: transparent;
 }
 
 /* ---------- Hero ---------- */
