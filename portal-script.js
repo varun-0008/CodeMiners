@@ -11,6 +11,9 @@ const SUPABASE_URL = 'https://omxgqhwogkihrdnlonoq.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_UGnbbIMZrz-jZvLN8pS7jw_1LGAp3HP';
 const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
+// Firebase Firestore instance for non-blocking mail batches
+const db = window.firebase ? window.firebase.firestore() : null;
+
 // ─────────────────────────────────────────────────────────────
 // PAGE NAVIGATION
 // ─────────────────────────────────────────────────────────────
