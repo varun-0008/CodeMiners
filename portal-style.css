@@ -979,18 +979,18 @@ input, textarea, select { font-family: inherit; }
 }
 
 .step-item.active .step-circle {
-  background: linear-gradient(135deg, var(--blue-accent), #2980b9);
-  border-color: var(--blue-accent);
+  background: linear-gradient(135deg, var(--gold-primary), var(--gold-light));
+  border-color: var(--gold-primary);
   color: #ffffff;
-  box-shadow: 0 0 18px rgba(52, 152, 219, 0.4);
+  box-shadow: 0 0 18px rgba(197, 155, 39, 0.4);
 }
 
 .step-item.active .step-label { color: var(--gold-primary); }
 
 .step-item.completed .step-circle {
-  background: rgba(52, 152, 219, 0.15);
-  border-color: rgba(52, 152, 219, 0.4);
-  color: var(--blue-accent);
+  background: rgba(197, 155, 39, 0.15);
+  border-color: rgba(197, 155, 39, 0.4);
+  color: var(--gold-primary);
 }
 
 .step-line {
@@ -1180,19 +1180,20 @@ textarea.field-input { padding-top: 13px; align-self: flex-start; width: 100%; }
 }
 
 .why-card {
-  background: rgba(44,48,53,0.7);
-  border: 1px solid var(--rock-border);
+  background: rgba(255, 255, 255, 0.75);
+  border: 1.5px solid #111111;
   border-radius: var(--radius-lg);
   padding: 28px;
   text-align: center;
   transition: var(--transition-smooth);
   backdrop-filter: blur(12px);
+  box-shadow: none !important;
 }
 
 .why-card:hover {
-  border-color: rgba(243,156,18,0.35);
+  border-color: var(--gold-primary);
   transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0,0,0,0.28), var(--shadow-amber);
+  box-shadow: none !important;
 }
 
 .why-ico {
