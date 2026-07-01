@@ -1748,12 +1748,13 @@ async function syncTeamSection() {
         
         // Map postgres snake_case keys back to the component-level expected camelCase keys
         const formattedTeamData = {
+          id: teamData.id,
           name: teamData.name,
           leaderId: teamData.leader_id,
           leaderName: teamData.leader_name,
           techStack: teamData.tech_stack,
           description: teamData.description,
-          members: teamData.members
+          members: Array.isArray(teamData.members) ? teamData.members : []
         };
 
         currentTeamData = formattedTeamData;
@@ -2057,7 +2058,9 @@ async function renderTeamDashboard(user, teamId, teamData) {
   });
   membersList.innerHTML = membersHtml;
 
-  const isUserLeader = teamData.leaderId === (user.id || user.uid);
+  const currentUid = user.uid || user.id || '';
+  const isUserLeader = teamData.leaderId === currentUid;
+  console.log('[Team] leaderId:', teamData.leaderId, 'currentUid:', currentUid, 'isLeader:', isUserLeader);
   const actionsContainer = document.getElementById('team-management-actions');
   
   if (isUserLeader) {
@@ -2084,7 +2087,7 @@ async function renderTeamDashboard(user, teamId, teamData) {
       const { data: reg, error: regError } = await supabaseClient
         .from('registrations')
         .select('*')
-        .or(`team_id.eq.${teamData.id},team_name.eq."${teamData.name}"`)
+        .or(`team_id.eq.${teamId},team_name.eq."${teamData.name}"`)
         .eq('event_name', 'CodeMiners Hackathon 2026')
         .maybeSingle();
 
