@@ -2410,18 +2410,22 @@ async function sendInvitation() {
 
     if (inviteError) throw inviteError;
 
-    const batch = db.batch();
-    const mailRef = db.collection('mail').doc();
-    batch.set(mailRef, {
-      to: receiverEmail,
-      message: {
-        subject: `You've been invited to join team "${currentTeamData.name}"!`,
-        text: `Hi ${receiverUsername}! You got an invitation to join the team "${currentTeamData.name}" by ${currentTeamData.leaderName}. Log in to your CodeMiners portal and visit the Teams page to accept or decline.`,
-        html: `<p>Hi <strong>${receiverUsername}</strong>!</p><p>You got an invitation to join the team <strong>${currentTeamData.name}</strong> by <strong>${currentTeamData.leaderName}</strong>.</p><p>Log in to your <a href="http://localhost:3000/">CodeMiners Portal</a> and visit the <strong>Teams</strong> section to accept or decline the request.</p>`
-      }
-    });
+    try {
+      const batch = db.batch();
+      const mailRef = db.collection('mail').doc();
+      batch.set(mailRef, {
+        to: receiverEmail,
+        message: {
+          subject: `You've been invited to join team "${currentTeamData.name}"!`,
+          text: `Hi ${receiverUsername}! You got an invitation to join the team "${currentTeamData.name}" by ${currentTeamData.leaderName}. Log in to your CodeMiners portal and visit the Teams page to accept or decline.`,
+          html: `<p>Hi <strong>${receiverUsername}</strong>!</p><p>You got an invitation to join the team <strong>${currentTeamData.name}</strong> by <strong>${currentTeamData.leaderName}</strong>.</p><p>Log in to your <a href="https://codeminer.firebaseapp.com/">CodeMiners Portal</a> and visit the <strong>Teams</strong> section to accept or decline the request.</p>`
+        }
+      });
+      await batch.commit();
+    } catch (mailErr) {
+      console.warn("Mail trigger failed (non-blocking):", mailErr);
+    }
 
-    await batch.commit();
     showToast(`Invitation sent to ${receiverUsername}!`, "success");
     document.getElementById('invite-identifier').value = '';
     loadSentInvitations(currentTeamId);

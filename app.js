@@ -33,7 +33,6 @@ const DOM = {
 
   // OAuth buttons
   btnGoogle:    document.getElementById('authGoogle'),
-  btnGithub:    document.getElementById('authGithub'),
   socialAuth:   document.getElementById('oauthProviders'),
   divider:      document.getElementById('divider'),
 
@@ -203,7 +202,7 @@ function playEntranceAnimation() {
   }, 1.2);
 
   // OAuth buttons stagger
-  tl.from([DOM.btnGoogle, DOM.btnGithub], {
+  tl.from([DOM.btnGoogle], {
     opacity: 0,
     y: 15,
     duration: 0.5,
@@ -256,7 +255,7 @@ function setupInputAnimations() {
 // ─────────────────────────────────────────────
 function setupButtonAnimations() {
   // Social buttons
-  [DOM.btnGoogle, DOM.btnGithub].forEach(btn => {
+  [DOM.btnGoogle].forEach(btn => {
     btn.addEventListener('mouseenter', () => {
       gsap.to(btn, { scale: 1.03, duration: 0.25, ease: 'power2.out' });
     });
@@ -622,31 +621,7 @@ DOM.btnGoogle.addEventListener('click', async () => {
   }
 });
 
-// ─────────────────────────────────────────────
-// Firebase Auth — GitHub Sign-In
-// ─────────────────────────────────────────────
-DOM.btnGithub.addEventListener('click', async () => {
-  const provider = new firebase.auth.GithubAuthProvider();
-  try {
-    const userCredential = await auth.signInWithPopup(provider);
-    const user = userCredential.user;
-    
-    const success = await ensureProfileWithFullName(user);
-    if (!success) {
-      showMessage('Login cancelled. Full name is required.');
-      return;
-    }
 
-    showMessage('Signed in with GitHub!', 'success');
-    setTimeout(() => {
-      window.location.href = 'portal.html';
-    }, 800);
-  } catch (error) {
-    if (error.code !== 'auth/popup-closed-by-user') {
-      showMessage(error.message);
-    }
-  }
-});
 
 // ─────────────────────────────────────────────
 // Auth State Observer
