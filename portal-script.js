@@ -1939,7 +1939,7 @@ async function loadIncomingInvitations(user) {
     const { data: invitesSnapshot, error } = await supabaseClient
       .from('invitations')
       .select('*')
-      .eq('receiver_email', user.email)
+      .ilike('receiver_email', user.email)
       .eq('status', 'pending');
 
     if (error) throw error;
@@ -2383,13 +2383,13 @@ async function sendInvitation() {
       profilesResult = await supabaseClient
         .from('profiles')
         .select('*')
-        .eq('email', identifier)
+        .ilike('email', identifier)
         .maybeSingle();
     } else {
       profilesResult = await supabaseClient
         .from('profiles')
         .select('*')
-        .eq('username', identifier)
+        .ilike('username', identifier)
         .maybeSingle();
     }
 
@@ -2425,7 +2425,7 @@ async function sendInvitation() {
       .from('invitations')
       .select('id')
       .eq('team_id', currentTeamId)
-      .eq('receiver_email', receiverEmail)
+      .ilike('receiver_email', receiverEmail)
       .eq('status', 'pending');
 
     if (checkError) throw checkError;
@@ -2441,7 +2441,7 @@ async function sendInvitation() {
       team_id: currentTeamId,
       team_name: currentTeamData.name,
       sender_id: user.id || user.uid,
-      sender_name: currentTeamData.leaderName,
+      sender_name: currentTeamData.leaderName || user.displayName || 'Team Leader',
       sender_email: user.email,
       receiver_email: receiverEmail,
       receiver_uid: receiverUid,
@@ -2462,8 +2462,8 @@ async function sendInvitation() {
         to: receiverEmail,
         message: {
           subject: `You've been invited to join team "${currentTeamData.name}"!`,
-          text: `Hi ${receiverUsername}! You got an invitation to join the team "${currentTeamData.name}" by ${currentTeamData.leaderName}. Log in to your CodeMiners portal and visit the Teams page to accept or decline.`,
-          html: `<p>Hi <strong>${receiverUsername}</strong>!</p><p>You got an invitation to join the team <strong>${currentTeamData.name}</strong> by <strong>${currentTeamData.leaderName}</strong>.</p><p>Log in to your <a href="https://codeminer.firebaseapp.com/">CodeMiners Portal</a> and visit the <strong>Teams</strong> section to accept or decline the request.</p>`
+          text: `Hi ${receiverUsername}! You got an invitation to join the team "${currentTeamData.name}" by ${currentTeamData.leaderName || user.displayName || 'Team Leader'}. Log in to your CodeMiners portal and visit the Teams page to accept or decline.`,
+          html: `<p>Hi <strong>${receiverUsername}</strong>!</p><p>You got an invitation to join the team <strong>${currentTeamData.name}</strong> by <strong>${currentTeamData.leaderName || user.displayName || 'Team Leader'}</strong>.</p><p>Log in to your <a href="https://codeminer.firebaseapp.com/">CodeMiners Portal</a> and visit the <strong>Teams</strong> section to accept or decline the request.</p>`
         }
       });
       await batch.commit();
@@ -2476,7 +2476,7 @@ async function sendInvitation() {
     loadSentInvitations(currentTeamId);
   } catch (error) {
     console.error("Error sending invitation:", error);
-    showToast("Failed to send invitation.", "error");
+    showToast("Failed to send invitation: " + (error.message || error), "error");
   } finally {
     btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> SEND INVITATION';
     btn.disabled = false;
