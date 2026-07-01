@@ -106,6 +106,25 @@ function playSectionAnimation(page) {
       "-=0.3"
     );
   }
+
+  // Animate counter values if present in the section
+  section.querySelectorAll('.achieve-num').forEach(num => {
+    const target = parseInt(num.getAttribute('data-target')) || 0;
+    const hasPlus = num.textContent.includes('+') || num.getAttribute('data-target-plus') === 'true';
+    const obj = { val: 0 };
+    
+    // Set initial text value
+    num.textContent = '0' + (hasPlus ? '+' : '');
+    
+    gsap.to(obj, {
+      val: target,
+      duration: 1.5,
+      ease: 'power2.out',
+      onUpdate: () => {
+        num.textContent = Math.floor(obj.val) + (hasPlus ? '+' : '');
+      }
+    });
+  });
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -1147,6 +1166,20 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('selected'));
       donationAmount = null;
     });
+  }
+
+  // Dynamically set events hosted count target based on ALL_EVENTS completion status
+  try {
+    const today = new Date();
+    const completedCount = ALL_EVENTS.filter(ev => new Date(ev.completionDate) <= today).length;
+    document.querySelectorAll('.events-hosted-count').forEach(el => {
+      el.setAttribute('data-target', completedCount);
+      // If we want a '+' sign for events hosted in the UI
+      el.setAttribute('data-target-plus', 'true');
+      el.textContent = completedCount + '+';
+    });
+  } catch (err) {
+    console.error("Error setting events hosted count:", err);
   }
 });
 
