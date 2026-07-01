@@ -395,6 +395,7 @@ async function processRegistration(btnElement, paymentId = null) {
     role: role,
     event_name: selectedEvent,
     team_name: role === 'leader' ? teamName : null,
+    team_id: currentTeamId || null,
     team_size: role === 'leader' ? realTeamSize : 1,
     payment_id: actualPaymentId,
     payment_status: paymentStatus,
@@ -464,6 +465,12 @@ async function processRegistration(btnElement, paymentId = null) {
           .from('profiles')
           .update({ team_id: insertedTeamId })
           .eq('id', user.id || user.uid);
+
+        await supabaseClient
+          .from('registrations')
+          .update({ team_id: insertedTeamId })
+          .eq('email', email)
+          .eq('event_name', selectedEvent);
 
         if (pendingInvites.length > 0) {
           const invitePayloads = pendingInvites.map(inv => ({
@@ -2080,7 +2087,7 @@ async function renderTeamDashboard(user, teamId, teamData) {
       const { data: reg, error: regError } = await supabaseClient
         .from('registrations')
         .select('*')
-        .eq('team_name', teamData.name)
+        .or(`team_id.eq.${teamData.id},team_name.eq."${teamData.name}"`)
         .eq('event_name', 'CodeMiners Hackathon 2026')
         .maybeSingle();
 
@@ -2286,6 +2293,7 @@ async function processTeamRegistration(paymentId, phone, college, studyYear, idV
     role: 'leader',
     event_name: 'CodeMiners Hackathon 2026',
     team_name: currentTeamData.name,
+    team_id: currentTeamId || null,
     team_size: teamSize,
     payment_id: paymentId,
     payment_status: 'captured',
