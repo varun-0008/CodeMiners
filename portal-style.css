@@ -955,8 +955,8 @@ input, textarea, select { font-family: inherit; }
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: rgba(44,48,53,0.9);
-  border: 2px solid rgba(255,255,255,0.15);
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -979,18 +979,18 @@ input, textarea, select { font-family: inherit; }
 }
 
 .step-item.active .step-circle {
-  background: linear-gradient(135deg, var(--gold-primary), var(--magma-primary));
-  border-color: var(--gold-primary);
-  color: #fff;
-  box-shadow: 0 0 18px rgba(243,156,18,0.4);
+  background: linear-gradient(135deg, var(--blue-accent), #2980b9);
+  border-color: var(--blue-accent);
+  color: #ffffff;
+  box-shadow: 0 0 18px rgba(52, 152, 219, 0.4);
 }
 
 .step-item.active .step-label { color: var(--gold-primary); }
 
 .step-item.completed .step-circle {
-  background: rgba(243,156,18,0.15);
-  border-color: rgba(243,156,18,0.4);
-  color: var(--gold-primary);
+  background: rgba(52, 152, 219, 0.15);
+  border-color: rgba(52, 152, 219, 0.4);
+  color: var(--blue-accent);
 }
 
 .step-line {
@@ -1250,8 +1250,8 @@ textarea.field-input { padding-top: 13px; align-self: flex-start; width: 100%; }
 .thankyou-card {
   max-width: 480px;
   margin: 0 auto;
-  background: rgba(44,48,53,0.85);
-  border: 1px solid rgba(243,156,18,0.25);
+  background: rgba(255, 255, 255, 0.75);
+  border: 1.5px solid #111111;
   border-radius: var(--radius-xl);
   padding: 48px 36px;
   text-align: center;
@@ -1259,7 +1259,7 @@ textarea.field-input { padding-top: 13px; align-self: flex-start; width: 100%; }
   flex-direction: column;
   align-items: center;
   gap: 14px;
-  box-shadow: 0 8px 48px rgba(0,0,0,0.4), var(--shadow-amber);
+  box-shadow: none !important;
 }
 
 .thankyou-ico {
@@ -1438,8 +1438,8 @@ textarea.field-input { padding-top: 13px; align-self: flex-start; width: 100%; }
 
 /* ── Footer ───────────────────────────────────────────────── */
 .site-footer {
-  background: rgba(23,27,31,0.95);
-  border-top: 1px solid rgba(243,156,18,0.12);
+  background: rgba(255, 255, 255, 0.95);
+  border-top: 1px solid rgba(197, 155, 39, 0.18);
   margin-top: 80px;
 }
 
@@ -1473,8 +1473,8 @@ textarea.field-input { padding-top: 13px; align-self: flex-start; width: 100%; }
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 50%;
   color: var(--text-muted);
   font-size: 15px;
@@ -1482,8 +1482,8 @@ textarea.field-input { padding-top: 13px; align-self: flex-start; width: 100%; }
 }
 
 .social-btn:hover {
-  background: rgba(243,156,18,0.12);
-  border-color: rgba(243,156,18,0.3);
+  background: rgba(197, 155, 39, 0.12);
+  border-color: rgba(197, 155, 39, 0.3);
   color: var(--gold-primary);
   transform: translateY(-2px);
 }
@@ -1518,7 +1518,7 @@ textarea.field-input { padding-top: 13px; align-self: flex-start; width: 100%; }
   justify-content: space-between;
   align-items: center;
   padding-top: 24px;
-  border-top: 1px solid rgba(255,255,255,0.06);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
   flex-wrap: wrap;
   gap: 8px;
 }
@@ -1638,6 +1638,8 @@ textarea.field-input { padding-top: 13px; align-self: flex-start; width: 100%; }
   text-align: center;
   transform: scale(0.9) translateY(20px);
   transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15);
+  border: 1.5px solid #111111 !important;
+  box-shadow: none !important;
 }
 .payment-modal-overlay.active .payment-modal-card {
   transform: scale(1) translateY(0);
@@ -1648,11 +1650,9 @@ textarea.field-input { padding-top: 13px; align-self: flex-start; width: 100%; }
   margin: 16px auto;
   padding: 12px;
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1.5px solid #111111 !important;
   border-radius: var(--radius-lg);
-  box-shadow: 
-    inset 0 1px 1px rgba(255, 255, 255, 0.15),
-    0 8px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: none !important;
 }
 .payment-qrcode-wrap img {
   display: block;

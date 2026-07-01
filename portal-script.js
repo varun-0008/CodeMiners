@@ -1387,16 +1387,50 @@ function viewParticipants(eventId, eventTitle) {
       .from('registrations')
       .select('*')
       .eq('event_name', eventTitle)
-      .then(({ data, error }) => {
+      .then(async ({ data, error }) => {
         if (error) throw error;
         
         fetchedMiners = [];
         if (data) {
+          const { data: profiles, error: pError } = await supabaseClient
+            .from('profiles')
+            .select('*');
+
+          const profileMap = {};
+          if (profiles) {
+            profiles.forEach(p => {
+              if (p.email) {
+                profileMap[p.email.toLowerCase()] = p;
+              }
+            });
+          }
+
           const user = window.currentUser;
           data.forEach(item => {
             const isOwner = user && (item.email === user.email);
             const decryptedCollege = decryptGlobal(item.college);
             const decryptedPin = isOwner ? decryptIdValue(item.id_value, user.uid) : 'Encrypted';
+            
+            const profile = item.email ? profileMap[item.email.toLowerCase()] : null;
+            let aboutVal = '';
+            let projectsArr = [];
+
+            if (profile) {
+              try {
+                if (profile.about) aboutVal = decryptData(profile.about, profile.id);
+              } catch(e){}
+              
+              try {
+                if (profile.projects) {
+                  if (Array.isArray(profile.projects)) {
+                    projectsArr = profile.projects;
+                  } else if (typeof profile.projects === 'string') {
+                    const decProj = decryptData(profile.projects, profile.id);
+                    if (decProj) projectsArr = JSON.parse(decProj);
+                  }
+                }
+              } catch(e){}
+            }
 
             if (item.team_name) {
               let existingTeam = fetchedMiners.find(m => m.name === item.team_name && m.participationType === 'Team');
@@ -1422,8 +1456,8 @@ function viewParticipants(eventId, eventTitle) {
                 subtitle: decryptedCollege || '', 
                 year: item.year || '',
                 role: 'Participant',
-                about: '', 
-                projects: item.project_link ? [{name: item.project_name || 'Project', link: item.project_link}] : [],
+                about: aboutVal || '', 
+                projects: projectsArr.length > 0 ? projectsArr : (item.project_link ? [{name: item.project_name || 'Project', link: item.project_link}] : []),
                 pin: decryptedPin || '',
                 participationType: '',
                 teamName: ''
@@ -1531,7 +1565,7 @@ function renderMinersList(searchQuery = '') {
     <div style="margin-bottom: 20px; position: relative;">
       <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 16px; top: 14px; color: var(--text-muted);"></i>
       <input type="text" id="miner-search" placeholder="Search by username or name..." 
-             style="width: 100%; padding: 12px 16px 12px 44px; border-radius: 8px; border: 1.5px solid var(--rock-border); background: rgba(0,0,0,0.3); color: white; outline: none; font-family: inherit;" 
+             style="width: 100%; padding: 12px 16px 12px 44px; border-radius: 8px; border: 1.5px solid #111111; background: #ffffff; color: #111111; outline: none; font-family: inherit; box-shadow: none !important;" 
              value="${searchQuery}" onkeyup="renderMinersList(this.value)">
     </div>
     <div style="display: grid; grid-template-columns: 1fr; gap: 12px; max-height: 400px; overflow-y: auto; padding-right: 8px;" id="miners-grid">
@@ -1572,8 +1606,8 @@ function viewMinerProfile(minerId) {
   let projectsHtml = '';
   if (!m.participationType && m.projects && m.projects.length > 0) {
     projectsHtml = `
-      <div style="background: rgba(0,0,0,0.2); border: 1.5px solid var(--rock-border); border-radius: 12px; padding: 20px; text-align: left; margin-top: 16px;">
-        <h3 style="margin-top:0; font-size: 15px; color: var(--text-light); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; margin-bottom: 12px;"><i class="fa-solid fa-code"></i> Personal Projects</h3>
+      <div style="background: rgba(255, 255, 255, 0.75); border: 1.5px solid #111111; box-shadow: none !important; border-radius: 12px; padding: 20px; text-align: left; margin-top: 16px;">
+        <h3 style="margin-top:0; font-size: 15px; color: var(--text-light); border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 8px; margin-bottom: 12px;"><i class="fa-solid fa-code"></i> Personal Projects</h3>
         <div style="display: flex; flex-direction: column; gap: 8px;">
           ${m.projects.map(p => `
             <a href="${p.link}" target="_blank" style="color: var(--gold-primary); text-decoration: none; font-size: 14px; background: rgba(240,165,0,0.1); padding: 8px 12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 8px;">
@@ -1586,8 +1620,8 @@ function viewMinerProfile(minerId) {
   } else if (m.participationType === 'Team') {
     const safeId = btoa(unescape(encodeURIComponent(m.id))).replace(/=/g, '');
     projectsHtml = `
-      <div style="background: rgba(0,0,0,0.2); border: 1.5px solid var(--rock-border); border-radius: 12px; padding: 20px; text-align: left; margin-top: 16px;">
-        <h3 style="margin-top:0; font-size: 15px; color: var(--text-light); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; margin-bottom: 12px;"><i class="fa-solid fa-rocket"></i> Team Project Link</h3>
+      <div style="background: rgba(255, 255, 255, 0.75); border: 1.5px solid #111111; box-shadow: none !important; border-radius: 12px; padding: 20px; text-align: left; margin-top: 16px;">
+        <h3 style="margin-top:0; font-size: 15px; color: var(--text-light); border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 8px; margin-bottom: 12px;"><i class="fa-solid fa-rocket"></i> Team Project Link</h3>
         <div style="display: flex; flex-direction: column; gap: 8px;">
           ${m.teamProjectLink ? `
             <a href="${m.teamProjectLink}" target="_blank" style="color: var(--gold-primary); text-decoration: none; font-size: 14px; background: rgba(240,165,0,0.1); padding: 8px 12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 8px;">
@@ -1596,7 +1630,7 @@ function viewMinerProfile(minerId) {
           ` : `<p style="color: var(--text-muted); font-size: 13px; margin: 0 0 8px 0;">No project link added yet.</p>`}
           
           <div style="display: flex; gap: 8px; align-items: center;">
-            <input type="text" id="team-proj-link-${safeId}" placeholder="Enter project URL..." value="${m.teamProjectLink}" class="field-input" style="flex: 1; padding: 10px; font-size: 13px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 6px;">
+            <input type="text" id="team-proj-link-${safeId}" placeholder="Enter project URL..." value="${m.teamProjectLink}" class="field-input" style="flex: 1; padding: 10px; font-size: 13px; background: #ffffff; border: 1px solid #111111; color: #111111; border-radius: 6px; box-shadow: none !important;">
             <button class="btn-gold" style="padding: 10px 16px; font-size: 13px; border-radius: 6px;" onclick="updateTeamProjectLink(this, '${m.id}', '${safeId}')">Save</button>
           </div>
         </div>
@@ -1607,8 +1641,8 @@ function viewMinerProfile(minerId) {
   let aboutHtml = '';
   if (!m.participationType && m.about) {
     aboutHtml = `
-      <div style="background: rgba(0,0,0,0.2); border: 1.5px solid var(--rock-border); border-radius: 12px; padding: 20px; text-align: left; margin-bottom: 16px;">
-        <h3 style="margin-top:0; font-size: 15px; color: var(--text-light); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; margin-bottom: 12px;"><i class="fa-solid fa-address-card"></i> About Miner</h3>
+      <div style="background: rgba(255, 255, 255, 0.75); border: 1.5px solid #111111; box-shadow: none !important; border-radius: 12px; padding: 20px; text-align: left; margin-bottom: 16px;">
+        <h3 style="margin-top:0; font-size: 15px; color: var(--text-light); border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 8px; margin-bottom: 12px;"><i class="fa-solid fa-address-card"></i> About Miner</h3>
         <p style="color: var(--text-muted); font-size: 13px; line-height: 1.6; margin: 0;">
           ${m.about}
         </p>
@@ -1624,8 +1658,8 @@ function viewMinerProfile(minerId) {
     
     if (mArray.length > 0) {
       membersHtml = `
-        <div style="background: rgba(0,0,0,0.2); border: 1.5px solid var(--rock-border); border-radius: 12px; padding: 20px; text-align: left; margin-bottom: 16px;">
-          <h3 style="margin-top:0; font-size: 15px; color: var(--text-light); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; margin-bottom: 12px;"><i class="fa-solid fa-users"></i> Team Members</h3>
+        <div style="background: rgba(255, 255, 255, 0.75); border: 1.5px solid #111111; box-shadow: none !important; border-radius: 12px; padding: 20px; text-align: left; margin-bottom: 16px;">
+          <h3 style="margin-top:0; font-size: 15px; color: var(--text-light); border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 8px; margin-bottom: 12px;"><i class="fa-solid fa-users"></i> Team Members</h3>
           <ul style="color: var(--text-muted); font-size: 13px; line-height: 1.6; margin: 0; padding-left: 20px;">
             ${mArray.map(member => `<li>${member}</li>`).join('')}
           </ul>
