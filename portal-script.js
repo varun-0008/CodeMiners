@@ -11,6 +11,31 @@ const SUPABASE_URL = 'https://omxgqhwogkihrdnlonoq.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_UGnbbIMZrz-jZvLN8pS7jw_1LGAp3HP';
 const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
+// Global fallback helpers if not defined in portal.html
+const GLOBAL_SALT_FALLBACK = 'CM_GlobalSalt_2026_Hash';
+window.encryptGlobal = window.encryptGlobal || function(plainText) {
+  if (!plainText) return '';
+  try {
+    return CryptoJS.AES.encrypt(String(plainText), GLOBAL_SALT_FALLBACK).toString();
+  } catch (err) {
+    console.error("encryptGlobal error:", err);
+    return plainText;
+  }
+};
+window.decryptGlobal = window.decryptGlobal || function(cipherText) {
+  if (!cipherText) return '';
+  try {
+    const bytes = CryptoJS.AES.decrypt(cipherText, GLOBAL_SALT_FALLBACK);
+    const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+    return decrypted || cipherText;
+  } catch (err) {
+    return cipherText;
+  }
+};
+
+const encryptGlobal = window.encryptGlobal;
+const decryptGlobal = window.decryptGlobal;
+
 // Global reference for the logged in user's profile database document
 let currentUserDoc = null;
 
@@ -2094,12 +2119,30 @@ async function renderTeamDashboard(user, teamId, teamData) {
     paymentCardBody.innerHTML = '<div style="text-align:center; padding:20px; color:rgba(255,255,255,0.4);"><i class="fa-solid fa-spinner fa-spin"></i> Checking registration status...</div>';
 
     try {
-      const { data: reg, error: regError } = await supabaseClient
-        .from('registrations')
-        .select('*')
-        .or(`team_id.eq.${teamId},team_name.eq."${teamData.name}"`)
-        .eq('event_name', 'CodeMiners Hackathon 2026')
-        .maybeSingle();
+      let reg = null;
+      let regError = null;
+
+      if (teamId) {
+        const { data, error } = await supabaseClient
+          .from('registrations')
+          .select('*')
+          .eq('team_id', teamId)
+          .eq('event_name', 'CodeMiners Hackathon 2026')
+          .maybeSingle();
+        reg = data;
+        regError = error;
+      }
+
+      if (!reg && !regError && teamData.name) {
+        const { data, error } = await supabaseClient
+          .from('registrations')
+          .select('*')
+          .eq('team_name', teamData.name)
+          .eq('event_name', 'CodeMiners Hackathon 2026')
+          .maybeSingle();
+        reg = data;
+        regError = error;
+      }
 
       if (regError) throw regError;
 

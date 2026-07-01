@@ -20,7 +20,7 @@
     rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     crossorigin="anonymous">
-  <link rel="stylesheet" href="portal-style.css">
+  <link rel="stylesheet" href="portal-style.css?v=16">
 
   <!-- GSAP -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -1413,7 +1413,7 @@
   </div><!-- /.page-wrapper -->
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="portal-script.min.js?v=13"></script>
+  <script src="portal-script.min.js?v=16"></script>
   <script>
     // Global user doc reference
     let currentUserDoc = null;
@@ -1443,6 +1443,26 @@
         return cipherText;
       }
     }
+    
+    function encryptGlobal(plainText) {
+      if (!plainText) return '';
+      try {
+        return CryptoJS.AES.encrypt(String(plainText), GLOBAL_SALT).toString();
+      } catch (err) {
+        console.error("encryptGlobal error:", err);
+        return plainText;
+      }
+    }
+
+    function decryptGlobal(cipherText) {
+      if (!cipherText) return '';
+      try {
+        const bytes = CryptoJS.AES.decrypt(cipherText, GLOBAL_SALT);
+        const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+        return decrypted || cipherText;
+      } catch (err) {
+        return cipherText;
+      }
 
     function encryptIdValue(idValue, uid) {
       if (!idValue) return '';
