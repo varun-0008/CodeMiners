@@ -1548,8 +1548,21 @@ textarea.field-input { padding-top: 13px; align-self: flex-start; width: 100%; }
   }
 
   .nav-link span { display: none; }
-  .nav-link { padding: 8px 12px; border-radius: var(--radius-md); flex-direction: column; gap: 3px; }
-  .nav-link i { font-size: 18px; }
+  .nav-link { padding: 8px 6px; border-radius: var(--radius-md); flex-direction: column; gap: 3px; }
+  .nav-link i { font-size: 16px; }
+
+  @media (max-width: 420px) {
+    .cloud-nav {
+      max-width: calc(100vw - 12px);
+      padding: 6px 4px;
+    }
+    .nav-link {
+      padding: 6px 4px;
+    }
+    .nav-link i {
+      font-size: 14px;
+    }
+  }
 
   .page-wrapper { padding-top: 90px; padding-bottom: 40px; }
 
