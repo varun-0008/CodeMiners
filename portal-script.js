@@ -1727,7 +1727,7 @@ async function syncTeamSection() {
     const { data: profile, error: profileError } = await supabaseClient
       .from('profiles')
       .select('*')
-      .eq('id', user.id || user.uid)
+      .eq('id', user.uid)
       .maybeSingle();
 
     if (profileError) throw profileError;
@@ -1772,7 +1772,7 @@ async function syncTeamSection() {
         await supabaseClient
           .from('profiles')
           .update({ team_id: null })
-          .eq('id', user.id || user.uid);
+          .eq('id', user.uid);
         currentTeamId = null;
         currentTeamData = null;
         renderNoTeamView(user);
@@ -1785,6 +1785,16 @@ async function syncTeamSection() {
   } catch (error) {
     console.error("Error syncing team section:", error);
     showToast("Failed to load team data.", "error");
+    // On error, show no-team view so user isn't stuck on loading
+    const noTeamView = document.getElementById('team-no-team-view');
+    if (noTeamView) {
+      noTeamView.style.display = 'grid';
+      if (window.innerWidth < 800) noTeamView.style.display = 'block';
+    }
+  } finally {
+    // Always hide the loading spinner
+    const lv = document.getElementById('team-loading-view');
+    if (lv) lv.style.display = 'none';
   }
 }
 
