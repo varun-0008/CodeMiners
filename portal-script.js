@@ -486,11 +486,11 @@ async function processRegistration(btnElement, paymentId = null) {
         const username = user.user_metadata?.full_name || user.user_metadata?.username || fullName;
         const teamPayload = {
           name: teamName,
-          leader_id: user.id || user.uid,
+          leader_id: user.uid,
           leader_name: username,
           tech_stack: 'Not specified yet',
           description: 'Created during registration.',
-          members: [{ uid: user.id || user.uid, name: username, email: user.email, role: 'leader' }]
+          members: [{ uid: user.uid, name: username, email: user.email, role: 'leader' }]
         };
 
         const { data: teamData, error: teamError } = await supabaseClient
@@ -512,7 +512,7 @@ async function processRegistration(btnElement, paymentId = null) {
         await supabaseClient
           .from('profiles')
           .update({ team_id: insertedTeamId })
-          .eq('id', user.id || user.uid);
+          .eq('id', user.uid);
 
         await supabaseClient
           .from('registrations')
@@ -524,7 +524,7 @@ async function processRegistration(btnElement, paymentId = null) {
           const invitePayloads = pendingInvites.map(inv => ({
             team_id: insertedTeamId,
             team_name: teamName,
-            sender_id: user.id || user.uid,
+            sender_id: user.uid,
             sender_name: username,
             sender_email: user.email,
             receiver_email: inv.email,
@@ -744,7 +744,7 @@ async function performInviteSearch() {
       const receiverUsername = userData.username || match.fullName || receiverEmail;
       
       let actionHtml = '';
-      if (receiverUid === (user.id || user.uid)) {
+      if (receiverUid === user.uid) {
         actionHtml = `<div style="color:var(--text-danger); font-size: 11px;">You</div>`;
       } else if (match.role === 'leader' || match.teamName) {
         actionHtml = `<div style="color:var(--text-danger); font-size: 11px;">Already in a team</div>`;
@@ -2051,7 +2051,7 @@ async function createTeam() {
     const { data: profile, error: profileError } = await supabaseClient
       .from('profiles')
       .select('*')
-      .eq('id', user.id || user.uid)
+      .eq('id', user.uid)
       .maybeSingle();
 
     if (profileError) throw profileError;
@@ -2060,13 +2060,13 @@ async function createTeam() {
 
     const teamPayload = {
       name: teamName,
-      leader_id: user.id || user.uid,
+      leader_id: user.uid,
       leader_name: username,
       tech_stack: techStack,
       description: description || 'No description provided.',
       members: [
         {
-          uid: user.id || user.uid,
+          uid: user.uid,
           name: username,
           email: user.email,
           role: 'leader'
@@ -2085,7 +2085,7 @@ async function createTeam() {
     await supabaseClient
       .from('profiles')
       .update({ team_id: teamData.id })
-      .eq('id', user.id || user.uid);
+      .eq('id', user.uid);
 
     showToast(`Team "${teamName}" created successfully!`, "success");
     syncTeamSection();
@@ -2116,7 +2116,7 @@ async function renderTeamDashboard(user, teamId, teamData) {
             <i class="fa-solid ${isLeader ? 'fa-crown' : 'fa-user'}"></i>
           </div>
           <div style="overflow: hidden;">
-            <div style="font-weight: 700; font-size: 13.5px; color: #111111; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${member.name} ${member.uid === (user.id || user.uid) ? '<span style="font-size:10px; color:var(--gold-primary); font-weight:normal;">(You)</span>' : ''}</div>
+            <div style="font-weight: 700; font-size: 13.5px; color: #111111; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${member.name} ${member.uid === user.uid ? '<span style="font-size:10px; color:var(--gold-primary); font-weight:normal;">(You)</span>' : ''}</div>
             <div style="font-size: 11px; color: #555555; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${member.email}</div>
           </div>
         </div>
@@ -2126,7 +2126,7 @@ async function renderTeamDashboard(user, teamId, teamData) {
   });
   membersList.innerHTML = membersHtml;
 
-  const currentUid = user.uid || user.id || '';
+  const currentUid = user.uid || '';
   const isUserLeader = teamData.leaderId === currentUid;
   console.log('[Team] leaderId:', teamData.leaderId, 'currentUid:', currentUid, 'isLeader:', isUserLeader);
   const actionsContainer = document.getElementById('team-management-actions');
@@ -2463,7 +2463,7 @@ async function sendInvitation() {
       return;
     }
 
-    if (receiverUid === (user.id || user.uid)) {
+    if (receiverUid === user.uid) {
       showToast("You cannot invite yourself.", "error");
       btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> SEND INVITATION';
       btn.disabled = false;
@@ -2489,7 +2489,7 @@ async function sendInvitation() {
     const invitePayload = {
       team_id: currentTeamId,
       team_name: currentTeamData.name,
-      sender_id: user.id || user.uid,
+      sender_id: user.uid,
       sender_name: currentTeamData.leaderName || user.displayName || 'Team Leader',
       sender_email: user.email,
       receiver_email: receiverEmail,
@@ -2597,7 +2597,7 @@ async function acceptInvitation(inviteId, teamId) {
     const { data: profile, error: profileError } = await supabaseClient
       .from('profiles')
       .select('*')
-      .eq('id', user.id || user.uid)
+      .eq('id', user.uid)
       .maybeSingle();
 
     if (profileError) throw profileError;
@@ -2605,7 +2605,7 @@ async function acceptInvitation(inviteId, teamId) {
     const username = userData.full_name || userData.username || user.user_metadata?.full_name || user.email;
 
     const newMember = {
-      uid: user.id || user.uid,
+      uid: user.uid,
       name: username,
       email: user.email,
       role: 'member'
@@ -2623,7 +2623,7 @@ async function acceptInvitation(inviteId, teamId) {
     await supabaseClient
       .from('profiles')
       .update({ team_id: teamId })
-      .eq('id', user.id || user.uid);
+      .eq('id', user.uid);
 
     const { error: updateInviteError } = await supabaseClient
       .from('invitations')
@@ -2681,7 +2681,7 @@ async function leaveTeam() {
 
   if (confirm("Are you sure you want to leave the team?")) {
     try {
-      const updatedMembers = currentTeamData.members.filter(m => m.uid !== (user.id || user.uid));
+      const updatedMembers = currentTeamData.members.filter(m => m.uid !== user.uid);
       
       const { error: updateError } = await supabaseClient
         .from('teams')
@@ -2693,7 +2693,7 @@ async function leaveTeam() {
       await supabaseClient
         .from('profiles')
         .update({ team_id: null })
-        .eq('id', user.id || user.uid);
+        .eq('id', user.uid);
 
       showToast("You have left the team.", "success");
       syncTeamSection();
