@@ -11,8 +11,7 @@ const SUPABASE_URL = 'https://omxgqhwogkihrdnlonoq.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_UGnbbIMZrz-jZvLN8pS7jw_1LGAp3HP';
 const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
-// Firebase Firestore instance for non-blocking mail batches
-const db = window.firebase ? window.firebase.firestore() : null;
+
 
 // ─────────────────────────────────────────────────────────────
 // PAGE NAVIGATION
@@ -463,7 +462,6 @@ async function processRegistration(btnElement, paymentId = null) {
 
         insertedTeamId = teamData.id;
 
-        const batch = db.batch();
         await supabaseClient
           .from('profiles')
           .update({ team_id: insertedTeamId })
@@ -495,34 +493,6 @@ async function processRegistration(btnElement, paymentId = null) {
           if (inviteError) {
             console.warn("Failed to create invites in Supabase: ", inviteError);
           }
-
-          pendingInvites.forEach(inv => {
-            const mailRef = db.collection('mail').doc();
-            batch.set(mailRef, {
-              to: inv.email,
-              message: {
-                subject: `You've been invited to join team "${teamName}"!`,
-                text: `Hi ${inv.username}! You got an invitation to join the team "${teamName}" by ${username}. Log in to your CodeMiners portal and visit the Teams page to accept or decline.`,
-                html: `<p>Hi <strong>${inv.username}</strong>!</p><p>You got an invitation to join the team <strong>${teamName}</strong> by <strong>${username}</strong>.</p><p>Log in to your <a href="http://localhost:3000/">CodeMiners Portal</a> and visit the <strong>Teams</strong> section to accept or decline the request.</p>`
-              }
-            });
-          });
-        }
-
-        const leaderMailRef = db.collection('mail').doc();
-        batch.set(leaderMailRef, {
-          to: user.email,
-          message: {
-            subject: `Team "${teamName}" Created Successfully!`,
-            text: `Congratulations! Your hackathon team "${teamName}" has been successfully created.`,
-            html: `<p>Congratulations!</p><p>Your hackathon team <strong>${teamName}</strong> has been successfully created.</p>`
-          }
-        });
-
-        try {
-          await batch.commit();
-        } catch (e) {
-          console.warn("Firestore team sync error:", e);
         }
       }
 
@@ -2044,20 +2014,6 @@ async function createTeam() {
       .update({ team_id: teamData.id })
       .eq('id', user.id || user.uid);
 
-    const batch = db.batch();
-    
-    // Add document to 'mail' collection to send notification email (Trigger Email schema)
-    const mailRef = db.collection('mail').doc();
-    batch.set(mailRef, {
-      to: user.email,
-      message: {
-        subject: `Team "${teamName}" Created Successfully!`,
-        text: `Congratulations! Your hackathon team "${teamName}" has been successfully created. Invite other miners to join your squad!`,
-        html: `<p>Congratulations!</p><p>Your hackathon team <strong>${teamName}</strong> has been successfully created.</p><p>Invite other miners to join your squad!</p>`
-      }
-    });
-
-    await batch.commit();
     showToast(`Team "${teamName}" created successfully!`, "success");
     syncTeamSection();
   } catch (error) {
@@ -2454,22 +2410,6 @@ async function sendInvitation() {
       .insert(invitePayload);
 
     if (inviteError) throw inviteError;
-
-    try {
-      const batch = db.batch();
-      const mailRef = db.collection('mail').doc();
-      batch.set(mailRef, {
-        to: receiverEmail,
-        message: {
-          subject: `You've been invited to join team "${currentTeamData.name}"!`,
-          text: `Hi ${receiverUsername}! You got an invitation to join the team "${currentTeamData.name}" by ${currentTeamData.leaderName || user.displayName || 'Team Leader'}. Log in to your CodeMiners portal and visit the Teams page to accept or decline.`,
-          html: `<p>Hi <strong>${receiverUsername}</strong>!</p><p>You got an invitation to join the team <strong>${currentTeamData.name}</strong> by <strong>${currentTeamData.leaderName || user.displayName || 'Team Leader'}</strong>.</p><p>Log in to your <a href="https://codeminer.firebaseapp.com/">CodeMiners Portal</a> and visit the <strong>Teams</strong> section to accept or decline the request.</p>`
-        }
-      });
-      await batch.commit();
-    } catch (mailErr) {
-      console.warn("Mail trigger failed (non-blocking):", mailErr);
-    }
 
     showToast(`Invitation sent to ${receiverUsername}!`, "success");
     document.getElementById('invite-identifier').value = '';
