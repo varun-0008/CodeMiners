@@ -509,11 +509,18 @@ DOM.authForm.addEventListener('submit', async (e) => {
 
       if (profileError) throw profileError;
       
-      // Send verification email and sign out
-      await userCredential.user.sendEmailVerification();
-      await auth.signOut();
-      
-      showMessage('Account created! Verification link sent to your email.', 'success');
+      // Send verification email and sign out (bypassed for debugging)
+      if (false) {
+        await userCredential.user.sendEmailVerification();
+        await auth.signOut();
+        showMessage('Account created! Verification link sent to your email.', 'success');
+      } else {
+        showSuccessOverlay();
+        showMessage('Account created and signed in successfully!', 'success');
+        setTimeout(() => {
+          window.location.href = 'portal.html';
+        }, 800);
+      }
     } else {
       const loginEmail = inputVal;
       if (!loginEmail.includes('@')) {
@@ -525,8 +532,8 @@ DOM.authForm.addEventListener('submit', async (e) => {
       const userCredential = await auth.signInWithEmailAndPassword(loginEmail, password);
       const user = userCredential.user;
       
-      // Check if email is verified
-      if (!user.emailVerified) {
+      // Check if email is verified (temporarily bypassed for testing)
+      if (false && !user.emailVerified) {
         await auth.signOut();
         showMessage('Please verify your email address first.');
         return;
@@ -664,7 +671,7 @@ DOM.btnGoogle.addEventListener('click', async () => {
 // Auth State Observer
 // ─────────────────────────────────────────────
 auth.onAuthStateChanged((user) => {
-  if (user && user.emailVerified && (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/'))) {
+  if (user && (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/'))) {
     window.location.href = 'portal.html';
   }
 });
