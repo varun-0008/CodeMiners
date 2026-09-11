@@ -3,6 +3,14 @@
    GSAP Animations · Firebase Auth
    ============================================ */
 
+// Disable Developer Tools / Inspect Shortcut Keys & Context Menu
+document.addEventListener('keydown', function (e) {
+  if (e.keyCode === 123) { e.preventDefault(); return false; }
+  if (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) { e.preventDefault(); return false; }
+  if (e.ctrlKey && e.keyCode === 85) { e.preventDefault(); return false; }
+});
+document.addEventListener('contextmenu', function (e) { e.preventDefault(); return false; });
+
 // ─────────────────────────────────────────────
 // Firebase and Supabase Configuration
 // ─────────────────────────────────────────────
@@ -496,6 +504,36 @@ DOM.authForm.addEventListener('submit', async (e) => {
       
       await userCredential.user.updateProfile({ displayName: fullName });
 
+      // Generate a unique username by checking existence
+      let baseUsername = email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '');
+      if (!baseUsername) baseUsername = 'user';
+      
+      let finalUsername = baseUsername;
+      let isUnique = false;
+      
+      try {
+        let attempts = 0;
+        while (!isUnique && attempts < 10) {
+          const { data: existing, error: checkError } = await supabaseClient
+            .from('profiles')
+            .select('id')
+            .eq('username', finalUsername)
+            .maybeSingle();
+            
+          if (checkError) throw checkError;
+          
+          if (existing) {
+            attempts++;
+            finalUsername = `${baseUsername}_${Math.floor(1000 + Math.random() * 9000)}`;
+          } else {
+            isUnique = true;
+          }
+        }
+      } catch (checkErr) {
+        console.warn("Username uniqueness check failed, using random suffix fallback:", checkErr);
+        finalUsername = `${baseUsername}_${Math.floor(1000 + Math.random() * 9000)}`;
+      }
+
       // Save user profile directly to Supabase profiles table
       const { error: profileError } = await supabaseClient
         .from('profiles')
@@ -503,7 +541,7 @@ DOM.authForm.addEventListener('submit', async (e) => {
           id: userCredential.user.uid,
           email: email,
           full_name: fullName,
-          username: email.split('@')[0],
+          username: finalUsername,
           created_at: new Date().toISOString()
         });
 

@@ -27,8 +27,8 @@ CREATE TABLE IF NOT EXISTS public.events (
 -- Seed/Upsert the known events with deterministic UUIDs
 INSERT INTO public.events (id, title, event_type, fee, is_active, display_date, completion_date)
 VALUES 
-    ('d4444444-4444-4444-4444-444444444444', 'Ideackathon', 'team', 50, true, 'Upcoming 2026', '2026-11-30'),
-    ('e5555555-5555-5555-5555-555555555555', 'Appdevelopment workshop', 'solo', 30, true, 'Upcoming 2026', '2026-11-15'),
+    ('d4444444-4444-4444-4444-444444444444', 'Ideackathon', 'team', 50, true, 'September 13, 2026', '2026-09-13'),
+    ('e5555555-5555-5555-5555-555555555555', 'Appdevelopment workshop', 'solo', 30, true, 'September 13, 2026', '2026-09-13'),
     ('a1111111-1111-1111-1111-111111111111', 'CodeMiners Hackathon 2026', 'team', 300, true, 'July 6, 2026', '2026-07-06'),
     ('b2222222-2222-2222-2222-222222222222', 'Pre-Hackathon', 'solo', 150, true, 'July 1, 2026', '2026-07-01'),
     ('c3333333-3333-3333-3333-333333333333', 'CodeMiners Orientation', 'solo', 0, true, 'June 28, 2026', '2026-06-28')
@@ -210,11 +210,17 @@ FOR EACH ROW EXECUTE FUNCTION public.check_user_single_team_per_event();
 -- ==============================================================================
 -- STEP 5: MIGRATE & NORMALIZE "registrations"
 -- ==============================================================================
--- Ensure event_id exists on registrations table
+-- Ensure event_id and created_at exist on registrations table
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'registrations' AND column_name = 'event_id') THEN
         ALTER TABLE public.registrations ADD COLUMN event_id UUID REFERENCES public.events(id) ON DELETE CASCADE;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'registrations' AND column_name = 'created_at') THEN
+        ALTER TABLE public.registrations ADD COLUMN created_at TIMESTAMPTZ DEFAULT now();
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'registrations' AND column_name = 'team_name') THEN
+        ALTER TABLE public.registrations ADD COLUMN team_name TEXT;
     END IF;
 END $$;
 

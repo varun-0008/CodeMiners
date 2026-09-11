@@ -289,17 +289,22 @@ function calculateEventFee(eventName, teamSize = 1) {
   const PLATFORM_FEE = 5;
   if (eventName === 'Ideackathon') {
     const size = Math.max(1, Math.min(5, parseInt(teamSize, 10) || 1));
-    const perPerson = (size === 5) ? 50 : 60;
+    const perPerson = 50;
+    const perPersonPlatform = 5;
     const subtotal = perPerson * size;
+    const platformFee = perPersonPlatform * size;
+    const total = subtotal + platformFee;
     return {
       eventName,
       isTeam: true,
       perPerson,
+      perPersonPlatform,
+      perPersonTotal: perPerson + perPersonPlatform,
       teamSize: size,
       subtotal,
-      platformFee: PLATFORM_FEE,
-      total: subtotal + PLATFORM_FEE,
-      description: `Ideackathon (${size} member${size > 1 ? 's' : ''} @ ₹${perPerson}/head + ₹${PLATFORM_FEE} platform fee)`
+      platformFee,
+      total,
+      description: `Ideackathon (${size} ${size === 1 ? 'member' : 'members'} · ₹50/head + ₹${PLATFORM_FEE} platform fee/head = ₹${total})`
     };
   } else if (eventName === 'Appdevelopment workshop') {
     return {
@@ -339,84 +344,537 @@ function calculateEventFee(eventName, teamSize = 1) {
   };
 }
 
+function handleTeamSizeKeyDown(e) {
+  // Allow navigation, deletion, tabs
+  if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'].includes(e.key)) {
+    return true;
+  }
+  // Only allow digits 1 to 5
+  if (['1', '2', '3', '4', '5'].includes(e.key)) {
+    const input = e.target;
+    // If text already exists and is not highlighted, replace it with the new key
+    if (input.selectionStart === input.selectionEnd && input.value.length >= 1) {
+      input.value = e.key;
+      handleTeamSizeInput(input);
+      e.preventDefault();
+      return false;
+    }
+    return true;
+  }
+  // Block all other keys (including 0, 6-9, letters, minus, plus, period)
+  e.preventDefault();
+  return false;
+}
+
+function handleTeamSizeInput(input) {
+  if (!input) return;
+  let val = input.value;
+  if (val === '') {
+    updateIdeackathonFeePreview();
+    return;
+  }
+  let num = parseInt(val, 10);
+  if (isNaN(num) || num < 1) {
+    input.value = 1;
+  } else if (num > 5) {
+    input.value = 5;
+  }
+  renderPendingInvites();
+  if (typeof updateIdeackathonFeePreview === 'function') {
+    updateIdeackathonFeePreview();
+  }
+}
+
+function handleTeamSizeBlur(input) {
+  if (!input) return;
+  let num = parseInt(input.value, 10);
+  if (isNaN(num) || num < 1) {
+    input.value = 1;
+  } else if (num > 5) {
+    input.value = 5;
+  }
+  renderPendingInvites();
+  if (typeof updateIdeackathonFeePreview === 'function') {
+    updateIdeackathonFeePreview();
+  }
+}
+
+function adjustTeamSize(delta) {
+  const input = document.getElementById('r-team-size');
+  if (!input) return;
+  let current = parseInt(input.value, 10) || 1;
+  let next = Math.max(1, Math.min(5, current + delta));
+  input.value = next;
+  handleTeamSizeInput(input);
+}
+
 function updateIdeackathonFeePreview() {
   const previewEl = document.getElementById('ideackathon-fee-calc');
   if (!previewEl) return;
   const sizeInput = document.getElementById('r-team-size');
-  const size = sizeInput ? Math.max(1, Math.min(5, parseInt(sizeInput.value, 10) || 5)) : 5;
+  const size = sizeInput ? Math.max(1, Math.min(5, parseInt(sizeInput.value, 10) || 1)) : 1;
   const feeInfo = calculateEventFee('Ideackathon', size);
   previewEl.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center;">
-      <span><strong>${size} ${size === 1 ? 'Member' : 'Members'}</strong> (${size === 5 ? '₹50/person' : '₹60/person'}): ₹${feeInfo.subtotal} + ₹${feeInfo.platformFee} Platform Fee</span>
+      <span><strong>Team of ${size} ${size === 1 ? 'Member' : 'Members'}</strong>: ${size} × (₹50 Registration Fee + ₹${feeInfo.perPersonPlatform || 5} Platform Fee)</span>
       <span style="font-weight:800; font-size:14px; color:var(--gold-primary);">Total: ₹${feeInfo.total}</span>
     </div>
   `;
 }
 
-function startRegistrationFor(eventName) {
+function selectEventOption(eventName) {
   selectedEvent = eventName;
   selectedEventId = DEFAULT_EVENT_IDS[eventName] || null;
-  navigate('registration');
+
+  const ideackathonCard = document.getElementById('opt-card-ideackathon');
+  const appdevCard = document.getElementById('opt-card-appdev_workshop');
+  const ideackathonBadge = document.getElementById('opt-badge-ideackathon');
+  const appdevBadge = document.getElementById('opt-badge-appdev_workshop');
+  const step1Btn = document.getElementById('reg-step-1-btn');
   const radio = document.querySelector(`input[name="event-select"][data-event-name="${eventName}"]`);
+
   if (radio) {
     radio.checked = true;
   }
+
+  if (eventName === 'Appdevelopment workshop') {
+    if (ideackathonCard) {
+      ideackathonCard.style.borderColor = 'rgba(240,165,0,0.25)';
+      ideackathonCard.style.background = 'rgba(240,165,0,0.02)';
+      ideackathonCard.style.boxShadow = 'none';
+      ideackathonCard.style.opacity = '0.7';
+    }
+    if (ideackathonBadge) ideackathonBadge.style.display = 'none';
+
+    if (appdevCard) {
+      appdevCard.style.borderColor = 'var(--blue-accent)';
+      appdevCard.style.background = 'rgba(33,150,243,0.12)';
+      appdevCard.style.boxShadow = '0 0 20px rgba(33,150,243,0.25)';
+      appdevCard.style.opacity = '1';
+    }
+    if (appdevBadge) {
+      appdevBadge.style.display = 'inline-flex';
+      appdevBadge.innerHTML = '<i class="fa-solid fa-circle-check"></i> SELECTED';
+    }
+
+    if (step1Btn) {
+      step1Btn.style.background = 'linear-gradient(135deg, #2196f3, #1565c0)';
+      step1Btn.style.color = '#ffffff';
+      step1Btn.style.borderColor = '#2196f3';
+      step1Btn.innerHTML = '<i class="fa-solid fa-laptop-code"></i> CONTINUE TO WORKSHOP REGISTRATION (SOLO · ₹35) &rarr;';
+    }
+  } else {
+    // Ideackathon / Default
+    if (appdevCard) {
+      appdevCard.style.borderColor = 'rgba(33,150,243,0.25)';
+      appdevCard.style.background = 'rgba(33,150,243,0.02)';
+      appdevCard.style.boxShadow = 'none';
+      appdevCard.style.opacity = '0.7';
+    }
+    if (appdevBadge) appdevBadge.style.display = 'none';
+
+    if (ideackathonCard) {
+      ideackathonCard.style.borderColor = 'var(--gold-primary)';
+      ideackathonCard.style.background = 'rgba(240,165,0,0.08)';
+      ideackathonCard.style.boxShadow = '0 0 20px rgba(240,165,0,0.2)';
+      ideackathonCard.style.opacity = '1';
+    }
+    if (ideackathonBadge) {
+      ideackathonBadge.style.display = 'inline-flex';
+      ideackathonBadge.innerHTML = '<i class="fa-solid fa-circle-check"></i> SELECTED';
+    }
+
+    if (step1Btn) {
+      step1Btn.style.background = 'linear-gradient(135deg, #f0a500, #c59b27)';
+      step1Btn.style.color = '#111111';
+      step1Btn.style.borderColor = '#f0a500';
+      step1Btn.innerHTML = '<i class="fa-solid fa-people-group"></i> GO TO TEAMS TO FORM SQUAD &amp; REGISTER &rarr;';
+    }
+  }
+}
+
+function renderEventSummaryBanner(eventName) {
+  const bannerEl = document.getElementById('reg-event-summary-banner');
+  if (!bannerEl) return;
+
+  if (eventName === 'Appdevelopment workshop') {
+    bannerEl.innerHTML = `
+      <div style="background: linear-gradient(135deg, rgba(33, 150, 243, 0.12), rgba(21, 101, 192, 0.08)); border: 1.5px solid rgba(33, 150, 243, 0.35); border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; box-shadow: 0 4px 15px rgba(33,150,243,0.1);">
+        <div style="display:flex; align-items:center; gap: 14px;">
+          <div style="width: 46px; height: 46px; border-radius: 10px; background: rgba(33, 150, 243, 0.2); border: 1px solid rgba(33, 150, 243, 0.4); display: flex; align-items: center; justify-content: center; color: var(--blue-accent); font-size: 22px; flex-shrink: 0;">
+            <i class="fa-solid fa-laptop-code"></i>
+          </div>
+          <div>
+            <div style="display:flex; align-items:center; gap: 8px; flex-wrap: wrap;">
+              <span style="font-weight: 800; font-size: 16px; color: #fff;">Appdevelopment workshop</span>
+              <span class="badge badge-blue" style="font-size: 10px; padding: 2px 8px;"><i class="fa-solid fa-user"></i> SOLO WORKSHOP</span>
+              <span class="badge" style="font-size: 10px; padding: 2px 8px; background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.18); display: inline-flex; align-items: center; gap: 4px;">
+                <img src="cloud-community-logo.jpg" alt="CC" style="width: 12px; height: 12px; border-radius: 50%; object-fit: cover;"> &lt;CC&gt; Collab
+              </span>
+            </div>
+            <div style="font-size: 12.5px; color: var(--text-muted); margin-top: 3px;">
+              Hands-on Web &amp; Mobile App Engineering · <strong>Individual / Solo Registration</strong>
+            </div>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 10.5px; color: #8ec5ff; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Solo Registration Pass</div>
+          <div style="font-size: 18px; font-weight: 800; color: #fff;">₹35 <span style="font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.6);">(₹30 fee + ₹5 platform fee)</span></div>
+        </div>
+      </div>
+      <div style="margin-top: 10px; background: rgba(33, 150, 243, 0.06); border: 1px solid rgba(33, 150, 243, 0.2); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #8ec5ff; display: flex; align-items: center; gap: 10px;">
+        <i class="fa-solid fa-circle-user" style="font-size: 15px; flex-shrink: 0;"></i>
+        <span><strong>Solo Event:</strong> No team formation or invites needed. Simply fill in your details below to secure your individual workshop seat.</span>
+      </div>
+    `;
+  } else {
+    // Ideackathon banner
+    bannerEl.innerHTML = `
+      <div style="background: linear-gradient(135deg, rgba(240, 165, 0, 0.12), rgba(255, 140, 0, 0.08)); border: 1.5px solid rgba(240, 165, 0, 0.35); border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; box-shadow: 0 4px 15px rgba(240,165,0,0.1);">
+        <div style="display:flex; align-items:center; gap: 14px;">
+          <div style="width: 46px; height: 46px; border-radius: 10px; background: rgba(240, 165, 0, 0.2); border: 1px solid rgba(240, 165, 0, 0.4); display: flex; align-items: center; justify-content: center; color: var(--gold-primary); font-size: 22px; flex-shrink: 0;">
+            <i class="fa-solid fa-lightbulb"></i>
+          </div>
+          <div>
+            <div style="display:flex; align-items:center; gap: 8px; flex-wrap: wrap;">
+              <span style="font-weight: 800; font-size: 16px; color: #fff;">Ideackathon</span>
+              <span class="badge badge-gold" style="font-size: 10px; padding: 2px 8px;"><i class="fa-solid fa-users"></i> TEAM EVENT (1–5 MEMBERS)</span>
+              <span class="badge" style="font-size: 10px; padding: 2px 8px; background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.18); display: inline-flex; align-items: center; gap: 4px;">
+                <img src="cloud-community-logo.jpg" alt="CC" style="width: 12px; height: 12px; border-radius: 50%; object-fit: cover;"> &lt;CC&gt; Collab
+              </span>
+            </div>
+            <div style="font-size: 12.5px; color: var(--text-muted); margin-top: 3px;">
+              Idea Pitching &amp; Innovation Challenge · <strong>Registered & Paid by Team Leader</strong>
+            </div>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 10.5px; color: var(--gold-light); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Fee Structure</div>
+          <div style="font-size: 18px; font-weight: 800; color: #fff;">₹50/head <span style="font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.6);">(+ ₹5 platform fee/head)</span></div>
+        </div>
+      </div>
+    `;
+  }
+}
+
+function showIdeackathonFormationPrompt() {
+  switchTeamSectionEvent('Ideackathon');
+  const ideackathonId = DEFAULT_EVENT_IDS['Ideackathon'];
+
+  // Check user team status for Ideackathon strictly
+  if (currentTeamData && currentTeamData.eventId === ideackathonId) {
+    const isLeader = currentTeamData.leaderId === window.currentUser?.uid;
+    const numMembers = currentTeamData.members?.length || 1;
+    if (isLeader) {
+      showToast(`Welcome to your Ideackathon squad "${currentTeamData.name}"! Confirm your squad (${numMembers} member${numMembers > 1 ? 's' : ''} · ₹${55 * numMembers}) and checkout below.`, 'info', 8000);
+      const payCard = document.getElementById('team-payment-card');
+      if (payCard) {
+        setTimeout(() => payCard.scrollIntoView({ behavior: 'smooth' }), 300);
+      }
+    } else {
+      showToast(`You are a member of squad "${currentTeamData.name}" for Ideackathon. Your Team Leader will complete squad registration & payment.`, 'info', 7000);
+    }
+  } else {
+    showToast('Ideackathon Squad Formation: You can register as a solo team of 1 (₹55) or assemble a squad of up to 5 members (₹55/head). Create your team below to checkout!', 'info', 9000);
+    const nameInput = document.getElementById('new-team-name');
+    if (nameInput) {
+      setTimeout(() => {
+        nameInput.scrollIntoView({ behavior: 'smooth' });
+        nameInput.focus();
+      }, 300);
+    }
+  }
+}
+
+function startRegistrationFor(eventName) {
+  if (eventName === 'Ideackathon') {
+    navigate('teams');
+    currentTeamId = null;
+    currentTeamData = null;
+    switchTeamSectionEvent('Ideackathon');
+    showIdeackathonFormationPrompt();
+    return;
+  }
+  selectedEvent = eventName;
+  selectedEventId = DEFAULT_EVENT_IDS[eventName] || null;
+  navigate('registration');
+  selectEventOption(eventName);
   setTimeout(() => {
     regNext(1);
-  }, 120);
+  }, 100);
+}
+
+async function checkAndSyncIdeackathonRegistrationForm() {
+  const noticeEl = document.getElementById('r-existing-team-notice');
+  const roleWrap = document.getElementById('r-role-wrap');
+  const leaderFields = document.getElementById('team-leader-fields');
+  const teamNameEl = document.getElementById('r-team-name');
+  const teamSizeEl = document.getElementById('r-team-size');
+  const btn = document.getElementById('reg-step-2-btn');
+  const user = window.currentUser;
+
+  if (!noticeEl) return;
+  noticeEl.style.display = 'none';
+  noticeEl.innerHTML = '';
+
+  if (!user) return;
+
+  try {
+    const eventId = await getEventId('Ideackathon');
+    
+    // Check if user is in any team strictly for Ideackathon
+    let userTeam = null;
+    if (currentTeamData && (currentTeamData.eventId === eventId && currentTeamData.eventName === 'Ideackathon')) {
+      userTeam = currentTeamData;
+    } else {
+      const { data: memberships } = await supabaseClient
+        .from('team_members')
+        .select('team_id, role, teams(*)')
+        .eq('user_id', user.uid);
+      
+      if (memberships && memberships.length > 0) {
+        const ideackathonMem = memberships.find(m => m.teams && m.teams.event_id === eventId);
+        if (ideackathonMem && ideackathonMem.teams) {
+          const { data: tmData } = await supabaseClient
+            .from('team_members')
+            .select('id, role, user_id, profiles(id, full_name, email, username)')
+            .eq('team_id', ideackathonMem.team_id);
+          
+          userTeam = {
+            id: ideackathonMem.team_id,
+            eventId: eventId,
+            eventName: 'Ideackathon',
+            name: ideackathonMem.teams.name,
+            leaderId: ideackathonMem.teams.leader_id,
+            leaderName: (tmData || []).find(m => m.role === 'leader')?.profiles?.full_name || 'Leader',
+            members: (tmData || []).map(m => ({
+              uid: m.user_id,
+              name: m.profiles?.full_name || m.profiles?.username || 'Member',
+              role: m.role
+            }))
+          };
+          currentTeamData = userTeam;
+          currentTeamId = userTeam.id;
+        }
+      }
+    }
+
+    if (userTeam) {
+      // Check if team is registered in registrations strictly for Ideackathon
+      let isRegistered = false;
+      let regDetails = null;
+
+      const { data: regByTeam } = await supabaseClient
+        .from('registrations')
+        .select('*')
+        .eq('team_id', userTeam.id)
+        .eq('event_id', eventId)
+        .maybeSingle();
+
+      if (regByTeam) {
+        isRegistered = true;
+        regDetails = regByTeam;
+      } else if (userTeam.leaderId) {
+        // Fallback: check if leader has registration for Ideackathon
+        const { data: regByLeader } = await supabaseClient
+          .from('registrations')
+          .select('*')
+          .eq('event_id', eventId)
+          .eq('user_id', userTeam.leaderId)
+          .maybeSingle();
+        if (regByLeader) {
+          isRegistered = true;
+          regDetails = regByLeader;
+          // Auto-heal link
+          await supabaseClient.from('registrations').update({ team_id: userTeam.id }).eq('id', regByLeader.id);
+        }
+      }
+
+      if (isRegistered) {
+        // Team is ALREADY registered!
+        noticeEl.style.display = 'block';
+        noticeEl.innerHTML = `
+          <div style="background: rgba(76, 175, 80, 0.1); border: 1.5px solid rgba(76, 175, 80, 0.35); border-radius: 10px; padding: 16px 18px; margin-bottom: 12px; display: flex; align-items: center; gap: 14px;">
+            <div style="width: 40px; height: 40px; border-radius: 50%; background: #4CAF50; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">
+              <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <div style="flex: 1;">
+              <div style="font-weight: 800; font-size: 15px; color: #4CAF50;">Team "${userTeam.name}" is Already Registered!</div>
+              <div style="font-size: 12.5px; color: var(--text-light); margin-top: 2px;">
+                Your squad has completed registration & payment for Ideackathon (Amount: ₹${regDetails.amount_paid} · ${regDetails.team_size || userTeam.members.length} Members).
+              </div>
+            </div>
+            <button type="button" class="btn-gold" style="padding: 8px 14px; font-size: 12px; flex-shrink: 0;" onclick="navigate('teams')">
+              <i class="fa-solid fa-people-group"></i> View Squad
+            </button>
+          </div>
+        `;
+        if (roleWrap) roleWrap.style.display = 'none';
+        if (leaderFields) leaderFields.style.display = 'none';
+        if (btn) {
+          btn.innerHTML = '<i class="fa-solid fa-check-double"></i> SQUAD ALREADY REGISTERED';
+          btn.disabled = true;
+          btn.style.opacity = '0.6';
+          btn.style.cursor = 'not-allowed';
+        }
+        return;
+      }
+
+      // If team is NOT registered yet:
+      const isLeader = userTeam.leaderId === user.uid;
+      const squadSize = Math.max(1, Math.min(5, userTeam.members.length));
+
+      if (isLeader) {
+        // Current user is Leader: link their existing squad
+        noticeEl.style.display = 'block';
+        noticeEl.innerHTML = `
+          <div style="background: rgba(240, 165, 0, 0.08); border: 1px solid rgba(240, 165, 0, 0.3); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px;">
+            <div style="font-size: 22px; color: var(--gold-primary); flex-shrink: 0;">
+              <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div style="flex: 1;">
+              <div style="font-size: 13.5px; font-weight: 700; color: #fff;">
+                Active Squad Linked: <span style="color: var(--gold-light);">${userTeam.name}</span>
+              </div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                Your squad currently has <strong>${squadSize} member${squadSize > 1 ? 's' : ''}</strong> from the Team Page. Pricing is calculated below.
+              </div>
+            </div>
+            <span class="badge badge-gold" style="font-size: 10px; padding: 4px 8px;">TEAM LEADER</span>
+          </div>
+        `;
+
+        if (roleWrap) roleWrap.style.display = 'none';
+        if (leaderFields) leaderFields.style.display = 'block';
+
+        if (teamNameEl) {
+          teamNameEl.value = userTeam.name;
+          teamNameEl.readOnly = true;
+          teamNameEl.style.background = 'rgba(255,255,255,0.05)';
+        }
+        if (teamSizeEl) {
+          teamSizeEl.value = squadSize;
+        }
+
+        const inviteSearchEl = document.getElementById('r-invite-search');
+        if (inviteSearchEl) {
+          const parent = inviteSearchEl.parentElement.parentElement;
+          if (parent) {
+            parent.innerHTML = `
+              <div style="font-size: 12px; color: var(--text-muted); padding: 8px 0;">
+                <i class="fa-solid fa-users" style="color: var(--gold-primary); margin-right: 6px;"></i>
+                Squad Members: <strong>${userTeam.members.map(m => m.name + (m.role === 'leader' ? ' (Leader)' : '')).join(', ')}</strong>.
+                <div style="margin-top: 4px; font-size: 11px; color: #888;">To recruit or manage members, visit the <a href="javascript:void(0)" onclick="navigate('teams')" style="color:var(--gold-primary); text-decoration: underline;">Teams tab</a>.</div>
+              </div>
+            `;
+          }
+        }
+
+        updateIdeackathonFeePreview();
+        if (btn) {
+          btn.disabled = false;
+          btn.style.opacity = '1';
+          btn.style.cursor = 'pointer';
+        }
+      } else {
+        // Current user is a MEMBER of an unregistered squad
+        noticeEl.style.display = 'block';
+        noticeEl.innerHTML = `
+          <div style="background: rgba(33, 150, 243, 0.08); border: 1px solid rgba(33, 150, 243, 0.3); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px;">
+            <div style="font-size: 22px; color: var(--blue-accent); flex-shrink: 0;">
+              <i class="fa-solid fa-circle-info"></i>
+            </div>
+            <div style="flex: 1;">
+              <div style="font-size: 13.5px; font-weight: 700; color: #fff;">
+                You are a Member of Squad: <span style="color: var(--blue-accent);">${userTeam.name}</span>
+              </div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                For Ideackathon, your Team Leader (<strong>${userTeam.leaderName || 'Leader'}</strong>) completes the squad registration and payment.
+              </div>
+            </div>
+            <button type="button" class="btn-ghost" style="padding: 6px 12px; font-size: 11px; flex-shrink: 0;" onclick="navigate('teams')">
+              Open Teams
+            </button>
+          </div>
+        `;
+        if (roleWrap) roleWrap.style.display = 'none';
+        if (leaderFields) leaderFields.style.display = 'none';
+        if (btn) {
+          btn.innerHTML = '<i class="fa-solid fa-hourglass-half"></i> WAITING FOR LEADER TO REGISTER';
+          btn.disabled = true;
+          btn.style.opacity = '0.6';
+          btn.style.cursor = 'not-allowed';
+        }
+      }
+    } else {
+      // User has NO team yet
+      if (teamNameEl) {
+        teamNameEl.readOnly = false;
+        teamNameEl.style.background = '';
+      }
+      if (roleWrap) roleWrap.style.display = 'block';
+      if (leaderFields) leaderFields.style.display = 'block';
+      if (btn) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        btn.innerHTML = '<i class="fa-solid fa-arrow-right"></i> CONTINUE TO PAYMENT';
+      }
+    }
+  } catch (err) {
+    console.error("Error in checkAndSyncIdeackathonRegistrationForm:", err);
+  }
 }
 
 function regNext(step) {
   if (step === 1) {
-    if (!selectedEvent) {
+    const checkedRadio = document.querySelector('input[name="event-select"]:checked');
+    if (checkedRadio && checkedRadio.dataset.eventName) {
+      selectedEvent = checkedRadio.dataset.eventName;
+      selectedEventId = DEFAULT_EVENT_IDS[selectedEvent] || null;
+    } else if (!selectedEvent) {
       selectedEvent = 'Ideackathon';
     }
     
+    if (selectedEvent === 'Ideackathon') {
+      startRegistrationFor('Ideackathon');
+      return;
+    }
+
     if (selectedEvent === 'CodeMiners Hackathon 2026') {
       showToast('Registration & Payment for Hackathon 2026 are managed from Team Management. Redirecting...', 'warning');
       navigate('teams');
       return;
-    } else if (selectedEvent === 'Appdevelopment workshop' || selectedEvent === 'CodeMiners Orientation') {
-      // Solo workshop event: hide team/leader controls
-      const roleWrap = document.getElementById('r-role-wrap');
-      if (roleWrap) roleWrap.style.display = 'none';
-      const leaderFields = document.getElementById('team-leader-fields');
-      if (leaderFields) leaderFields.style.display = 'none';
-      
-      const roleEl = document.getElementById('r-role');
-      if (roleEl) roleEl.value = 'member';
+    }
 
-      const btn = document.getElementById('reg-step-2-btn');
-      if (btn) btn.innerHTML = '<i class="fa-solid fa-arrow-right"></i> CONTINUE TO PAYMENT (₹35)';
-    } else {
-      // Team event (e.g. Ideackathon)
-      const roleWrap = document.getElementById('r-role-wrap');
-      if (roleWrap) roleWrap.style.display = 'block';
-      
-      const roleEl = document.getElementById('r-role');
-      if (roleEl) {
-        roleEl.disabled = false;
-        roleEl.value = 'leader';
-      }
-      const leaderFields = document.getElementById('team-leader-fields');
-      if (leaderFields) leaderFields.style.display = 'block';
+    renderEventSummaryBanner(selectedEvent);
 
-      const teamNameEl = document.getElementById('r-team-name');
-      if (teamNameEl) {
-        teamNameEl.readOnly = false;
-      }
-      const teamSizeEl = document.getElementById('r-team-size');
-      if (teamSizeEl) {
-        if (!teamSizeEl.value) teamSizeEl.value = '5';
-        const inviteSearchEl = document.getElementById('r-invite-search');
-        if (inviteSearchEl) {
-          const parent = inviteSearchEl.parentElement.parentElement;
-          if (parent) parent.style.display = 'block';
-        }
-      }
-      const btn = document.getElementById('reg-step-2-btn');
-      if (btn) btn.innerHTML = '<i class="fa-solid fa-arrow-right"></i> CONTINUE TO PAYMENT';
-      updateIdeackathonFeePreview();
+    // Solo workshop event: completely isolate and hide ALL team controls & notices
+    const noticeEl = document.getElementById('r-existing-team-notice');
+    if (noticeEl) {
+      noticeEl.style.display = 'none';
+      noticeEl.innerHTML = '';
+    }
+    const roleWrap = document.getElementById('r-role-wrap');
+    if (roleWrap) roleWrap.style.display = 'none';
+    const leaderFields = document.getElementById('team-leader-fields');
+    if (leaderFields) leaderFields.style.display = 'none';
+    
+    const roleEl = document.getElementById('r-role');
+    if (roleEl) roleEl.value = 'solo';
+
+    const teamNameEl = document.getElementById('r-team-name');
+    if (teamNameEl) teamNameEl.value = '';
+    pendingInvites = [];
+
+    const btn = document.getElementById('reg-step-2-btn');
+    if (btn) {
+      btn.innerHTML = '<i class="fa-solid fa-arrow-right"></i> CONTINUE TO PAYMENT (₹35)';
+      btn.style.background = 'linear-gradient(135deg, #2196f3, #1565c0)';
+      btn.style.color = '#ffffff';
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.style.cursor = 'pointer';
     }
 
     setRegStep(2);
@@ -428,6 +886,7 @@ function regNext(step) {
     const year    = document.getElementById('r-year').value;
     const pin     = document.getElementById('r-pin').value;
     const hallticket = document.getElementById('r-hallticket').value;
+    const isSoloWorkshop = (selectedEvent === 'Appdevelopment workshop' || selectedEvent === 'CodeMiners Orientation');
 
     if (!name.value.trim() || !email.value.trim() || !phone.value.trim() || !college.value.trim()) {
       showToast('Please fill in all required fields.', 'error');
@@ -438,20 +897,14 @@ function regNext(step) {
       return;
     }
     
-    if (year === 'first') {
-      if (!hallticket.trim()) {
-        showToast('Please enter your Hall Ticket Number.', 'error');
-        return;
-      }
-    } else {
-      if (!pin.trim()) {
-        showToast('Please enter your PIN.', 'error');
-        return;
-      }
+    const idVal = (pin || hallticket || '').trim();
+    if (!idVal) {
+      showToast('Please enter your College PIN.', 'error');
+      return;
     }
     
-    const role = document.getElementById('r-role').value;
-    if (role === 'leader') {
+    const role = isSoloWorkshop ? 'solo' : document.getElementById('r-role').value;
+    if (!isSoloWorkshop && role === 'leader') {
       const teamName = document.getElementById('r-team-name').value.trim();
       const teamSize = document.getElementById('r-team-size').value;
       if (!teamName) {
@@ -488,16 +941,43 @@ function regNext(step) {
           } else if (regCheck) {
             btn.innerHTML = originalBtnText;
             btn.disabled = false;
-            showToast(`You have already registered for this event!`, 'error');
+            if (isSoloWorkshop) {
+              showToast('You are already registered for the Appdevelopment workshop! Check your registered events in Profile.', 'info', 6000);
+            } else {
+              showToast('You have already registered for this event!', 'error');
+            }
             return;
           }
+
+          if (!isSoloWorkshop && currentTeamId) {
+            const { data: teamRegCheck } = await supabaseClient
+              .from('registrations')
+              .select('id')
+              .eq('event_id', eventId)
+              .eq('team_id', currentTeamId)
+              .maybeSingle();
+            if (teamRegCheck) {
+              btn.innerHTML = originalBtnText;
+              btn.disabled = false;
+              showToast(`Your squad "${currentTeamData?.name || 'team'}" is already registered for this event!`, 'error');
+              return;
+            }
+          }
+        }
+
+        if (isSoloWorkshop) {
+          btn.innerHTML = originalBtnText;
+          btn.disabled = false;
+          setRegStep(3);
+          initRazorpayRegistrationPayment();
+          return;
         }
 
         if (role === 'leader') {
           const teamName = document.getElementById('r-team-name').value.trim();
           const { data: teamData, error: teamError } = await supabaseClient
             .from('teams')
-            .select('id')
+            .select('id, leader_id')
             .eq('event_id', eventId)
             .ilike('name', teamName);
 
@@ -510,8 +990,12 @@ function regNext(step) {
             return;
           }
           if (teamData && teamData.length > 0) {
-            showToast(`Team name "${teamName}" is already taken for this event.`, 'error');
-            return;
+            const matchingTeam = teamData[0];
+            const isUserOwnSquad = (currentTeamData && currentTeamData.id === matchingTeam.id) || (user && matchingTeam.leader_id === user.uid);
+            if (!isUserOwnSquad) {
+              showToast(`Team name "${teamName}" is already taken for this event.`, 'error');
+              return;
+            }
           }
           
           if (selectedEvent === 'Ideackathon' || selectedEvent === 'CodeMiners Hackathon 2026') {
@@ -527,12 +1011,7 @@ function regNext(step) {
             showToast('For Ideackathon, the Team Leader registers and pays for the team. Please register as Team Leader or accept an invite in your Teams tab.', 'warning', 6000);
             return;
           }
-          if (selectedEvent === 'Appdevelopment workshop') {
-            setRegStep(3);
-            initRazorpayRegistrationPayment();
-          } else {
-            processRegistration(btn);
-          }
+          processRegistration(btn);
         }
       } catch (checkEx) {
         console.error("Error in registration checks:", checkEx);
@@ -552,13 +1031,14 @@ async function processRegistration(btnElement, paymentId = null) {
   btnElement.disabled = true;
 
   const user = window.currentUser;
-  const role = selectedEvent === 'Pre-Hackthon' ? 'individual' : document.getElementById('r-role').value;
-  const teamName = (selectedEvent === 'Pre-Hackthon' || !document.getElementById('r-team-name')) ? '' : document.getElementById('r-team-name').value.trim();
+  const isSoloWorkshop = (selectedEvent === 'Appdevelopment workshop' || selectedEvent === 'CodeMiners Orientation');
+  const role = isSoloWorkshop ? 'solo' : (selectedEvent === 'Pre-Hackthon' ? 'individual' : document.getElementById('r-role').value);
+  const teamName = isSoloWorkshop ? '' : ((selectedEvent === 'Pre-Hackthon' || !document.getElementById('r-team-name')) ? '' : document.getElementById('r-team-name').value.trim());
   const fullName = document.getElementById('r-name').value.trim();
   const email = document.getElementById('r-email').value.trim();
   const studyYear = document.getElementById('r-year').value;
-  const idType = studyYear === 'first' ? 'hallticket' : 'pin';
-  const idValue = studyYear === 'first' ? document.getElementById('r-hallticket').value.trim() : document.getElementById('r-pin').value.trim();
+  const idType = 'pin';
+  const idValue = (document.getElementById('r-pin')?.value || document.getElementById('r-hallticket')?.value || '').trim();
 
   // Prepare payload for Supabase
   let currentRegTeamSize = 1;
@@ -567,6 +1047,8 @@ async function processRegistration(btnElement, paymentId = null) {
     currentRegTeamSize = sizeInput ? Math.max(1, Math.min(5, parseInt(sizeInput.value, 10) || 5)) : 5;
   } else if (selectedEvent === 'CodeMiners Hackathon 2026') {
     currentRegTeamSize = (currentTeamData && currentTeamData.members) ? currentTeamData.members.length : 1;
+  } else if (isSoloWorkshop) {
+    currentRegTeamSize = 1;
   }
 
   const feeInfo = calculateEventFee(selectedEvent, currentRegTeamSize);
@@ -584,11 +1066,20 @@ async function processRegistration(btnElement, paymentId = null) {
   const supabasePayload = {
     event_id: eventId,
     user_id: user.uid,
-    team_id: (selectedEvent === 'CodeMiners Hackathon 2026' || currentTeamId) ? currentTeamId : null,
+    team_id: isSoloWorkshop ? null : ((selectedEvent === 'CodeMiners Hackathon 2026' || currentTeamId) ? currentTeamId : null),
     payment_status: paymentStatus,
     amount_paid: amountPaid,
     payment_id: actualPaymentId,
-    created_at: new Date().toISOString()
+    event_name: selectedEvent,
+    team_size: currentRegTeamSize,
+    full_name: fullName,
+    email: email,
+    phone: encryptedPhone,
+    college: encryptedCollege,
+    year: studyYear,
+    id_type: idType,
+    id_value: encryptedId,
+    registered_at: new Date().toISOString()
   };
 
   // Sync latest phone and college to user's profile
@@ -603,15 +1094,15 @@ async function processRegistration(btnElement, paymentId = null) {
 
   // Prepare data for Google Sheets
   const sheetData = new FormData();
-  sheetData.append('Event', selectedEvent);
+  sheetData.append('Event', selectedEvent + (isSoloWorkshop ? ' (Solo Workshop)' : ''));
   sheetData.append('Name', fullName);
   sheetData.append('Email', email);
   sheetData.append('Phone', document.getElementById('r-phone').value.trim());
   sheetData.append('College', document.getElementById('r-college').value.trim());
   sheetData.append('Year', studyYear);
   sheetData.append('ID (PIN/Hall Ticket)', idValue || '—');
-  sheetData.append('Role', role);
-  sheetData.append('Team Name', teamName || '—');
+  sheetData.append('Role', isSoloWorkshop ? 'Solo Participant' : role);
+  sheetData.append('Team Name', isSoloWorkshop ? '—' : (teamName || '—'));
   sheetData.append('PaymentID', actualPaymentId);
   sheetData.append('Status', paymentStatus === 'captured' ? 'Paid' : 'Free');
 
@@ -630,74 +1121,100 @@ async function processRegistration(btnElement, paymentId = null) {
         return;
       }
 
-      let insertedTeamId = null;
-      if (role === 'leader' && user && selectedEvent !== 'CodeMiners Hackathon 2026') {
-        const teamPayload = {
-          event_id: eventId,
-          name: teamName,
-          leader_id: user.uid,
-          tech_stack: 'Not specified yet',
-          description: 'Created during registration.'
-        };
+      let targetTeamId = currentTeamId;
+      if (!isSoloWorkshop && role === 'leader' && user && selectedEvent !== 'CodeMiners Hackathon 2026') {
+        const existingTeamMatches = currentTeamData && currentTeamData.name.toLowerCase() === teamName.toLowerCase() && currentTeamData.leaderId === user.uid;
 
-        const { data: teamData, error: teamError } = await supabaseClient
-          .from('teams')
-          .insert(teamPayload)
-          .select('id')
-          .single();
+        if (!targetTeamId || !existingTeamMatches) {
+          const teamPayload = {
+            event_id: eventId,
+            name: teamName,
+            leader_id: user.uid,
+            tech_stack: 'Not specified yet',
+            description: 'Created during registration.'
+          };
 
-        if (teamError) {
-          console.error("Error creating team in Supabase: ", teamError);
-          btnElement.innerHTML = originalBtnText;
-          btnElement.disabled = false;
-          showToast('Registration saved, but failed to create team. Try setting up team from profile.', 'error');
-          return;
+          const { data: teamData, error: teamError } = await supabaseClient
+            .from('teams')
+            .insert(teamPayload)
+            .select('id')
+            .single();
+
+          if (teamError) {
+            console.error("Error creating team in Supabase: ", teamError);
+            btnElement.innerHTML = originalBtnText;
+            btnElement.disabled = false;
+            showToast('Registration saved, but failed to create team: ' + (teamError.message || 'Error'), 'error');
+            return;
+          }
+
+          targetTeamId = teamData.id;
+          currentTeamId = teamData.id;
+          currentTeamData = {
+            id: teamData.id,
+            eventId: eventId,
+            eventName: selectedEvent,
+            name: teamName,
+            leaderId: user.uid,
+            members: [{ uid: user.uid, name: fullName, role: 'leader' }]
+          };
         }
 
-        insertedTeamId = teamData.id;
-
-        // Add leader to team_members
-        const { error: tmError } = await supabaseClient
-          .from('team_members')
-          .insert({
-            team_id: insertedTeamId,
-            user_id: user.uid,
-            role: 'leader'
-          });
-
-        if (tmError) console.warn("Error assigning team leader in team_members:", tmError);
-
-        // Update registration record with team_id
+        // Link registration to team
         await supabaseClient
           .from('registrations')
-          .update({ team_id: insertedTeamId })
+          .update({ team_id: targetTeamId })
           .eq('event_id', eventId)
           .eq('user_id', user.uid);
 
-        if (pendingInvites.length > 0) {
-          const invitePayloads = pendingInvites.map(inv => ({
-            team_id: insertedTeamId,
-            sender_id: user.uid,
-            receiver_email: inv.email,
-            receiver_username: inv.username,
-            status: 'pending'
-          }));
+        // Add leader to team_members if not already
+        const { data: existingMember } = await supabaseClient
+          .from('team_members')
+          .select('id')
+          .eq('team_id', targetTeamId)
+          .eq('user_id', user.uid)
+          .maybeSingle();
 
-          const { error: inviteError } = await supabaseClient
-            .from('invitations')
-            .insert(invitePayloads);
+        if (!existingMember) {
+          await supabaseClient
+            .from('team_members')
+            .insert({ team_id: targetTeamId, user_id: user.uid, role: 'leader' });
+        }
 
-          if (inviteError) {
-            console.warn("Failed to create invites in Supabase: ", inviteError);
+        // Send invitations to selected members
+        for (const member of pendingInvites) {
+          try {
+            const receiverUid = member.uid || member.id;
+            await supabaseClient.from('invitations').insert({
+              team_id: targetTeamId,
+              team_name: teamName || 'Team',
+              sender_id: user.uid,
+              sender_name: fullName || user.displayName || 'Team Leader',
+              sender_email: email || user.email,
+              receiver_email: member.email,
+              receiver_uid: receiverUid,
+              receiver_username: member.username || member.email,
+              status: 'pending'
+            });
+          } catch (invErr) {
+            console.error("Error inviting member:", member.email, invErr);
           }
         }
       }
 
-      fetch(scriptURL, { method: 'POST', body: sheetData })
-        .catch(e => console.warn('Sheet error:', e));
+      // Background submission to Google Sheets
+      fetch(scriptURL, {
+        method: 'POST',
+        body: sheetData,
+        mode: 'no-cors'
+      }).then(() => {
+        console.log("Synced to Google Sheets");
+      }).catch(err => {
+        console.warn("Could not sync to Google Sheets:", err);
+      });
 
       btnElement.innerHTML = originalBtnText;
-      btnElement.disabled  = false;
+      btnElement.disabled = false;
 
       regCount++;
       const receiptId = 'REG-CM-2026-' + String(regCount).padStart(4, '0');
@@ -705,7 +1222,7 @@ async function processRegistration(btnElement, paymentId = null) {
       const rId = document.getElementById('receipt-id');
       if (rId) rId.textContent = receiptId;
       const rEvent = document.getElementById('receipt-event');
-      if (rEvent) rEvent.textContent = selectedEvent || '—';
+      if (rEvent) rEvent.textContent = isSoloWorkshop ? `${selectedEvent} (Solo Workshop)` : (selectedEvent || '—');
       const rName = document.getElementById('receipt-name');
       if (rName) rName.textContent = fullName;
       const rEmail = document.getElementById('receipt-email');
@@ -729,13 +1246,20 @@ function regBack(step) {
   if (step === 3) {
     if (typeof clearRPTimers === 'function') clearRPTimers();
   }
+  if (step === 2) {
+    if (typeof selectEventOption === 'function' && selectedEvent) {
+      selectEventOption(selectedEvent);
+    }
+  }
   setRegStep(step - 1);
 }
 
 function regReset() {
   if (typeof clearRPTimers === 'function') clearRPTimers();
-  selectedEvent = null;
-  document.querySelectorAll('input[name="event-select"]').forEach(r => r.checked = false);
+  selectedEvent = 'Appdevelopment workshop';
+  if (typeof selectEventOption === 'function') {
+    selectEventOption('Appdevelopment workshop');
+  }
   document.getElementById('r-name').value    = '';
   document.getElementById('r-email').value   = '';
   document.getElementById('r-phone').value   = '';
@@ -744,8 +1268,16 @@ function regReset() {
   document.getElementById('r-pin').value     = '';
   document.getElementById('r-hallticket').value = '';
   
+  const noticeEl = document.getElementById('r-existing-team-notice');
+  if (noticeEl) {
+    noticeEl.style.display = 'none';
+    noticeEl.innerHTML = '';
+  }
+  const bannerEl = document.getElementById('reg-event-summary-banner');
+  if (bannerEl) bannerEl.innerHTML = '';
+
   const roleWrap = document.getElementById('r-role-wrap');
-  if (roleWrap) roleWrap.style.display = 'block';
+  if (roleWrap) roleWrap.style.display = 'none';
   const leaderFields = document.getElementById('team-leader-fields');
   if (leaderFields) leaderFields.style.display = 'none';
   
@@ -769,19 +1301,12 @@ function setRegStep(step) {
 // TOGGLE PIN/HALL TICKET BASED ON YEAR
 // ─────────────────────────────────────────────────────────────
 function toggleIdField() {
-  const year = document.getElementById('r-year');
   const pinWrap = document.getElementById('pin-wrap');
   const hallTicketWrap = document.getElementById('hall-ticket-wrap');
   
-  if (year && pinWrap && hallTicketWrap) {
-    if (year.value === 'first') {
-      pinWrap.style.display = 'none';
-      hallTicketWrap.style.display = 'block';
-    } else {
-      pinWrap.style.display = 'block';
-      hallTicketWrap.style.display = 'none';
-    }
-  }
+  // All years (first, second, third) now use College PIN
+  if (pinWrap) pinWrap.style.display = 'block';
+  if (hallTicketWrap) hallTicketWrap.style.display = 'none';
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -820,9 +1345,11 @@ function handleInviteSearchInput() {
 
 let eventRegistrationsCache = null;
 let lastEventCached = null;
+window._searchedProfilesMap = window._searchedProfilesMap || {};
 
 async function performInviteSearch() {
-  const identifier = document.getElementById('r-invite-search').value.trim().toLowerCase();
+  const inputEl = document.getElementById('r-invite-search');
+  const identifier = inputEl ? inputEl.value.trim().toLowerCase() : '';
   const resultContainer = document.getElementById('r-search-result-container');
   const user = window.currentUser;
   
@@ -832,102 +1359,97 @@ async function performInviteSearch() {
   }
   
   if (!identifier) {
-    resultContainer.style.display = 'none';
-    resultContainer.innerHTML = '';
+    if (resultContainer) {
+      resultContainer.style.display = 'none';
+      resultContainer.innerHTML = '';
+    }
     return;
   }
   
-  const maxSize = parseInt(document.getElementById('r-team-size').value) || 5;
+  const maxSize = parseInt(document.getElementById('r-team-size')?.value, 10) || 5;
   if (pendingInvites.length >= (maxSize - 1)) {
-    resultContainer.style.display = 'block';
-    resultContainer.innerHTML = `<div style="color:var(--text-danger); font-size: 13px;">Team is full! You can only invite ${maxSize - 1} members.</div>`;
+    if (resultContainer) {
+      resultContainer.style.display = 'block';
+      resultContainer.innerHTML = `<div style="color:var(--text-danger); font-size: 13px;">Team is full! You can only invite ${maxSize - 1} members.</div>`;
+    }
     return;
   }
 
-  resultContainer.style.display = 'block';
-  resultContainer.innerHTML = '<div style="font-size: 13px; color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Searching event registrations...</div>';
+  if (resultContainer) {
+    resultContainer.style.display = 'block';
+    resultContainer.innerHTML = '<div style="font-size: 13px; color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Searching registered members...</div>';
+  }
 
   try {
-    // 1. Fetch/Cache event registrations
-    if (!eventRegistrationsCache || lastEventCached !== selectedEvent) {
-      const eventId = await getEventId(selectedEvent);
-      const { data: regsData, error: regsError } = await supabaseClient
-        .from('registrations')
-        .select('*, profiles(id, email, full_name, username), teams(id, name)')
-        .eq('event_id', eventId);
+    // 1. Search directly in profiles by username, full_name, or email
+    const { data: profiles, error: searchError } = await supabaseClient
+      .from('profiles')
+      .select('id, full_name, username, email')
+      .or(`username.ilike.%${identifier}%,full_name.ilike.%${identifier}%,email.ilike.%${identifier}%`)
+      .limit(8);
       
-      if (regsError) throw regsError;
-      
-      eventRegistrationsCache = [];
-      if (regsData) {
-        regsData.forEach(item => {
-          const prof = item.profiles || {};
-          const tm = item.teams || {};
-          eventRegistrationsCache.push({
-            uid: item.user_id,
-            email: prof.email || item.email || '',
-            fullName: prof.full_name || item.full_name || '',
-            username: prof.username || '',
-            teamId: item.team_id,
-            teamName: tm.name || item.team_name || ''
-          });
-        });
+    if (searchError) throw searchError;
+
+    if (!profiles || profiles.length === 0) {
+      if (resultContainer) {
+        resultContainer.innerHTML = `<div style="color:var(--text-danger); font-size: 13px;">No registered members found matching "${identifier}".</div>`;
       }
-      lastEventCached = selectedEvent;
-    }
-    
-    // 2. Filter locally by prefix
-    const matches = eventRegistrationsCache.filter(reg => 
-      (reg.email && reg.email.toLowerCase().startsWith(identifier)) ||
-      (reg.fullName && reg.fullName.toLowerCase().startsWith(identifier))
-    ).slice(0, 5);
-    
-    if (matches.length === 0) {
-      resultContainer.innerHTML = `<div style="color:var(--text-danger); font-size: 13px;">No users found registered for this event matching "${identifier}".</div>`;
       return;
     }
-    
-    // 3. Fetch their UIDs from Supabase profiles table
-    const emailsToFetch = matches.map(m => m.email);
-    const { data: profiles, error: profilesError } = await supabaseClient
-      .from('profiles')
-      .select('*')
-      .in('email', emailsToFetch);
-    
-    if (profilesError) throw profilesError;
 
-    const usersMap = {};
-    if (profiles) {
-      profiles.forEach(p => {
-        usersMap[p.email] = { uid: p.id, username: p.username || p.full_name, ...p };
-      });
+    // 2. Check if any found profiles are already in a team for this event
+    const targetEventId = await getEventId(selectedEvent || 'Ideackathon');
+    const userIds = profiles.map(p => p.id);
+    const existingTeamUserIds = new Set();
+
+    if (userIds.length > 0) {
+      const { data: memberRows, error: memberError } = await supabaseClient
+        .from('team_members')
+        .select('user_id, team_id, teams(id, name, event_id)')
+        .in('user_id', userIds);
+
+      if (!memberError && memberRows) {
+        memberRows.forEach(m => {
+          if (m.teams && m.teams.event_id === targetEventId) {
+            existingTeamUserIds.add(m.user_id);
+          }
+        });
+      }
     }
-    
-    // 4. Render HTML
+
+    // Cache profiles in global map
+    window._searchedProfilesMap = window._searchedProfilesMap || {};
+    profiles.forEach(p => {
+      window._searchedProfilesMap[p.id] = {
+        uid: p.id,
+        id: p.id,
+        username: p.full_name || p.username || p.email,
+        email: p.email || ''
+      };
+    });
+
+    // 3. Render HTML
     let html = '';
-    matches.forEach(match => {
-      const userData = usersMap[match.email];
-      if (!userData) return;
-      
-      const receiverUid = userData.uid;
-      const receiverEmail = match.email;
-      const receiverUsername = userData.username || match.fullName || receiverEmail;
-      
+    profiles.forEach(prof => {
+      const receiverUid = prof.id;
+      const receiverEmail = prof.email || '';
+      const receiverUsername = prof.full_name || prof.username || receiverEmail;
+
       let actionHtml = '';
       if (receiverUid === user.uid) {
-        actionHtml = `<div style="color:var(--text-danger); font-size: 11px;">You</div>`;
-      } else if (match.role === 'leader' || match.teamName) {
-        actionHtml = `<div style="color:var(--text-danger); font-size: 11px;">Already in a team</div>`;
-      } else if (pendingInvites.some(inv => inv.uid === receiverUid)) {
-        actionHtml = `<div style="color:var(--color-amber); font-size: 11px;">Added</div>`;
+        actionHtml = `<div style="color:var(--text-danger); font-size: 11px; font-weight: 700;">You</div>`;
+      } else if (existingTeamUserIds.has(receiverUid)) {
+        actionHtml = `<div style="color:var(--text-danger); font-size: 11px; font-weight: 700;">Already in a team</div>`;
+      } else if (pendingInvites.some(inv => (inv.uid === receiverUid || inv.id === receiverUid))) {
+        actionHtml = `<div style="color:var(--color-amber); font-size: 11px; font-weight: 700;"><i class="fa-solid fa-check"></i> Added</div>`;
       } else {
         actionHtml = `
-          <button type="button" class="btn-ghost" style="padding: 4px 12px; font-size: 12px; border: 1px solid var(--gold-primary); color: var(--gold-primary);" onclick="addInviteToList('${receiverUid}', '${receiverUsername}', '${receiverEmail}')">
+          <button type="button" class="btn-ghost" style="padding: 4px 12px; font-size: 12px; border: 1px solid var(--gold-primary); color: var(--gold-primary); cursor: pointer;" onclick="addInviteToList('${receiverUid}')">
             <i class="fa-solid fa-paper-plane"></i> Invite
           </button>
         `;
       }
-      
+
       html += `
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
           <div>
@@ -938,43 +1460,70 @@ async function performInviteSearch() {
         </div>
       `;
     });
-    
-    if (!html) {
-       resultContainer.innerHTML = `<div style="color:var(--text-danger); font-size: 13px;">No valid invitees found.</div>`;
-    } else {
-       resultContainer.innerHTML = html;
-    }
 
+    if (resultContainer) {
+      resultContainer.innerHTML = html;
+    }
   } catch (error) {
     console.error("Error searching user:", error);
-    resultContainer.innerHTML = '<div style="color:var(--text-danger); font-size: 13px;">Error searching for user.</div>';
+    if (resultContainer) {
+      resultContainer.innerHTML = '<div style="color:var(--text-danger); font-size: 13px;">Error searching for user: ' + (error.message || error) + '</div>';
+    }
   }
 }
 
 function addInviteToList(uid, username, email) {
-  const maxSize = parseInt(document.getElementById('r-team-size').value) || 5;
+  const sizeInput = document.getElementById('r-team-size');
+  const maxSize = sizeInput ? Math.max(1, Math.min(5, parseInt(sizeInput.value, 10) || 5)) : 5;
+
   if (pendingInvites.length >= (maxSize - 1)) {
-    showToast(`You can only invite ${maxSize - 1} members.`, "error");
+    showToast(`You can only invite ${maxSize - 1} members for a team of ${maxSize}.`, "error");
     return;
   }
-  
-  pendingInvites.push({ uid, username, email });
-  document.getElementById('r-invite-search').value = '';
-  document.getElementById('r-search-result-container').style.display = 'none';
+
+  const cached = window._searchedProfilesMap?.[uid] || { uid, id: uid, username: username || uid, email: email || '' };
+  const targetUid = cached.uid || uid;
+  const targetUsername = cached.username || username || 'Member';
+  const targetEmail = cached.email || email || '';
+
+  if (pendingInvites.some(inv => (inv.uid === targetUid || inv.id === targetUid))) {
+    showToast("This member is already in your invitation list.", "warning");
+    return;
+  }
+
+  pendingInvites.push({
+    uid: targetUid,
+    id: targetUid,
+    username: targetUsername,
+    email: targetEmail
+  });
+
+  const searchInput = document.getElementById('r-invite-search');
+  if (searchInput) searchInput.value = '';
+  const resultContainer = document.getElementById('r-search-result-container');
+  if (resultContainer) {
+    resultContainer.style.display = 'none';
+    resultContainer.innerHTML = '';
+  }
   renderPendingInvites();
 }
 
 function removeInvite(uid) {
-  pendingInvites = pendingInvites.filter(inv => inv.uid !== uid);
+  pendingInvites = pendingInvites.filter(inv => inv.uid !== uid && inv.id !== uid);
   renderPendingInvites();
 }
 
 function renderPendingInvites() {
-  const maxSize = parseInt(document.getElementById('r-team-size').value) || 4;
-  document.getElementById('r-invite-count').textContent = pendingInvites.length;
-  document.getElementById('r-invite-max').textContent = Math.max(0, maxSize - 1);
-  
+  const sizeInput = document.getElementById('r-team-size');
+  const maxSize = sizeInput ? Math.max(1, Math.min(5, parseInt(sizeInput.value, 10) || 5)) : 5;
+  const countEl = document.getElementById('r-invite-count');
+  const maxEl = document.getElementById('r-invite-max');
+  if (countEl) countEl.textContent = pendingInvites.length;
+  if (maxEl) maxEl.textContent = Math.max(0, maxSize - 1);
+
   const container = document.getElementById('r-selected-invites-list');
+  if (!container) return;
+
   if (pendingInvites.length === 0) {
     container.innerHTML = '<div style="font-size:12px; color:var(--text-muted); font-style:italic;">No members selected yet.</div>';
     return;
@@ -1519,8 +2068,8 @@ function initLiquidGlassPhysics() {
 // PARTICIPANTS SECTION LOGIC
 // ─────────────────────────────────────────────────────────────
 const ALL_EVENTS = [
-  { id: 'ideackathon', title: 'Ideackathon', displayDate: 'Upcoming 2026', completionDate: '2026-11-30' },
-  { id: 'appdev-workshop', title: 'Appdevelopment workshop', displayDate: 'Upcoming 2026', completionDate: '2026-11-15' },
+  { id: 'ideackathon', title: 'Ideackathon', displayDate: 'Sept 13, 2026', completionDate: '2026-09-13' },
+  { id: 'appdev-workshop', title: 'Appdevelopment workshop', displayDate: 'Sept 13, 2026', completionDate: '2026-09-13' },
   { id: 'orientation', title: 'CodeMiners Orientation', displayDate: 'June 28, 2026', completionDate: '2026-06-28' },
   { id: 'pre-hackathon', title: 'Pre-Hackthon', displayDate: 'July 1, 2026', completionDate: '2026-07-01' },
   { id: 'hackathon', title: 'CodeMiners Hackathon 2026', displayDate: 'July 6, 2026', completionDate: '2026-07-06' }
@@ -1612,16 +2161,65 @@ async function viewParticipants(eventId, eventTitle) {
 
     const { data, error } = await supabaseClient
       .from('registrations')
-      .select('*, profiles(*), teams(*)')
+      .select('*, teams(*)')
       .eq('event_id', eventId);
 
     if (error) throw error;
+
+    // Fetch full squad members from team_members for all registered teams
+    const teamIds = (data || []).map(item => item.team_id).filter(Boolean);
+    const teamMembersMap = {};
+
+    if (teamIds.length > 0) {
+      try {
+        const { data: membersData } = await supabaseClient
+          .from('team_members')
+          .select('team_id, role, user_id, profiles(id, full_name, username, email, college)')
+          .in('team_id', teamIds);
+
+        if (membersData) {
+          membersData.forEach(tm => {
+            if (!teamMembersMap[tm.team_id]) teamMembersMap[tm.team_id] = [];
+            const profile = tm.profiles || {};
+            const mName = profile.full_name || profile.username || 'Member';
+            const mCollege = profile.college ? decryptGlobal(profile.college) : '';
+            teamMembersMap[tm.team_id].push({
+              name: mName,
+              role: tm.role,
+              college: mCollege,
+              isLeader: tm.role === 'leader'
+            });
+          });
+        }
+      } catch (e) {
+        console.warn("Could not fetch team_members for participants:", e);
+      }
+    }
+
+    // Fetch associated profile records (for about/projects/pin) without foreign key dependency
+    const userIds = (data || []).map(item => item.user_id).filter(Boolean);
+    const profilesMap = {};
+    if (userIds.length > 0) {
+      try {
+        const { data: profilesData } = await supabaseClient
+          .from('profiles')
+          .select('id, full_name, username, email, college, pin, about, projects')
+          .in('id', userIds);
+        if (profilesData) {
+          profilesData.forEach(p => {
+            profilesMap[p.id] = p;
+          });
+        }
+      } catch (pe) {
+        console.warn("Could not fetch supplementary profiles:", pe);
+      }
+    }
     
     fetchedMiners = [];
     if (data) {
       const user = window.currentUser;
       data.forEach(item => {
-        const profile = item.profiles || {};
+        const profile = profilesMap[item.user_id] || {};
         const team = item.teams || {};
         const pEmail = profile.email || item.email || '';
         const isOwner = user && (pEmail === user.email);
@@ -1650,22 +2248,40 @@ async function viewParticipants(eventId, eventTitle) {
           } catch(e){}
         }
 
-        const teamName = team.name || item.team_name;
+        const isSoloEvent = (eventTitle === 'Appdevelopment workshop' || eventTitle === 'Pre-Hackthon');
+        const teamName = isSoloEvent ? null : (team.name || item.team_name);
         if (teamName) {
+          const membersFromDb = item.team_id && teamMembersMap[item.team_id];
+          let formattedMemberList = [];
+          let squadCollege = decryptedCollege;
+
+          if (membersFromDb && membersFromDb.length > 0) {
+            formattedMemberList = membersFromDb.map(m => m.isLeader ? `${m.name} (Leader)` : m.name);
+            const leaderMember = membersFromDb.find(m => m.isLeader);
+            if (leaderMember && leaderMember.college) squadCollege = leaderMember.college;
+          } else {
+            formattedMemberList = [pName + ' (Leader)'];
+          }
+
           let existingTeam = fetchedMiners.find(m => m.name === teamName && m.participationType === 'Team');
           if (existingTeam) {
-            if (!existingTeam.teamMembers.includes(pName)) {
-              existingTeam.teamMembers.push(pName);
-            }
+            formattedMemberList.forEach(mem => {
+              if (!existingTeam.teamMembers.includes(mem)) {
+                existingTeam.teamMembers.push(mem);
+              }
+            });
+            existingTeam.teamSize = existingTeam.teamMembers.length;
+            existingTeam.subtitle = `${existingTeam.teamSize} Members · ${squadCollege || 'Squad'}`;
           } else {
             fetchedMiners.push({
               id: teamName,
               name: teamName,
-              subtitle: decryptedCollege || 'Team',
+              subtitle: `${formattedMemberList.length} Member${formattedMemberList.length > 1 ? 's' : ''} · ${squadCollege || 'Squad'}`,
               participationType: 'Team',
-              teamMembers: [pName],
-              teamProjectLink: item.project_link || '',
-              projectName: item.project_name || ''
+              teamSize: formattedMemberList.length,
+              teamMembers: formattedMemberList,
+              teamProjectLink: item.project_link || team.tech_stack || '',
+              projectName: item.project_name || team.name || ''
             });
           }
         } else {
@@ -1687,9 +2303,9 @@ async function viewParticipants(eventId, eventTitle) {
     
     renderMinersList('');
   } catch (e) {
-    console.error("DB error fetching participants:", e);
+    console.warn("Notice: DB error fetching participants:", e);
     fetchedMiners = [];
-    renderMinersList('');
+    renderMinersList('', true);
   }
 }
 
@@ -1708,69 +2324,83 @@ function loadAllMiners() {
     </div>
   `;
   
-  // Fetch from Supabase - profiles table
-  try {
-    supabaseClient
-      .from('profiles')
-      .select('*')
-      .then(({ data, error }) => {
-        if (error) throw error;
-        
-        fetchedMiners = [];
-        if (data) {
-          data.forEach(item => {
-            let projectsArr = [];
-            try {
-              if (item.projects) {
-                // If it's already an array, use it. If it's a string, try to decrypt and parse.
-                if (Array.isArray(item.projects)) {
-                  projectsArr = item.projects;
-                } else if (typeof item.projects === 'string') {
-                  const decProj = decryptData(item.projects, item.id);
-                  if (decProj) projectsArr = JSON.parse(decProj);
-                }
+  // Timeout guard for 8 seconds
+  const timeoutPromise = new Promise((_, reject) => 
+    setTimeout(() => reject(new Error("Database request timed out")), 8000)
+  );
+  const fetchPromise = supabaseClient.from('profiles').select('*');
+
+  Promise.race([fetchPromise, timeoutPromise])
+    .then(({ data, error }) => {
+      if (error) throw error;
+      
+      fetchedMiners = [];
+      if (data) {
+        data.forEach(item => {
+          let projectsArr = [];
+          try {
+            if (item.projects) {
+              if (Array.isArray(item.projects)) {
+                projectsArr = item.projects;
+              } else if (typeof item.projects === 'string') {
+                const decProj = decryptData(item.projects, item.id);
+                if (decProj) projectsArr = JSON.parse(decProj);
               }
-            } catch (e) {
-              console.error("Failed to parse projects", e);
             }
+          } catch (e) {
+            console.warn("Failed to parse projects", e);
+          }
 
-            let decAbout = item.about;
-            let decPin = item.pin;
-            try {
-              if (item.about) decAbout = decryptData(item.about, item.id);
-              if (item.pin) decPin = decryptData(item.pin, item.id);
-            } catch (e) {}
+          let decAbout = item.about;
+          let decPin = item.pin;
+          try {
+            if (item.about) decAbout = decryptData(item.about, item.id);
+            if (item.pin) decPin = decryptData(item.pin, item.id);
+          } catch (e) {}
 
-            fetchedMiners.push({
-              id: item.id,
-              name: item.full_name || 'Anonymous',
-              subtitle: item.username || '', 
-              year: '',
-              role: 'CodeMiner',
-              about: decAbout || '',
-              projects: projectsArr,
-              pin: decPin || ''
-            });
+          fetchedMiners.push({
+            id: item.id,
+            name: item.full_name || 'Anonymous',
+            subtitle: item.username || '', 
+            year: '',
+            role: 'CodeMiner',
+            about: decAbout || '',
+            projects: projectsArr,
+            pin: decPin || ''
           });
-        }
-        
-        renderMinersList('');
-      })
-      .catch((error) => {
-        console.error("Error fetching miners:", error);
-        fetchedMiners = [];
-        renderMinersList('');
-      });
-  } catch (e) {
-    console.error("DB error:", e);
-    fetchedMiners = [];
-    renderMinersList('');
-  }
+        });
+      }
+      
+      renderMinersList('', false);
+    })
+    .catch((error) => {
+      console.warn("Miners fetch notice (database unreachable or sleeping):", error);
+      fetchedMiners = [];
+      renderMinersList('', true);
+    });
 }
 
-function renderMinersList(searchQuery = '') {
+function renderMinersList(searchQuery = '', isError = false) {
   const container = document.getElementById('participants-list-content');
   if (!container) return;
+
+  if (isError) {
+    container.innerHTML = `
+      <div style="text-align: center; padding: 36px 20px; color: var(--text-muted);">
+        <div style="width: 52px; height: 52px; border-radius: 50%; background: rgba(240,165,0,0.1); border: 1px solid rgba(240,165,0,0.3); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; color: var(--gold-primary); font-size: 22px;">
+          <i class="fa-solid fa-cloud-bolt"></i>
+        </div>
+        <div style="font-weight: 700; color: var(--text-light); margin-bottom: 6px; font-size: 15px;">Database Reconnecting</div>
+        <p style="font-size: 12.5px; max-width: 380px; margin: 0 auto 16px; line-height: 1.5; color: var(--text-muted);">
+          The cloud database timed out or is currently waking up. If you manage this project, please restore it in your Supabase dashboard.
+        </p>
+        <button class="btn btn-primary" style="padding: 8px 22px; font-size: 13px;" onclick="loadAllMiners()">
+          <i class="fa-solid fa-rotate-right" style="margin-right: 6px;"></i> Retry Connection
+        </button>
+      </div>
+    `;
+    return;
+  }
 
   const filtered = fetchedMiners.filter(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()) || m.subtitle.toLowerCase().includes(searchQuery.toLowerCase()));
 
@@ -1788,13 +2418,17 @@ function renderMinersList(searchQuery = '') {
     html += `<p style="text-align: center; color: var(--text-muted); padding: 20px;">No miners found.</p>`;
   } else {
     filtered.forEach(m => {
+      const isTeam = m.participationType === 'Team';
       html += `
-        <div class="event-item" style="display: flex; align-items: center; gap: 16px; padding: 12px;" onclick="viewMinerProfile('${m.id}')">
-          <div style="width: 48px; height: 48px; border-radius: 50%; border: 2px solid rgba(240,165,0,0.3); background: rgba(240,165,0,0.1); display: flex; align-items: center; justify-content: center; color: var(--gold-primary); font-size: 20px;">
-            <i class="fa-solid fa-user"></i>
+        <div class="event-item" style="display: flex; align-items: center; gap: 16px; padding: 12px; cursor: pointer;" onclick="viewMinerProfile('${m.id}')">
+          <div style="width: 48px; height: 48px; border-radius: 50%; border: 2px solid rgba(240,165,0,0.3); background: rgba(240,165,0,0.1); display: flex; align-items: center; justify-content: center; color: var(--gold-primary); font-size: ${isTeam ? '18px' : '20px'}; flex-shrink: 0;">
+            <i class="fa-solid ${isTeam ? 'fa-people-group' : 'fa-user'}"></i>
           </div>
-          <div>
-            <div style="font-weight: 700; color: var(--text-light); margin-bottom:2px;">${m.name}</div>
+          <div style="flex: 1; overflow: hidden;">
+            <div style="font-weight: 700; color: var(--text-light); margin-bottom:2px; display: flex; align-items: center; gap: 8px;">
+              ${m.name}
+              ${isTeam ? `<span class="badge badge-gold" style="font-size: 10px; padding: 2px 7px;">TEAM (${m.teamSize || m.teamMembers?.length || 1})</span>` : ''}
+            </div>
             <div style="font-size: 12px; color: var(--text-muted);">${m.subtitle}</div>
           </div>
           <i class="fa-solid fa-chevron-right" style="margin-left: auto; color: var(--text-muted);"></i>
@@ -1806,8 +2440,9 @@ function renderMinersList(searchQuery = '') {
   container.innerHTML = html;
 
   const searchInput = document.getElementById('miner-search');
-  if (searchInput) {
+  if (searchInput && searchQuery) {
     searchInput.focus();
+    searchInput.setSelectionRange(searchQuery.length, searchQuery.length);
   }
 }
 
@@ -1948,9 +2583,30 @@ async function updateTeamProjectLink(btn, teamName, safeId) {
   }
 }
 
-async function syncTeamSection() {
+let activeTeamSectionEvent = 'Ideackathon';
+
+function switchTeamSectionEvent(eventName) {
+  activeTeamSectionEvent = eventName || 'Ideackathon';
+  syncTeamSection(activeTeamSectionEvent);
+}
+
+async function syncTeamSection(preferredEventName) {
   const user = window.currentUser;
   if (!user) return;
+
+  const targetEventName = preferredEventName || activeTeamSectionEvent || 'Ideackathon';
+  activeTeamSectionEvent = targetEventName;
+  currentTeamId = null;
+  currentTeamData = null;
+
+  const switcherEl = document.getElementById('team-active-event-select');
+  if (switcherEl && switcherEl.value !== targetEventName) {
+    switcherEl.value = targetEventName;
+  }
+  const createSelectEl = document.getElementById('new-team-event');
+  if (createSelectEl && createSelectEl.value !== targetEventName) {
+    createSelectEl.value = targetEventName;
+  }
 
   const loadingView = document.getElementById('team-loading-view');
   const noTeamView = document.getElementById('team-no-team-view');
@@ -1970,89 +2626,71 @@ async function syncTeamSection() {
     if (profileError) throw profileError;
     currentUserDoc = profile;
 
-    // Query team_members for the user's active team membership
+    const targetEventId = await getEventId(targetEventName);
+
+    // Query team_members strictly for user's team membership in THIS event
     const { data: userMemberships, error: memberError } = await supabaseClient
       .from('team_members')
       .select('team_id, role, teams(*)')
-      .eq('user_id', user.uid)
-      .limit(1);
+      .eq('user_id', user.uid);
 
     if (memberError) throw memberError;
 
-    if (userMemberships && userMemberships.length > 0 && userMemberships[0].teams) {
-      const membership = userMemberships[0];
-      const teamRecord = membership.teams;
-      currentTeamId = teamRecord.id;
+    // Strictly find the team belonging to targetEventId - NO fallback to other events!
+    const membership = (userMemberships || []).find(m => m.teams && m.teams.event_id === targetEventId);
 
-      // Fetch all members of this team from team_members joined with profiles
-      const { data: teamMembers, error: tmError } = await supabaseClient
-        .from('team_members')
-        .select('id, role, user_id, profiles(id, full_name, email, username)')
-        .eq('team_id', currentTeamId);
-
-      if (tmError) throw tmError;
-
-      const formattedMembers = (teamMembers || []).map(tm => ({
-        uid: tm.user_id,
-        name: tm.profiles?.full_name || tm.profiles?.username || 'Member',
-        email: tm.profiles?.email || '',
-        role: tm.role
-      }));
-
-      let teamEventTitle = 'Ideackathon';
-      if (teamRecord.event_id === DEFAULT_EVENT_IDS['CodeMiners Hackathon 2026']) {
-        teamEventTitle = 'CodeMiners Hackathon 2026';
-      } else if (teamRecord.event_id === DEFAULT_EVENT_IDS['Ideackathon']) {
-        teamEventTitle = 'Ideackathon';
-      } else if (teamRecord.event_id) {
-        try {
-          const { data: evData } = await supabaseClient
-            .from('events')
-            .select('title')
-            .eq('id', teamRecord.event_id)
-            .maybeSingle();
-          if (evData && evData.title) teamEventTitle = evData.title;
-        } catch (e) {}
-      }
-
-      const formattedTeamData = {
-        id: teamRecord.id,
-        eventId: teamRecord.event_id,
-        eventName: teamEventTitle,
-        name: teamRecord.name,
-        leaderId: teamRecord.leader_id,
-        leaderName: formattedMembers.find(m => m.role === 'leader')?.name || 'Leader',
-        techStack: teamRecord.tech_stack || 'Not specified',
-        description: teamRecord.description || 'No description provided.',
-        members: formattedMembers
-      };
-
-      currentTeamData = formattedTeamData;
-
-      renderTeamDashboard(user, currentTeamId, formattedTeamData);
-      if (loadingView) loadingView.style.display = 'none';
-      if (dashboardView) {
-        dashboardView.style.display = 'grid';
-        if (window.innerWidth < 800) {
-          dashboardView.style.display = 'block';
-        }
-      }
-    } else {
+    if (!membership || !membership.teams) {
       currentTeamId = null;
       currentTeamData = null;
-      renderNoTeamView(user);
+      renderNoTeamView(user, targetEventName);
+      return;
+    }
+
+    const teamRecord = membership.teams;
+    currentTeamId = teamRecord.id;
+
+    // Fetch all members of this team from team_members joined with profiles
+    const { data: teamMembers, error: tmError } = await supabaseClient
+      .from('team_members')
+      .select('id, role, user_id, profiles(id, full_name, email, username)')
+      .eq('team_id', currentTeamId);
+
+    if (tmError) throw tmError;
+
+    const formattedMembers = (teamMembers || []).map(tm => ({
+      uid: tm.user_id,
+      name: tm.profiles?.full_name || tm.profiles?.username || 'Member',
+      email: tm.profiles?.email || '',
+      role: tm.role
+    }));
+
+    const formattedTeamData = {
+      id: teamRecord.id,
+      eventId: teamRecord.event_id,
+      eventName: targetEventName,
+      name: teamRecord.name,
+      leaderId: teamRecord.leader_id,
+      leaderName: formattedMembers.find(m => m.role === 'leader')?.name || 'Leader',
+      techStack: teamRecord.tech_stack || 'Not specified',
+      description: teamRecord.description || 'No description provided.',
+      members: formattedMembers
+    };
+
+    currentTeamData = formattedTeamData;
+
+    renderTeamDashboard(user, currentTeamId, formattedTeamData);
+    if (loadingView) loadingView.style.display = 'none';
+    if (dashboardView) {
+      dashboardView.style.display = 'grid';
+      if (window.innerWidth < 800) {
+        dashboardView.style.display = 'block';
+      }
     }
   } catch (error) {
     console.error("Error syncing team section:", error);
     showToast("Failed to load team data.", "error");
-    // On error, show no-team view so user isn't stuck on loading
-    const noTeamView = document.getElementById('team-no-team-view');
-    if (noTeamView) {
-      noTeamView.style.display = 'grid';
-      if (window.innerWidth < 800) noTeamView.style.display = 'block';
-    }
+    renderNoTeamView(user, targetEventName);
   } finally {
-    // Always hide the loading spinner
     const lv = document.getElementById('team-loading-view');
     if (lv) lv.style.display = 'none';
   }
@@ -2073,7 +2711,7 @@ function filterPastEvents() {
       if (endDateStr) {
         const parts = endDateStr.split('-');
         const endDate = new Date(parts[0], parts[1] - 1, parts[2]);
-        endDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
 
         if (today > endDate) {
           // Keep expired options visible but disable them and show "Closed" badge
@@ -2132,7 +2770,7 @@ function filterPastEvents() {
       if (endDateStr) {
         const parts = endDateStr.split('-');
         const endDate = new Date(parts[0], parts[1] - 1, parts[2]);
-        endDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
 
         if (today > endDate) {
           card.style.display = 'none';
@@ -2172,7 +2810,8 @@ let currentTeamData = null;
 
 
 
-function renderNoTeamView(user) {
+function renderNoTeamView(user, targetEventName) {
+  const eventName = targetEventName || activeTeamSectionEvent || 'Ideackathon';
   const loadingView = document.getElementById('team-loading-view');
   const noTeamView = document.getElementById('team-no-team-view');
   if (loadingView) loadingView.style.display = 'none';
@@ -2191,6 +2830,50 @@ function renderNoTeamView(user) {
   if (techInput) techInput.value = '';
   if (descInput) descInput.value = '';
 
+  const eventSelect = document.getElementById('new-team-event');
+  if (eventSelect) eventSelect.value = eventName;
+  const switcherEl = document.getElementById('team-active-event-select');
+  if (switcherEl) switcherEl.value = eventName;
+
+  // Update instruction banner dynamically for event
+  const isIdeackathon = (eventName === 'Ideackathon');
+  const infoBanner = document.getElementById('team-info-banner-content');
+  if (infoBanner) {
+    if (isIdeackathon) {
+      infoBanner.innerHTML = `
+        <h3 style="margin: 0 0 6px 0; font-size: 16px; font-weight: 800; color: #111111; display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
+          Ideackathon Team Registration &amp; Payment
+          <span style="font-size: 11px; font-weight: 700; color: #111; background: #eee; border: 1px solid #ccc; border-radius: 12px; padding: 2px 8px; display: inline-flex; align-items: center; gap: 4px;">
+            <img src="cloud-community-logo.jpg" alt="CC" style="width: 13px; height: 13px; border-radius: 50%; object-fit: cover;"> &lt;CC&gt; Collab
+          </span>
+        </h3>
+        <p style="margin: 0; font-size: 13.5px; color: #444; line-height: 1.5;">
+          <strong>Ideackathon</strong> is an innovation pitching and prototyping challenge for teams of 1 to 5 members, hosted in official collaboration with <strong>Cloud Community &lt;CC&gt;</strong>:
+        </p>
+        <ol style="margin: 8px 0 0 0; padding-left: 20px; font-size: 13px; color: #555; line-height: 1.5;">
+          <li><strong>Create a New Team</strong> below (which designates you as the Team Leader), OR</li>
+          <li><strong>Accept a pending team invitation</strong> sent by another Team Leader.</li>
+        </ol>
+        <p style="margin: 10px 0 0 0; font-size: 13px; color: #666; font-style: italic;">
+          Once your squad is assembled, the Team Leader confirms details and pays the registration fee: <strong>₹50/head + ₹5 platform fee per member</strong> (Total ₹55 per member).
+        </p>
+        <div style="margin-top: 14px; padding: 12px 14px; background: rgba(240, 165, 0, 0.08); border-left: 3px solid #f0a500; border-radius: 6px; font-size: 13px; color: #333; line-height: 1.45;">
+          <i class="fa-solid fa-user-astronaut" style="color:#f0a500; margin-right: 6px;"></i>
+          <strong>Participating Solo?</strong> Simply create your team below with your project/solo name (e.g. <em>"Solo - [Your Name]"</em>). You do not need to invite teammates—you can proceed directly to checkout as a 1-member squad for ₹55!
+        </div>
+      `;
+    } else {
+      infoBanner.innerHTML = `
+        <h3 style="margin: 0 0 6px 0; font-size: 16px; font-weight: 800; color: #111111;">
+          ${eventName} Team Workspace
+        </h3>
+        <p style="margin: 0; font-size: 13.5px; color: #444; line-height: 1.5;">
+          Manage your team, recruit teammates, and view registered members for <strong>${eventName}</strong>.
+        </p>
+      `;
+    }
+  }
+
   loadIncomingInvitations(user);
 }
 
@@ -2200,25 +2883,31 @@ async function loadIncomingInvitations(user) {
   container.innerHTML = '<p style="color:rgba(255,255,255,0.4); text-align:center; padding: 20px;"><i class="fa-solid fa-spinner fa-spin"></i> Checking invitations...</p>';
 
   try {
+    const targetEventName = activeTeamSectionEvent || 'Ideackathon';
+    const targetEventId = await getEventId(targetEventName);
+
     const { data: invitesSnapshot, error } = await supabaseClient
       .from('invitations')
-      .select('*')
+      .select('*, teams(id, event_id, name)')
       .ilike('receiver_email', user.email)
       .eq('status', 'pending');
 
     if (error) throw error;
 
-    if (!invitesSnapshot || invitesSnapshot.length === 0) {
-      container.innerHTML = '<p style="color:rgba(255,255,255,0.4); text-align:center; padding: 20px;">No pending invitations found.</p>';
+    // Isolate by target event ID so invitations from previous hackathons don't bleed into active event
+    const eventInvites = (invitesSnapshot || []).filter(invite => invite.teams && invite.teams.event_id === targetEventId);
+
+    if (!eventInvites || eventInvites.length === 0) {
+      container.innerHTML = `<p style="color:rgba(255,255,255,0.4); text-align:center; padding: 20px;">No pending invitations for ${targetEventName}.</p>`;
       return;
     }
     let invitesHtml = '';
-    invitesSnapshot.forEach(invite => {
+    eventInvites.forEach(invite => {
       invitesHtml += `
         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 16px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px;">
           <div>
-            <div style="font-weight: 700; color: var(--color-amber); font-size: 14px;">${invite.team_name}</div>
-            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Invited by: ${invite.sender_name}</div>
+            <div style="font-weight: 700; color: var(--color-amber); font-size: 14px;">${invite.team_name || invite.teams?.name || 'Squad Invite'}</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Invited by: ${invite.sender_name} · <span style="color:var(--gold-primary);">${targetEventName}</span></div>
           </div>
           <div style="display: flex; gap: 8px; margin-top: 4px;">
             <button class="btn-gold" style="padding: 6px 12px; font-size: 12px; flex: 1; justify-content: center;" onclick="acceptInvitation('${invite.id}', '${invite.team_id}')"><i class="fa-solid fa-check"></i> Accept</button>
@@ -2256,6 +2945,21 @@ async function createTeam() {
   try {
     const teamEventTitle = document.getElementById('new-team-event') ? document.getElementById('new-team-event').value : 'Ideackathon';
     const targetEventId = await getEventId(teamEventTitle);
+
+    // Check if user is ALREADY in a team for this targetEventId
+    const { data: userExistingMemberships, error: userMemberCheckErr } = await supabaseClient
+      .from('team_members')
+      .select('team_id, teams(id, event_id, name)')
+      .eq('user_id', user.uid);
+
+    if (userMemberCheckErr) throw userMemberCheckErr;
+    const existingTeamInEvent = (userExistingMemberships || []).find(m => m.teams && m.teams.event_id === targetEventId);
+    if (existingTeamInEvent && existingTeamInEvent.teams) {
+      showToast(`You are already in a squad ("${existingTeamInEvent.teams.name}") for ${teamEventTitle}. You cannot create another team.`, 'error');
+      btn.innerHTML = '<i class="fa-solid fa-circle-plus"></i> CREATE TEAM';
+      btn.disabled = false;
+      return;
+    }
 
     // Check uniqueness of team name in Supabase for this event
     const { data: teamCheck, error: checkError } = await supabaseClient
@@ -2314,6 +3018,12 @@ async function renderTeamDashboard(user, teamId, teamData) {
   document.getElementById('dash-team-desc').textContent = teamData.description || 'No description provided.';
   document.getElementById('dash-team-tech').textContent = teamData.techStack;
   
+  const eventBadge = document.getElementById('team-event-badge');
+  if (eventBadge) eventBadge.textContent = teamData.eventName || 'Ideackathon';
+
+  const payCardTitle = document.getElementById('team-pay-card-title');
+  if (payCardTitle) payCardTitle.innerHTML = `<i class="fa-solid fa-credit-card"></i> ${teamData.eventName || 'Ideackathon'} Registration &amp; Payment`;
+
   const numMembers = teamData.members.length;
   document.getElementById('team-size-badge').textContent = `${numMembers} / 5 members`;
 
@@ -2368,11 +3078,27 @@ async function renderTeamDashboard(user, teamId, teamData) {
       let regError = null;
 
       if (teamId) {
-        const { data, error } = await supabaseClient
+        const targetEvId = teamData?.eventId || (await getEventId(teamData?.eventName || 'Ideackathon'));
+        let { data, error } = await supabaseClient
           .from('registrations')
           .select('*')
           .eq('team_id', teamId)
+          .eq('event_id', targetEvId)
           .maybeSingle();
+
+        if (!data && teamData && teamData.leaderId) {
+          const { data: leaderReg } = await supabaseClient
+            .from('registrations')
+            .select('*')
+            .eq('event_id', targetEvId)
+            .eq('user_id', teamData.leaderId)
+            .maybeSingle();
+          if (leaderReg) {
+            data = leaderReg;
+            // Auto-heal link in registrations
+            await supabaseClient.from('registrations').update({ team_id: teamId }).eq('id', leaderReg.id);
+          }
+        }
         reg = data;
         regError = error;
       }
@@ -2440,7 +3166,7 @@ async function renderTeamDashboard(user, teamId, teamData) {
           paymentCardBody.innerHTML = `
             <p style="color: #444444; font-size: 14px; margin-bottom: 20px; line-height: 1.5;">
               Confirm your squad details below and complete the team registration payment for <strong>${teamData.eventName || 'Ideackathon'}</strong>. 
-              <br><strong>Fee Structure:</strong> ₹50/head for a team of 5, or ₹60/head for &lt;5 members, plus ₹5 platform fee.
+              <br><strong>Fee Structure:</strong> ₹50/head + ₹5 platform fee per member (Total ₹55 per member).
             </p>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
               <div>
@@ -2470,17 +3196,22 @@ async function renderTeamDashboard(user, teamId, teamData) {
                 </div>
               </div>
               <div>
-                <label class="input-label" id="team-pay-id-label" style="color: #111111 !important;">${yearVal === 'first' ? 'HALL TICKET NUMBER' : 'PIN NUMBER'}</label>
+                <label class="input-label" id="team-pay-id-label" style="color: #111111 !important;">COLLEGE PIN</label>
                 <div class="input-wrap">
                   <i class="fa-solid fa-id-card input-ico"></i>
-                  <input type="text" class="field-input" id="team-pay-id-value" placeholder="${yearVal === 'first' ? 'Enter Hall Ticket number' : 'Enter PIN number'}" value="${pinVal}">
+                  <input type="text" class="field-input" id="team-pay-id-value" placeholder="Enter College PIN" value="${pinVal}">
                 </div>
               </div>
             </div>
             <div style="background: rgba(240, 165, 0, 0.05); border: 1px dashed var(--gold-primary); padding: 16px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
               <div>
-                <div style="font-size: 14px; color: #111111; font-weight: 600;">${teamData.eventName || 'Ideackathon'}</div>
-                <div style="font-size: 12px; color: #444444;">${numMembers} member${numMembers > 1 ? 's' : ''} @ ₹${feeInfo.perPerson}/head (Subtotal: ₹${feeInfo.subtotal}) ${feeInfo.platformFee > 0 ? `+ ₹${feeInfo.platformFee} Platform Fee` : ''}</div>
+                <div style="font-size: 14px; color: #111111; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+                  ${teamData.eventName || 'Ideackathon'}
+                  <span style="font-size: 10px; background: #eee; border: 1px solid #ccc; padding: 1px 6px; border-radius: 10px; display: inline-flex; align-items: center; gap: 4px; font-weight: 700; color: #111;">
+                    <img src="cloud-community-logo.jpg" style="width: 12px; height: 12px; border-radius: 50%; object-fit: cover;"> &lt;CC&gt; Collab
+                  </span>
+                </div>
+                <div style="font-size: 12px; color: #444444;">${numMembers} member${numMembers > 1 ? 's' : ''} @ ₹${feeInfo.perPerson}/head + ₹${feeInfo.perPersonPlatform || 5} Platform Fee/head (Subtotal: ₹${feeInfo.subtotal} + Fee: ₹${feeInfo.platformFee})</div>
               </div>
               <div style="font-size: 24px; color: var(--gold-primary); font-weight: 800;">₹${feeInfo.total}</div>
             </div>
@@ -2508,21 +3239,19 @@ async function renderTeamDashboard(user, teamId, teamData) {
 }
 
 function toggleTeamPayIdFields() {
-  const yearSelect = document.getElementById('team-pay-year');
   const label = document.getElementById('team-pay-id-label');
   const input = document.getElementById('team-pay-id-value');
-  if (yearSelect && label && input) {
-    if (yearSelect.value === 'first') {
-      label.textContent = 'HALL TICKET NUMBER';
-      input.placeholder = 'Enter Hall Ticket number';
-    } else {
-      label.textContent = 'PIN NUMBER';
-      input.placeholder = 'Enter PIN number';
-    }
-  }
+  if (label) label.textContent = 'COLLEGE PIN';
+  if (input) input.placeholder = 'Enter College PIN';
 }
 
 function payTeamRegistration() {
+  const user = window.currentUser;
+  if (!user || !currentTeamData || currentTeamData.leaderId !== user.uid) {
+    showToast('Only the Team Leader can make the registration payment for the squad.', 'error');
+    return;
+  }
+
   const teamEventTitle = (currentTeamData && currentTeamData.eventName) || 'Ideackathon';
   
   if (teamEventTitle === 'CodeMiners Hackathon 2026') {
@@ -2597,12 +3326,16 @@ function payTeamRegistration() {
 
 async function processTeamRegistration(paymentId, phone, college, studyYear, idValue, feeInfo = null) {
   const user = window.currentUser;
+  if (!user || !currentTeamData || currentTeamData.leaderId !== user.uid) {
+    showToast('Only the Team Leader can make the registration payment for the squad.', 'error');
+    return;
+  }
   const teamSize = currentTeamData.members.length;
   const teamEventTitle = currentTeamData.eventName || 'Ideackathon';
   const targetEventId = currentTeamData.eventId || (await getEventId(teamEventTitle));
   const amountPaid = feeInfo ? feeInfo.total : (teamSize < 5 ? 70 * teamSize : 50 * teamSize);
 
-  const idType = studyYear === 'first' ? 'hallticket' : 'pin';
+  const idType = 'pin';
   const encryptedId = encryptIdValue(idValue, user.uid);
   const encryptedPhone = encryptData(phone, user.uid);
   const encryptedCollege = encryptGlobal(college);
@@ -2614,7 +3347,6 @@ async function processTeamRegistration(paymentId, phone, college, studyYear, idV
     payment_status: 'captured',
     amount_paid: amountPaid,
     payment_id: paymentId,
-    created_at: new Date().toISOString(),
     // Backward compatibility fields
     event_name: teamEventTitle,
     team_size: teamSize,
@@ -2696,7 +3428,8 @@ async function sendInvitation() {
       profilesResult = await supabaseClient
         .from('profiles')
         .select('*')
-        .ilike('username', identifier)
+        .or(`username.ilike.%${identifier}%,full_name.ilike.%${identifier}%,email.ilike.%${identifier}%`)
+        .limit(1)
         .maybeSingle();
     }
 
@@ -2714,8 +3447,15 @@ async function sendInvitation() {
     receiverUid = targetData.id;
     receiverUsername = targetData.full_name || targetData.username || receiverEmail;
 
-    if (targetData.team_id) {
-      showToast(`"${receiverUsername}" is already in another team.`, "error");
+    const targetEventId = currentTeamData.eventId || (await getEventId(currentTeamData.eventName || 'Ideackathon'));
+    const { data: existingMemberships } = await supabaseClient
+      .from('team_members')
+      .select('team_id, teams(id, event_id)')
+      .eq('user_id', receiverUid);
+
+    const inSameEventTeam = existingMemberships?.some(m => m.team_id === currentTeamId || (m.teams && m.teams.event_id === targetEventId));
+    if (inSameEventTeam) {
+      showToast(`"${receiverUsername}" is already in a team for this event.`, "error");
       btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> SEND INVITATION';
       btn.disabled = false;
       return;
@@ -2853,7 +3593,20 @@ async function acceptInvitation(inviteId, teamId) {
       .select('*', { count: 'exact', head: true })
       .eq('team_id', teamId);
 
-    if (count && count >= 4) {
+    // Check if user is ALREADY in a team for teamData.event_id
+    const { data: userExistingMemberships, error: userMemberCheckErr } = await supabaseClient
+      .from('team_members')
+      .select('team_id, teams(id, event_id, name)')
+      .eq('user_id', user.uid);
+
+    if (userMemberCheckErr) throw userMemberCheckErr;
+    const existingInThisEvent = (userExistingMemberships || []).find(m => m.teams && m.teams.event_id === teamData.event_id);
+    if (existingInThisEvent && existingInThisEvent.teams) {
+      showToast(`You are already a member of squad "${existingInThisEvent.teams.name}" for this event. Leave that squad before joining another.`, 'error');
+      return;
+    }
+
+    if (count && count >= 5) {
       showToast("This team is already full.", "error");
       return;
     }
@@ -2875,12 +3628,27 @@ async function acceptInvitation(inviteId, teamId) {
       .update({ status: 'accepted' })
       .eq('id', inviteId);
 
-    // Reject other pending invitations
-    await supabaseClient
-      .from('invitations')
-      .update({ status: 'rejected' })
-      .eq('receiver_email', user.email)
-      .eq('status', 'pending');
+    // Reject other pending invitations strictly for THIS event
+    try {
+      const { data: pendingOtherInvites } = await supabaseClient
+        .from('invitations')
+        .select('id, teams(event_id)')
+        .ilike('receiver_email', user.email)
+        .eq('status', 'pending');
+      
+      const inviteIdsToReject = (pendingOtherInvites || [])
+        .filter(inv => inv.teams && inv.teams.event_id === teamData.event_id)
+        .map(inv => inv.id);
+
+      if (inviteIdsToReject.length > 0) {
+        await supabaseClient
+          .from('invitations')
+          .update({ status: 'rejected' })
+          .in('id', inviteIdsToReject);
+      }
+    } catch (invErr) {
+      console.warn("Could not reject other event invitations:", invErr);
+    }
 
     showToast(`You have joined "${teamData.name}"!`, "success");
     syncTeamSection();
@@ -2961,6 +3729,8 @@ async function disbandTeam() {
 // ─────────────────────────────────────────────────────────────
 function initRazorpayRegistrationPayment() {
   let teamSize = 1;
+  const isSoloWorkshop = (selectedEvent === 'Appdevelopment workshop' || selectedEvent === 'CodeMiners Orientation');
+
   if (selectedEvent === 'Ideackathon') {
     const sizeInput = document.getElementById('r-team-size');
     teamSize = sizeInput ? Math.max(1, Math.min(5, parseInt(sizeInput.value, 10) || 5)) : 5;
@@ -2977,7 +3747,9 @@ function initRazorpayRegistrationPayment() {
     amountEl.textContent = `₹${feeInfo.total}`;
   }
   if (detailsEl) {
-    if (feeInfo.platformFee > 0) {
+    if (isSoloWorkshop) {
+      detailsEl.innerHTML = `<strong>${feeInfo.eventName}</strong> &nbsp;<span class="badge badge-blue" style="font-size:10px;padding:2px 8px;"><i class="fa-solid fa-user"></i> Solo Pass</span><br><span style="font-size:11px;color:rgba(255,255,255,0.6);">Base Ticket: ₹${feeInfo.subtotal} &nbsp;+&nbsp; Platform Fee: ₹${feeInfo.platformFee}</span>`;
+    } else if (feeInfo.platformFee > 0) {
       detailsEl.innerHTML = `${feeInfo.description}<br><span style="font-size:11px;color:rgba(255,255,255,0.6);">Base: ₹${feeInfo.subtotal} &nbsp;+&nbsp; Platform Fee: ₹${feeInfo.platformFee}</span>`;
     } else {
       detailsEl.textContent = feeInfo.description;
@@ -2989,6 +3761,7 @@ function payWithRazorpaySDK(btnElement) {
   const fullName = document.getElementById('r-name').value.trim();
   const email = document.getElementById('r-email').value.trim();
   const phone = document.getElementById('r-phone').value.trim();
+  const isSoloWorkshop = (selectedEvent === 'Appdevelopment workshop' || selectedEvent === 'CodeMiners Orientation');
 
   let teamSize = 1;
   if (selectedEvent === 'Ideackathon') {
@@ -3010,7 +3783,7 @@ function payWithRazorpaySDK(btnElement) {
     amount: amount * 100, // in paise
     currency: "INR",
     name: "CodeMiners",
-    description: `${selectedEvent} Registration Fee`,
+    description: isSoloWorkshop ? `${selectedEvent} (Solo Workshop Ticket)` : `${selectedEvent} Registration Fee`,
     image: "logo.png",
     handler: function (response) {
       showToast("Payment Successful!", "success");
@@ -3028,20 +3801,20 @@ function payWithRazorpaySDK(btnElement) {
       name: fullName,
       email: email,
       phone: phone,
-      college: document.getElementById('r-college').value.trim(),
-      year: document.getElementById('r-year').value,
-      pin: document.getElementById('r-pin').value.trim(),
-      hallticket: document.getElementById('r-hallticket').value.trim(),
-      role: document.getElementById('r-role') ? document.getElementById('r-role').value : 'individual',
+      college: document.getElementById('r-college')?.value.trim() || '',
+      year: document.getElementById('r-year')?.value || '',
+      pin: (document.getElementById('r-pin')?.value || document.getElementById('r-hallticket')?.value || '').trim(),
+      hallticket: (document.getElementById('r-pin')?.value || document.getElementById('r-hallticket')?.value || '').trim(),
+      role: isSoloWorkshop ? 'solo' : (document.getElementById('r-role') ? document.getElementById('r-role').value : 'individual'),
       eventName: selectedEvent,
-      teamName: document.getElementById('r-team-name') ? document.getElementById('r-team-name').value.trim() : '',
-      teamSize: teamSize,
+      teamName: isSoloWorkshop ? '' : (document.getElementById('r-team-name') ? document.getElementById('r-team-name').value.trim() : ''),
+      teamSize: isSoloWorkshop ? 1 : teamSize,
       subtotal: feeInfo.subtotal,
       platformFee: feeInfo.platformFee,
       totalAmount: feeInfo.total
     },
     theme: {
-      color: "#3395ff"
+      color: isSoloWorkshop ? "#2196f3" : "#3395ff"
     },
     modal: {
       ondismiss: function () {

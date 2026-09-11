@@ -1,1 +1,4 @@
 node_modules/
+*.csv
+*.xlsx
+extract_*.py

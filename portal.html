@@ -9,6 +9,11 @@
     // Global Error & Promise Rejection Logger Overlay
     (function() {
       const errs = [];
+      window._clearDebugLogs = function() {
+        errs.length = 0;
+        const el = document.getElementById('debug-error-overlay');
+        if (el) el.remove();
+      };
       function renderOverlay() {
         let el = document.getElementById('debug-error-overlay');
         if (!el) {
@@ -17,7 +22,11 @@
           el.style.cssText = 'position:fixed; top:0; left:0; width:100%; max-height:200px; overflow-y:auto; background:rgba(244,67,54,0.95); color:white; font-family:monospace; font-size:12px; padding:12px; z-index:999999; border-bottom:3px solid #b71c1c; box-shadow:0 4px 20px rgba(0,0,0,0.5); box-sizing:border-box;';
           document.body.appendChild(el);
         }
-        el.innerHTML = '<div style="font-weight:bold; margin-bottom:8px; font-size:13px; text-transform:uppercase;"><i class="fa-solid fa-triangle-exclamation"></i> Client-Side Debug Logs:</div>' + 
+        el.style.display = 'block';
+        el.innerHTML = '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">' +
+          '<span style="font-weight:bold; font-size:13px; text-transform:uppercase;"><i class="fa-solid fa-triangle-exclamation"></i> Client-Side Debug Logs:</span>' +
+          '<div><button onclick="document.getElementById(\'debug-error-overlay\').style.display=\'none\';" style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.6); color:white; padding:2px 8px; border-radius:4px; cursor:pointer; font-size:11px; margin-right:6px;">Dismiss</button>' +
+          '<button onclick="window._clearDebugLogs();" style="background:white; border:none; color:#b71c1c; padding:2px 8px; border-radius:4px; cursor:pointer; font-size:11px; font-weight:bold;">Clear</button></div></div>' + 
           errs.map(e => `<div style="margin-bottom:6px; border-bottom:1px dashed rgba(255,255,255,0.2); padding-bottom:4px; word-break:break-all;">[${e.type}] ${e.message}</div>`).join('');
       }
       function logErr(type, msg) {
@@ -200,36 +209,53 @@
 
         <!-- Upcoming Events Preview -->
         <div style="margin-bottom:72px;">
-          <div class="section-heading">
-            <div class="section-tag"><i class="fa-solid fa-calendar-check"></i> UPCOMING EVENTS</div>
-            <h2 class="section-title">Don't Miss <span class="accent">These</span></h2>
+          <div class="section-heading" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px;">
+            <div>
+              <div class="section-tag"><i class="fa-solid fa-calendar-check"></i> UPCOMING EVENTS</div>
+              <h2 class="section-title">Don't Miss <span class="accent">These</span></h2>
+            </div>
+            <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.14);border-radius:50px;padding:6px 16px;box-shadow:0 4px 15px rgba(0,0,0,0.25);">
+              <span style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);font-weight:700;">In Collab With</span>
+              <img src="cloud-community-logo.jpg" alt="Cloud Community &lt;CC&gt;" style="width:24px;height:24px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(255,255,255,0.25);">
+              <span style="font-size:13px;font-weight:800;color:#ffffff;letter-spacing:0.02em;">Cloud Community &lt;CC&gt;</span>
+            </div>
           </div>
           <div class="events-preview-grid"
             style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
             <!-- Event 1: Ideackathon -->
-            <div class="event-card" data-end-date="2026-11-30" style="border: 1.5px solid var(--gold-primary); background: rgba(240,165,0,0.03);">
+            <div class="event-card" data-end-date="2026-09-13" style="border: 1.5px solid var(--gold-primary); background: rgba(240,165,0,0.03);">
               <div class="event-card-top" style="background: linear-gradient(90deg, var(--gold-primary), var(--gold-light));"></div>
               <div class="event-card-body">
-                <div class="event-date" style="color: var(--gold-primary);"><i class="fa-solid fa-calendar-day"></i> UPCOMING &nbsp;·&nbsp; TEAM EVENT</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;">
+                  <div class="event-date" style="color: var(--gold-primary);margin-bottom:0;"><i class="fa-solid fa-calendar-day"></i> LAST DATE: SEPT 13, 2026</div>
+                  <span style="font-size:10.5px;font-weight:700;color:#ffffff;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);border-radius:20px;padding:2px 8px;display:inline-flex;align-items:center;gap:5px;">
+                    <img src="cloud-community-logo.jpg" alt="CC" style="width:13px;height:13px;border-radius:50%;object-fit:cover;"> Collab with &lt;CC&gt;
+                  </span>
+                </div>
                 <div class="event-title">Ideackathon</div>
-                <div class="event-desc">Unleash disruptive ideas! Brainstorm, pitch, and prototype innovative concepts with your team in our premier innovation showdown.</div>
+                <div class="event-desc">Unleash disruptive ideas! Brainstorm, pitch, and prototype innovative concepts with your team. Organized in proud collaboration with <strong>Cloud Community &lt;CC&gt;</strong>.</div>
                 <div class="event-footer">
-                  <span class="badge badge-gold"><i class="fa-solid fa-users"></i> Teams 1–5 · ₹50/head (5) or ₹60/head (&lt;5) + ₹5 fee</span>
-                  <button class="btn-gold" style="padding: 6px 14px; font-size: 12px;" onclick="startRegistrationFor('Ideackathon')">Register Now →</button>
+                  <span class="badge badge-gold"><i class="fa-solid fa-users"></i> Solo (₹55) or Squads 1–5 (₹55/head)</span>
+                  <button class="btn-gold" style="padding: 6px 14px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;" onclick="startRegistrationFor('Ideackathon')"><i class="fa-solid fa-users"></i> Form Squad &amp; Register →</button>
                 </div>
               </div>
             </div>
 
             <!-- Event 2: Appdevelopment workshop -->
-            <div class="event-card" data-end-date="2026-11-15" style="border: 1.5px solid var(--blue-accent); background: rgba(33,150,243,0.03);">
+            <div class="event-card" data-end-date="2026-09-13" style="border: 1.5px solid var(--blue-accent); background: rgba(33,150,243,0.03);">
               <div class="event-card-top" style="background: linear-gradient(90deg, var(--blue-accent), #42a5f5);"></div>
               <div class="event-card-body">
-                <div class="event-date" style="color: var(--blue-accent);"><i class="fa-solid fa-calendar-day"></i> UPCOMING &nbsp;·&nbsp; WORKSHOP</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;">
+                  <div class="event-date" style="color: var(--blue-accent);margin-bottom:0;"><i class="fa-solid fa-calendar-day"></i> LAST DATE: SEPT 13, 2026</div>
+                  <span style="font-size:10.5px;font-weight:700;color:#ffffff;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);border-radius:20px;padding:2px 8px;display:inline-flex;align-items:center;gap:5px;">
+                    <img src="cloud-community-logo.jpg" alt="CC" style="width:13px;height:13px;border-radius:50%;object-fit:cover;"> Collab with &lt;CC&gt;
+                  </span>
+                </div>
                 <div class="event-title">Appdevelopment workshop</div>
-                <div class="event-desc">Deep-dive masterclass into modern application engineering. Build, test, and deploy responsive web and cross-platform mobile apps.</div>
+                <div class="event-desc">Deep-dive masterclass into modern application engineering. Build, test, and deploy responsive web &amp; mobile apps. Organized in proud collaboration with <strong>Cloud Community &lt;CC&gt;</strong>.</div>
                 <div class="event-footer">
                   <span class="badge badge-blue"><i class="fa-solid fa-laptop-code"></i> Solo Workshop · ₹30 + ₹5 fee (₹35)</span>
-                  <button class="btn-ghost" style="padding: 6px 14px; font-size: 12px; border-color: var(--blue-accent); color: var(--blue-accent);" onclick="startRegistrationFor('Appdevelopment workshop')">Register Now →</button>
+                  <button class="btn-ghost" style="padding: 6px 14px; font-size: 12px; border-color: var(--blue-accent); color: var(--blue-accent); display: inline-flex; align-items: center; gap: 6px;" onclick="startRegistrationFor('Appdevelopment workshop')"><i class="fa-solid fa-laptop-code"></i> Register Now (Solo · ₹35) →</button>
                 </div>
               </div>
             </div>
@@ -437,7 +463,7 @@
         <div class="section-heading">
           <div class="section-tag"><i class="fa-solid fa-id-card-clip"></i> ENROLL</div>
           <h1 class="section-title">Registration &amp; <span class="accent">Payments</span></h1>
-          <p class="section-sub">Select an event, complete your registration, and finalize payment securely.</p>
+          <p class="section-sub">Select an event, complete your registration, and finalize payment securely. Organized in collaboration with <strong>Cloud Community &lt;CC&gt;</strong>.</p>
         </div>
 
         <!-- Step Indicator -->
@@ -473,51 +499,58 @@
               <div style="display:flex;flex-direction:column;gap:16px;margin-bottom:24px;" id="event-select-container">
                 
                 <!-- Event 1: Ideackathon -->
-                <label class="event-select-opt active-event-opt"
-                  style="display:flex;align-items:center;gap:18px;padding:20px 22px;border:2px solid var(--gold-primary);background:rgba(240,165,0,0.06);border-radius:12px;cursor:pointer;transition:var(--transition-smooth);position:relative;"
-                  onmouseover="this.style.borderColor='var(--gold-light)';this.style.transform='translateY(-2px)';"
-                  onmouseout="this.style.borderColor='var(--gold-primary)';this.style.transform='translateY(0)';">
+                <div id="opt-card-ideackathon" class="event-select-opt" data-end-date="2026-09-13"
+                  style="display:flex;align-items:center;gap:18px;padding:20px 22px;border:2px solid var(--gold-primary);background:rgba(240,165,0,0.08);border-radius:12px;cursor:pointer;transition:var(--transition-smooth);position:relative;box-shadow:0 0 18px rgba(240,165,0,0.15);"
+                  onclick="selectEventOption('Ideackathon')">
                   <input type="radio" name="event-select" value="ideackathon" data-event-name="Ideackathon"
-                    style="accent-color:var(--gold-primary);width:20px;height:20px;"
-                    onchange="selectedEvent='Ideackathon'" checked>
+                    style="accent-color:var(--gold-primary);width:20px;height:20px;" checked>
                   <div style="width:48px;height:48px;border-radius:10px;background:rgba(240,165,0,0.12);border:1px solid rgba(240,165,0,0.3);display:flex;align-items:center;justify-content:center;color:var(--gold-primary);font-size:22px;flex-shrink:0;">
                     <i class="fa-solid fa-lightbulb"></i>
                   </div>
                   <div style="flex:1;">
-                    <div style="font-weight:800;font-size:17px;color:var(--text-light);margin-bottom:4px;display:flex;align-items:center;gap:10px;">
+                    <div style="font-weight:800;font-size:17px;color:var(--text-light);margin-bottom:4px;display:flex;align-items:center;flex-wrap:wrap;gap:8px;">
                       Ideackathon <span class="badge badge-gold" style="font-size:10px;padding:2px 8px;"><i class="fa-solid fa-users"></i> TEAM EVENT (1–5)</span>
+                      <span class="badge" style="font-size:10px;padding:2px 8px;background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.18);display:inline-flex;align-items:center;gap:4px;"><img src="cloud-community-logo.jpg" alt="CC" style="width:12px;height:12px;border-radius:50%;object-fit:cover;"> &lt;CC&gt; Collab</span>
+                      <span class="badge" style="font-size:10px;padding:2px 8px;background:rgba(240,165,0,0.15);color:var(--gold-light);border:1px solid rgba(240,165,0,0.3);"><i class="fa-solid fa-clock"></i> Closes Sept 13</span>
                     </div>
-                    <div style="font-size:13px;color:var(--text-muted);line-height:1.4;">
-                      Idea Pitching &amp; Innovation &nbsp;·&nbsp; <strong style="color:var(--gold-light)">₹50/head (5 members) | ₹60/head (&lt;5 members) + ₹5 platform fee</strong>
+                    <div style="font-size:13px;color:var(--text-muted);line-height:1.4;margin-bottom:8px;">
+                      Idea Pitching &amp; Innovation Challenge &nbsp;·&nbsp; <strong style="color:var(--gold-light)">₹50/head + ₹5 platform fee (₹55/member)</strong>
+                      <br><span style="font-size:12px;color:rgba(255,255,255,0.7);"><i class="fa-solid fa-shield-halved" style="color:var(--gold-primary);"></i> Team registration &amp; payment are managed on the <strong>Teams Page</strong> (Team Leader pays for squad).</span>
                     </div>
+                    <button type="button" class="btn-gold" style="padding: 6px 14px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;" onclick="event.stopPropagation(); startRegistrationFor('Ideackathon');">
+                      <i class="fa-solid fa-users"></i> Form Squad on Teams Page &rarr;
+                    </button>
                   </div>
-                  <span class="badge badge-gold" style="font-size:11px;padding:4px 10px;margin-left:auto;"><i class="fa-solid fa-circle-dot fa-fade"></i> ACTIVE</span>
-                </label>
+                  <span id="opt-badge-ideackathon" class="badge badge-gold" style="font-size:11px;padding:4px 10px;margin-left:auto;align-self:flex-start;"><i class="fa-solid fa-circle-check"></i> SELECTED</span>
+                </div>
 
                 <!-- Event 2: Appdevelopment workshop -->
-                <label class="event-select-opt active-event-opt"
-                  style="display:flex;align-items:center;gap:18px;padding:20px 22px;border:2px solid var(--blue-accent);background:rgba(33,150,243,0.06);border-radius:12px;cursor:pointer;transition:var(--transition-smooth);position:relative;"
-                  onmouseover="this.style.borderColor='#42a5f5';this.style.transform='translateY(-2px)';"
-                  onmouseout="this.style.borderColor='var(--blue-accent)';this.style.transform='translateY(0)';">
+                <div id="opt-card-appdev_workshop" class="event-select-opt" data-end-date="2026-09-13"
+                  style="display:flex;align-items:center;gap:18px;padding:20px 22px;border:2px solid rgba(33,150,243,0.3);background:rgba(33,150,243,0.03);border-radius:12px;cursor:pointer;transition:var(--transition-smooth);position:relative;opacity:0.85;"
+                  onclick="selectEventOption('Appdevelopment workshop')">
                   <input type="radio" name="event-select" value="appdev_workshop" data-event-name="Appdevelopment workshop"
-                    style="accent-color:var(--blue-accent);width:20px;height:20px;"
-                    onchange="selectedEvent='Appdevelopment workshop'">
+                    style="accent-color:var(--blue-accent);width:20px;height:20px;">
                   <div style="width:48px;height:48px;border-radius:10px;background:rgba(33,150,243,0.12);border:1px solid rgba(33,150,243,0.3);display:flex;align-items:center;justify-content:center;color:var(--blue-accent);font-size:22px;flex-shrink:0;">
                     <i class="fa-solid fa-laptop-code"></i>
                   </div>
                   <div style="flex:1;">
-                    <div style="font-weight:800;font-size:17px;color:var(--text-light);margin-bottom:4px;display:flex;align-items:center;gap:10px;">
+                    <div style="font-weight:800;font-size:17px;color:var(--text-light);margin-bottom:4px;display:flex;align-items:center;flex-wrap:wrap;gap:8px;">
                       Appdevelopment workshop <span class="badge badge-blue" style="font-size:10px;padding:2px 8px;"><i class="fa-solid fa-user"></i> SOLO WORKSHOP</span>
+                      <span class="badge" style="font-size:10px;padding:2px 8px;background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.18);display:inline-flex;align-items:center;gap:4px;"><img src="cloud-community-logo.jpg" alt="CC" style="width:12px;height:12px;border-radius:50%;object-fit:cover;"> &lt;CC&gt; Collab</span>
+                      <span class="badge" style="font-size:10px;padding:2px 8px;background:rgba(33,150,243,0.15);color:#8ec5ff;border:1px solid rgba(33,150,243,0.3);"><i class="fa-solid fa-clock"></i> Closes Sept 13</span>
                     </div>
-                    <div style="font-size:13px;color:var(--text-muted);line-height:1.4;">
-                      Hands-on Web &amp; Mobile App Engineering &nbsp;·&nbsp; <strong style="color:var(--blue-accent)">Solo: ₹30 + ₹5 platform fee (Total ₹35)</strong>
+                    <div style="font-size:13px;color:var(--text-muted);line-height:1.4;margin-bottom:8px;">
+                      Hands-on Web &amp; Mobile App Engineering &nbsp;·&nbsp; <strong style="color:var(--blue-accent)">Solo Pass: ₹30 + ₹5 platform fee (Total ₹35)</strong>
+                      <br><span style="font-size:12px;color:rgba(255,255,255,0.7);"><i class="fa-solid fa-user-check" style="color:var(--blue-accent);"></i> Individual registration. Register directly below.</span>
                     </div>
+                    <button type="button" class="btn-ghost" style="padding: 6px 14px; font-size: 12px; border-color: var(--blue-accent); color: var(--blue-accent); display: inline-flex; align-items: center; gap: 6px;" onclick="event.stopPropagation(); startRegistrationFor('Appdevelopment workshop');">
+                      <i class="fa-solid fa-laptop-code"></i> Register Solo (₹35) &rarr;
+                    </button>
                   </div>
-                  <span class="badge badge-blue" style="font-size:11px;padding:4px 10px;margin-left:auto;"><i class="fa-solid fa-circle-dot fa-fade"></i> ACTIVE</span>
-                </label>
-
+                  <span id="opt-badge-appdev_workshop" class="badge badge-blue" style="font-size:11px;padding:4px 10px;margin-left:auto;display:none;align-self:flex-start;"><i class="fa-solid fa-circle-check"></i> SELECTED</span>
+                </div>
               </div>
-              <button class="btn-gold" onclick="regNext(1)" style="width:100%;justify-content:center;padding:14px;font-size:14px;letter-spacing:1px;"><i class="fa-solid fa-arrow-right"></i> CONTINUE TO DETAILS</button>
+              <button id="reg-step-1-btn" class="btn-gold" onclick="regNext(1)" style="width:100%;justify-content:center;padding:14px;font-size:14px;letter-spacing:1px;background:linear-gradient(135deg, #f0a500, #c59b27);color:#111111;border-color:#f0a500;"><i class="fa-solid fa-people-group"></i> GO TO TEAMS TO FORM SQUAD &amp; REGISTER &rarr;</button>
             </div>
           </div>
         </div>
@@ -525,10 +558,17 @@
         <!-- Step 2: Details -->
         <div id="reg-panel-2" style="display:none;">
           <div class="glass-card" style="max-width:720px;margin:0 auto;">
-            <div class="card-header">
+            <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
               <div class="card-title"><i class="fa-solid fa-user-pen"></i> Registration Details</div>
+              <div style="font-size:11px;font-weight:700;color:var(--text-light);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:3px 10px;display:inline-flex;align-items:center;gap:6px;">
+                <img src="cloud-community-logo.jpg" alt="CC" style="width:14px;height:14px;border-radius:50%;object-fit:cover;">
+                <span>CodeMiners × Cloud Community &lt;CC&gt;</span>
+              </div>
             </div>
             <div class="card-body">
+              <!-- Dynamic Event Summary Banner (Solo Workshop vs Team Ideackathon) -->
+              <div id="reg-event-summary-banner" style="margin-bottom: 20px;"></div>
+
               <form id="reg-details-form" style="display:flex;flex-direction:column;gap:18px;">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
                   <div><label class="input-label">FULL NAME</label>
@@ -541,11 +581,11 @@
                   </div>
                   <div><label class="input-label">PHONE</label>
                     <div class="input-wrap"><i class="fa-solid fa-phone input-ico"></i><input type="tel"
-                        class="field-input" id="r-phone" required></div>
+                        class="field-input" id="r-phone" placeholder="Enter your phone number" required></div>
                   </div>
                   <div><label class="input-label">COLLEGE / INSTITUTION</label>
                     <div class="input-wrap"><i class="fa-solid fa-building-columns input-ico"></i><input type="text"
-                        class="field-input" id="r-college" required></div>
+                        class="field-input" id="r-college" placeholder="Enter your college" required></div>
                   </div>
                   <div>
                     <label class="input-label">STUDY YEAR</label>
@@ -555,37 +595,42 @@
                         <option value="first" style="background:var(--dark-stone);">First Year</option>
                         <option value="second" style="background:var(--dark-stone);" selected>Second Year</option>
                         <option value="third" style="background:var(--dark-stone);">Third Year</option>
+                        <option value="fourth" style="background:var(--dark-stone);">Fourth Year</option>
                       </select>
                     </div>
                   </div>
                   <div id="pin-wrap">
-                    <label class="input-label">PIN</label>
+                    <label class="input-label">COLLEGE PIN</label>
                     <div class="input-wrap">
                       <i class="fa-solid fa-id-card input-ico"></i>
-                      <input type="text" class="field-input" id="r-pin">
+                      <input type="text" class="field-input" id="r-pin" placeholder="Enter your College PIN">
                     </div>
                   </div>
                   <div id="hall-ticket-wrap" style="display:none;">
-                    <label class="input-label">HALL TICKET NUMBER</label>
+                    <label class="input-label">COLLEGE PIN</label>
                     <div class="input-wrap">
-                      <i class="fa-solid fa-hashtag input-ico"></i>
-                      <input type="text" class="field-input" id="r-hallticket">
+                      <i class="fa-solid fa-id-card input-ico"></i>
+                      <input type="text" class="field-input" id="r-hallticket" placeholder="Enter your College PIN">
                     </div>
                   </div>
-                  <div style="grid-column: 1 / -1;" id="r-role-wrap">
+                  <!-- Existing Team Notice for Ideackathon (hidden for solo workshop) -->
+                  <div id="r-existing-team-notice" style="display:none !important; grid-column: 1 / -1; margin-bottom: 4px;"></div>
+
+                  <div style="grid-column: 1 / -1; display:none !important;" id="r-role-wrap">
                     <label class="input-label">PARTICIPANT ROLE</label>
                     <div class="input-wrap">
                       <i class="fa-solid fa-user-group input-ico"></i>
                       <select class="field-input select-field" id="r-role" onchange="toggleRoleFields()">
-                        <option value="member" style="background:var(--dark-stone);" selected>Team Member</option>
+                        <option value="solo" style="background:var(--dark-stone);" selected>Solo Workshop Attendee (Individual)</option>
+                        <option value="member" style="background:var(--dark-stone);">Team Member</option>
                         <option value="leader" style="background:var(--dark-stone);">Team Leader</option>
                       </select>
                     </div>
                   </div>
 
-                  <!-- Team Leader specific fields -->
+                  <!-- Team Leader specific fields (hidden for solo workshop) -->
                   <div id="team-leader-fields"
-                    style="display:none; grid-column: 1 / -1; border-top: 1px solid var(--rock-border); padding-top: 16px; margin-top: 8px;">
+                    style="display:none !important; grid-column: 1 / -1; border-top: 1px solid var(--rock-border); padding-top: 16px; margin-top: 8px;">
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
                       <div>
                         <label class="input-label">TEAM NAME</label>
@@ -595,12 +640,19 @@
                         </div>
                       </div>
                       <div>
-                        <label class="input-label">NUMBER OF MEMBERS (MAX 5)</label>
-                        <div class="input-wrap">
+                        <label class="input-label">NUMBER OF MEMBERS (1 – 5)</label>
+                        <div class="input-wrap" style="position: relative;">
                           <i class="fa-solid fa-list-ol input-ico"></i>
                           <input type="number" class="field-input" id="r-team-size" min="1" max="5" value="5"
-                            onchange="renderPendingInvites(); if(typeof updateIdeackathonFeePreview==='function') updateIdeackathonFeePreview();"
-                            oninput="if(typeof updateIdeackathonFeePreview==='function') updateIdeackathonFeePreview();">
+                            step="1"
+                            onkeydown="return handleTeamSizeKeyDown(event)"
+                            oninput="handleTeamSizeInput(this)"
+                            onblur="handleTeamSizeBlur(this)"
+                            style="padding-right: 74px; font-weight: 700;">
+                          <div style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: flex; gap: 4px; z-index: 2;">
+                            <button type="button" onclick="adjustTeamSize(-1)" style="width: 26px; height: 26px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; transition: 0.2s;" title="Decrease size"><i class="fa-solid fa-minus"></i></button>
+                            <button type="button" onclick="adjustTeamSize(1)" style="width: 26px; height: 26px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; transition: 0.2s;" title="Increase size"><i class="fa-solid fa-plus"></i></button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -609,8 +661,8 @@
                     <div id="ideackathon-fee-calc"
                       style="font-size: 12px; color: var(--gold-light); margin-top: 12px; padding: 10px 14px; background: rgba(240,165,0,0.08); border-radius: 8px; border: 1px solid rgba(240,165,0,0.25);">
                       <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span><strong>5 Members</strong> (₹50/person): ₹250 + ₹5 Platform Fee</span>
-                        <span style="font-weight:800; font-size:14px; color:var(--gold-primary);">Total: ₹255</span>
+                        <span><strong>5 Members</strong>: 5 × (₹50 Fee + ₹5 Platform Fee)</span>
+                        <span style="font-weight:800; font-size:14px; color:var(--gold-primary);">Total: ₹275</span>
                       </div>
                     </div>
 
@@ -681,7 +733,7 @@
                     style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">
                     Registration Fee</div>
                   <div id="rp-team-details" style="font-weight: 700; color: #fff; margin-top: 3px; font-size: 13px;">
-                    CodeMiners Hackathon</div>
+                    Appdevelopment workshop (Solo Pass · ₹35)</div>
                 </div>
                 <div style="text-align: right;">
                   <div
@@ -1299,7 +1351,21 @@
         <div class="section-heading">
           <div class="section-tag"><i class="fa-solid fa-people-group"></i> TEAM MANAGEMENT</div>
           <h1 class="section-title">My <span class="accent">Squad &amp; Teams</span></h1>
-          <p class="section-sub">Create your team, recruit collaborators, and manage your squad for Ideackathon.</p>
+          <p class="section-sub">Create your team, recruit collaborators, and manage your squad for Ideackathon (in collaboration with <strong>Cloud Community &lt;CC&gt;</strong>).</p>
+        </div>
+
+        <!-- Event Switcher for Teams Section -->
+        <div style="max-width: 960px; margin: 0 auto 24px auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 12px 20px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-calendar-check" style="color: var(--gold-primary); font-size: 17px;"></i>
+            <span style="font-size: 14px; font-weight: 700; color: #fff;">Event Workspace:</span>
+          </div>
+          <div style="display:flex; align-items:center; gap: 10px;">
+            <select id="team-active-event-select" onchange="switchTeamSectionEvent(this.value)" class="field-input select-field" style="padding: 8px 14px; font-size: 13px; font-weight: 700; background: var(--dark-stone); border: 1.5px solid var(--gold-primary); color: #fff; min-width: 250px;">
+              <option value="Ideackathon" selected>Ideackathon (Active Sept 2026)</option>
+              <option value="CodeMiners Hackathon 2026">CodeMiners Hackathon 2026 (Past Flagship)</option>
+            </select>
+          </div>
         </div>
 
         <!-- State 1: Loading State -->
@@ -1319,18 +1385,27 @@
               <div style="font-size: 28px; color: var(--gold-primary); margin-top: 2px;">
                 <i class="fa-solid fa-circle-info"></i>
               </div>
-              <div>
-                <h3 style="margin: 0 0 6px 0; font-size: 16px; font-weight: 800; color: #111111;">Ideackathon Team Registration &amp; Payment</h3>
+              <div id="team-info-banner-content" style="flex: 1;">
+                <h3 style="margin: 0 0 6px 0; font-size: 16px; font-weight: 800; color: #111111; display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
+                  Ideackathon Team Registration &amp; Payment
+                  <span style="font-size: 11px; font-weight: 700; color: #111; background: #eee; border: 1px solid #ccc; border-radius: 12px; padding: 2px 8px; display: inline-flex; align-items: center; gap: 4px;">
+                    <img src="cloud-community-logo.jpg" alt="CC" style="width: 13px; height: 13px; border-radius: 50%; object-fit: cover;"> &lt;CC&gt; Collab
+                  </span>
+                </h3>
                 <p style="margin: 0; font-size: 13.5px; color: #444; line-height: 1.5;">
-                  <strong>Ideackathon</strong> is an innovation pitching and prototyping challenge for teams of 1 to 5 members:
+                  <strong>Ideackathon</strong> is an innovation pitching and prototyping challenge for teams of 1 to 5 members, hosted in official collaboration with <strong>Cloud Community &lt;CC&gt;</strong>:
                 </p>
                 <ol style="margin: 8px 0 0 0; padding-left: 20px; font-size: 13px; color: #555; line-height: 1.5;">
                   <li><strong>Create a New Team</strong> below (which designates you as the Team Leader), OR</li>
                   <li><strong>Accept a pending team invitation</strong> sent by another Team Leader.</li>
                 </ol>
                 <p style="margin: 10px 0 0 0; font-size: 13px; color: #666; font-style: italic;">
-                  Once your squad is assembled, the Team Leader confirms details and pays the registration fee: <strong>₹50/head for a team of 5</strong> or <strong>₹60/head for &lt;5 members</strong> + <strong>₹5 platform fee</strong>.
+                  Once your squad is assembled, the Team Leader confirms details and pays the registration fee: <strong>₹50/head + ₹5 platform fee per member</strong> (Total ₹55 per member).
                 </p>
+                <div style="margin-top: 14px; padding: 12px 14px; background: rgba(240, 165, 0, 0.08); border-left: 3px solid #f0a500; border-radius: 6px; font-size: 13px; color: #333; line-height: 1.45;">
+                  <i class="fa-solid fa-user-astronaut" style="color:#f0a500; margin-right: 6px;"></i>
+                  <strong>Participating Solo?</strong> Simply create your team below with your project/solo name (e.g. <em>"Solo - [Your Name]"</em>). You do not need to invite teammates—you can proceed directly to checkout as a 1-member squad for ₹55!
+                </div>
               </div>
             </div>
           </div>
@@ -1344,7 +1419,7 @@
               <div style="margin-bottom: 16px;">
                 <label class="input-label">SELECT EVENT</label>
                 <div class="input-wrap"><i class="fa-solid fa-calendar-check input-ico"></i>
-                  <select class="field-input select-field" id="new-team-event" style="background:var(--dark-stone);">
+                  <select class="field-input select-field" id="new-team-event" style="background:var(--dark-stone);" onchange="switchTeamSectionEvent(this.value)">
                     <option value="Ideackathon" selected>Ideackathon (Active Team Event)</option>
                     <option value="CodeMiners Hackathon 2026">CodeMiners Hackathon 2026 (Past Flagship)</option>
                   </select>
@@ -1389,7 +1464,7 @@
           <!-- Hackathon Registration & Payment Card -->
           <div class="glass-card" id="team-payment-card" style="display: none; border: 1.5px solid #111111; background: rgba(255, 255, 255, 0.9); box-shadow: none !important; color: #111111;">
             <div class="card-header" style="border-bottom: 1px solid rgba(0,0,0,0.08);">
-              <div class="card-title" style="color: #111111;"><i class="fa-solid fa-credit-card"></i> Hackathon Registration & Payment</div>
+              <div class="card-title" style="color: #111111;" id="team-pay-card-title"><i class="fa-solid fa-credit-card"></i> Team Registration &amp; Payment</div>
             </div>
             <div class="card-body" style="padding: 24px;" id="team-payment-card-body">
               <!-- Dynamically populated via javascript -->
@@ -1464,7 +1539,7 @@
   </div><!-- /.page-wrapper -->
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="portal-script.min.js?v=21"></script>
+  <script src="portal-script.min.js?v=31"></script>
   <script>
     // Global user doc reference (declared in portal-script.js)
 

@@ -98,30 +98,54 @@ serve(async (req) => {
           const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2.39.0");
           const supabase = createClient(supabaseUrl, supabaseKey);
 
-          const { error } = await supabase
-            .from("registrations")
-            .insert({
-              full_name: notes.name,
-              email: notes.email,
-              phone: notes.phone,
-              college: notes.college,
-              year: notes.year,
-              id_type: notes.pin ? "pin" : "hallticket",
-              id_value: notes.pin || notes.hallticket,
-              role: notes.role || "leader",
-              event_name: notes.eventName,
-              team_name: notes.teamName || "",
-              team_size: parseInt(notes.teamSize) || 1,
+          // 2a. Resolve Event ID
+          let eventId = notes.eventId;
+          if (!eventId && notes.eventName) {
+            const { data: eventData } = await supabase
+              .from("events")
+              .select("id, event_type")
+              .ilike("title", notes.eventName.trim())
+              .maybeSingle();
+            if (eventData) {
+              eventId = eventData.id;
+            }
+          }
+
+          // 2b. Resolve User ID
+          let userId = notes.userId;
+          if (!userId && notes.email) {
+            const { data: profileData } = await supabase
+              .from("profiles")
+              .select("id")
+              .eq("email", notes.email.trim())
+              .maybeSingle();
+            if (profileData) {
+              userId = profileData.id;
+            }
+          }
+
+          if (eventId && userId) {
+            const regPayload: Record<string, any> = {
+              event_id: eventId,
+              user_id: userId,
+              team_id: notes.teamId || null,
               payment_id: payment.id,
               payment_status: "captured",
               amount_paid: payment.amount / 100,
-              created_at: new Date().toISOString()
-            });
+              registered_at: new Date().toISOString()
+            };
 
-          if (error) {
-            console.error("Failed to write to Supabase Database table:", error);
+            const { error } = await supabase
+              .from("registrations")
+              .insert(regPayload);
+
+            if (error) {
+              console.error("Failed to write to Supabase Database table:", error);
+            } else {
+              console.log("Saved payment capture successfully inside Supabase registrations table.");
+            }
           } else {
-            console.log("Saved payment capture successfully inside Supabase Database.");
+            console.warn("Could not resolve event_id or user_id for registration persistence:", { eventId, userId });
           }
         } catch (dbError) {
           console.error("Supabase Database connection error:", dbError);
