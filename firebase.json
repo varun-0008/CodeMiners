@@ -9,7 +9,10 @@
       "**/.*",
       "**/node_modules/**",
       "package.json",
-      "package-lock.json"
+      "package-lock.json",
+      "**/*.csv",
+      "**/*.xlsx",
+      "**/*.py"
     ],
     "rewrites": [
       {
