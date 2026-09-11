@@ -41,8 +41,31 @@ window.decryptGlobal = window.decryptGlobal || function(cipherText) {
   }
 };
 
-const encryptGlobal = window.encryptGlobal;
-const decryptGlobal = window.decryptGlobal;
+
+// Local crypto helper functions/constants for user-specific data
+var CRYPTO_SALT = 'CM_SecretSalt_2026_Key';
+function getDerivationKey(uid) {
+  return CryptoJS.SHA256(uid + CRYPTO_SALT).toString();
+}
+
+window.encryptData = window.encryptData || function(plainText, uid) {
+  if (!plainText) return '';
+  const key = getDerivationKey(uid);
+  return CryptoJS.AES.encrypt(String(plainText), key).toString();
+};
+
+window.decryptData = window.decryptData || function(cipherText, uid) {
+  if (!cipherText) return '';
+  const key = getDerivationKey(uid);
+  try {
+    const bytes = CryptoJS.AES.decrypt(cipherText, key);
+    const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+    return decrypted || cipherText;
+  } catch (err) {
+    return cipherText;
+  }
+};
+
 
 // Global reference for the logged in user's profile database document
 let currentUserDoc = null;
@@ -1799,10 +1822,15 @@ function initContactForm() {
 // ─────────────────────────────────────────────────────────────
 function initNavScroll() {
   const nav = document.getElementById('cloud-nav');
+  const toggleBtn = document.getElementById('theme-toggle-btn');
   if (!nav) return;
 
   window.addEventListener('scroll', () => {
-    nav.classList.toggle('scrolled', window.scrollY > 30);
+    const isScrolled = window.scrollY > 30;
+    nav.classList.toggle('scrolled', isScrolled);
+    if (toggleBtn) {
+      toggleBtn.classList.toggle('scrolled', isScrolled);
+    }
   }, { passive: true });
 }
 
@@ -2381,6 +2409,7 @@ function loadAllMiners() {
 }
 
 function renderMinersList(searchQuery = '', isError = false) {
+  window.lastMinersSearchQuery = searchQuery;
   const container = document.getElementById('participants-list-content');
   if (!container) return;
 
@@ -2404,22 +2433,16 @@ function renderMinersList(searchQuery = '', isError = false) {
 
   const filtered = fetchedMiners.filter(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()) || m.subtitle.toLowerCase().includes(searchQuery.toLowerCase()));
 
-  let html = `
-    <div style="margin-bottom: 20px; position: relative;">
-      <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 16px; top: 14px; color: var(--text-muted);"></i>
-      <input type="text" id="miner-search" placeholder="Search by username or name..." 
-             style="width: 100%; padding: 12px 16px 12px 44px; border-radius: 8px; border: 1.5px solid #111111; background: #ffffff; color: #111111; outline: none; font-family: inherit; box-shadow: none !important;" 
-             value="${searchQuery}" onkeyup="renderMinersList(this.value)">
-    </div>
-    <div style="display: grid; grid-template-columns: 1fr; gap: 12px; max-height: 400px; overflow-y: auto; padding-right: 8px;" id="miners-grid">
-  `;
+  const searchInput = document.getElementById('miner-search');
+  const minersGrid = document.getElementById('miners-grid');
 
+  let gridHtml = '';
   if (filtered.length === 0) {
-    html += `<p style="text-align: center; color: var(--text-muted); padding: 20px;">No miners found.</p>`;
+    gridHtml += `<p style="text-align: center; color: var(--text-muted); padding: 20px;">No miners found.</p>`;
   } else {
     filtered.forEach(m => {
       const isTeam = m.participationType === 'Team';
-      html += `
+      gridHtml += `
         <div class="event-item" style="display: flex; align-items: center; gap: 16px; padding: 12px; cursor: pointer;" onclick="viewMinerProfile('${m.id}')">
           <div style="width: 48px; height: 48px; border-radius: 50%; border: 2px solid rgba(240,165,0,0.3); background: rgba(240,165,0,0.1); display: flex; align-items: center; justify-content: center; color: var(--gold-primary); font-size: ${isTeam ? '18px' : '20px'}; flex-shrink: 0;">
             <i class="fa-solid ${isTeam ? 'fa-people-group' : 'fa-user'}"></i>
@@ -2436,13 +2459,41 @@ function renderMinersList(searchQuery = '', isError = false) {
       `;
     });
   }
-  html += `</div>`;
-  container.innerHTML = html;
 
-  const searchInput = document.getElementById('miner-search');
-  if (searchInput && searchQuery) {
-    searchInput.focus();
-    searchInput.setSelectionRange(searchQuery.length, searchQuery.length);
+  if (searchInput && minersGrid) {
+    minersGrid.innerHTML = gridHtml;
+  } else {
+    let html = `
+      <div style="margin-bottom: 20px; position: relative;">
+        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 16px; top: 14px; color: var(--text-muted);"></i>
+        <input type="text" id="miner-search" placeholder="Search by username or name..." 
+               style="width: 100%; padding: 12px 16px 12px 44px; border-radius: 8px; border: 1.5px solid #111111; background: #ffffff; color: #111111; outline: none; font-family: inherit; box-shadow: none !important;" 
+               value="${searchQuery}" oninput="renderMinersList(this.value)">
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr; gap: 12px; max-height: 400px; overflow-y: auto; padding-right: 8px; will-change: transform, scroll-position; transform: translate3d(0,0,0); backface-visibility: hidden; -webkit-overflow-scrolling: touch;" id="miners-grid">
+        ${gridHtml}
+      </div>
+    `;
+    container.innerHTML = html;
+  }
+
+  // Restore scroll positions if they were saved
+  if (window.lastMinersScrollState) {
+    const state = window.lastMinersScrollState;
+    window.lastMinersScrollState = null; // Clear state
+    setTimeout(() => {
+      const gEl = document.getElementById('miners-grid');
+      if (gEl && state.grid) {
+        gEl.scrollTop = state.grid;
+      }
+      const pBox = container.closest('.participants-box');
+      if (pBox && state.parent) {
+        pBox.scrollTop = state.parent;
+      }
+      if (state.main !== undefined) {
+        window.scrollTo(0, state.main);
+      }
+    }, 0);
   }
 }
 
@@ -2450,11 +2501,25 @@ function viewMinerProfile(minerId) {
   const m = fetchedMiners.find(x => x.id === minerId);
   if (!m) return;
   const container = document.getElementById('participants-list-content');
+  if (!container) return;
+
+  // Capture scroll positions before replacing container content
+  const parentBox = container.closest('.participants-box');
+  const parentScrollTop = parentBox ? parentBox.scrollTop : 0;
+  const gridEl = document.getElementById('miners-grid');
+  const gridScrollTop = gridEl ? gridEl.scrollTop : 0;
+  const mainScrollTop = window.scrollY || document.documentElement.scrollTop;
+  
+  window.lastMinersScrollState = {
+    parent: parentScrollTop,
+    grid: gridScrollTop,
+    main: mainScrollTop
+  };
   
   let projectsHtml = '';
   if (!m.participationType && m.projects && m.projects.length > 0) {
     projectsHtml = `
-      <div style="background: rgba(255, 255, 255, 0.75); border: 1.5px solid #111111; box-shadow: none !important; border-radius: 12px; padding: 20px; text-align: left; margin-top: 16px;">
+      <div class="miner-profile-card" style="margin-top: 16px;">
         <h3 style="margin-top:0; font-size: 15px; color: var(--text-light); border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 8px; margin-bottom: 12px;"><i class="fa-solid fa-code"></i> Personal Projects</h3>
         <div style="display: flex; flex-direction: column; gap: 8px;">
           ${m.projects.map(p => `
@@ -2467,8 +2532,10 @@ function viewMinerProfile(minerId) {
     `;
   } else if (m.participationType === 'Team') {
     const safeId = btoa(unescape(encodeURIComponent(m.id))).replace(/=/g, '');
+    const loggedInName = (window.currentUserDoc && window.currentUserDoc.full_name) || (window.currentUser && window.currentUser.displayName) || '';
+    const isMember = m.teamMembers && m.teamMembers.some(member => member.toLowerCase().trim() === loggedInName.toLowerCase().trim());
     projectsHtml = `
-      <div style="background: rgba(255, 255, 255, 0.75); border: 1.5px solid #111111; box-shadow: none !important; border-radius: 12px; padding: 20px; text-align: left; margin-top: 16px;">
+      <div class="miner-profile-card" style="margin-top: 16px;">
         <h3 style="margin-top:0; font-size: 15px; color: var(--text-light); border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 8px; margin-bottom: 12px;"><i class="fa-solid fa-rocket"></i> Team Project Link</h3>
         <div style="display: flex; flex-direction: column; gap: 8px;">
           ${m.teamProjectLink ? `
@@ -2477,10 +2544,12 @@ function viewMinerProfile(minerId) {
             </a>
           ` : `<p style="color: var(--text-muted); font-size: 13px; margin: 0 0 8px 0;">No project link added yet.</p>`}
           
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <input type="text" id="team-proj-link-${safeId}" placeholder="Enter project URL..." value="${m.teamProjectLink}" class="field-input" style="flex: 1; padding: 10px; font-size: 13px; background: #ffffff; border: 1px solid #111111; color: #111111; border-radius: 6px; box-shadow: none !important;">
-            <button class="btn-gold" style="padding: 10px 16px; font-size: 13px; border-radius: 6px;" onclick="updateTeamProjectLink(this, '${m.id}', '${safeId}')">Save</button>
-          </div>
+          ${isMember ? `
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <input type="text" id="team-proj-link-${safeId}" placeholder="Enter project URL..." value="${m.teamProjectLink}" class="field-input" style="flex: 1; padding: 10px; font-size: 13px; border-radius: 6px; box-shadow: none !important;">
+              <button class="btn-gold" style="padding: 10px 16px; font-size: 13px; border-radius: 6px;" onclick="updateTeamProjectLink(this, '${m.id}', '${safeId}')">Save</button>
+            </div>
+          ` : ''}
         </div>
       </div>
     `;
@@ -2489,7 +2558,7 @@ function viewMinerProfile(minerId) {
   let aboutHtml = '';
   if (!m.participationType && m.about) {
     aboutHtml = `
-      <div style="background: rgba(255, 255, 255, 0.75); border: 1.5px solid #111111; box-shadow: none !important; border-radius: 12px; padding: 20px; text-align: left; margin-bottom: 16px;">
+      <div class="miner-profile-card" style="margin-bottom: 16px;">
         <h3 style="margin-top:0; font-size: 15px; color: var(--text-light); border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 8px; margin-bottom: 12px;"><i class="fa-solid fa-address-card"></i> About Miner</h3>
         <p style="color: var(--text-muted); font-size: 13px; line-height: 1.6; margin: 0;">
           ${m.about}
@@ -2506,7 +2575,7 @@ function viewMinerProfile(minerId) {
     
     if (mArray.length > 0) {
       membersHtml = `
-        <div style="background: rgba(255, 255, 255, 0.75); border: 1.5px solid #111111; box-shadow: none !important; border-radius: 12px; padding: 20px; text-align: left; margin-bottom: 16px;">
+        <div class="miner-profile-card" style="margin-bottom: 16px;">
           <h3 style="margin-top:0; font-size: 15px; color: var(--text-light); border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 8px; margin-bottom: 12px;"><i class="fa-solid fa-users"></i> Team Members</h3>
           <ul style="color: var(--text-muted); font-size: 13px; line-height: 1.6; margin: 0; padding-left: 20px;">
             ${mArray.map(member => `<li>${member}</li>`).join('')}
@@ -2517,7 +2586,7 @@ function viewMinerProfile(minerId) {
   }
 
   container.innerHTML = `
-    <button class="btn-icon" style="margin-bottom: 16px; color: var(--gold-primary); background: transparent; border: none; cursor: pointer; display:flex; align-items:center; gap: 8px; font-weight:600; font-family:inherit; padding: 0;" onclick="renderMinersList('')">
+    <button class="btn-icon" style="margin-bottom: 16px; color: var(--gold-primary); background: transparent; border: none; cursor: pointer; display:flex; align-items:center; gap: 8px; font-weight:600; font-family:inherit; padding: 0;" onclick="renderMinersList(window.lastMinersSearchQuery || '')">
       <i class="fa-solid fa-arrow-left"></i> Back to Miners
     </button>
     <div style="text-align: center; padding: 0;">
@@ -2553,6 +2622,16 @@ async function updateTeamProjectLink(btn, teamName, safeId) {
   
   if (!url) {
     showToast("Please enter a valid URL.", "error");
+    return;
+  }
+  
+  // Security check: must be a member of the team to update team project link
+  const m = fetchedMiners.find(x => x.id === teamName);
+  if (!m) return;
+  const loggedInName = (window.currentUserDoc && window.currentUserDoc.full_name) || (window.currentUser && window.currentUser.displayName) || '';
+  const isMember = m.teamMembers && m.teamMembers.some(member => member.toLowerCase().trim() === loggedInName.toLowerCase().trim());
+  if (!isMember) {
+    showToast("Permission denied. You are not a member of this team.", "error");
     return;
   }
   

@@ -61,7 +61,7 @@
     rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     crossorigin="anonymous">
-  <link rel="stylesheet" href="portal-style.css?v=17">
+  <link rel="stylesheet" href="portal-style.css?v=23">
 
   <!-- GSAP -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -126,25 +126,29 @@
   <!-- ═══════════════════════════════════════════════════════════
        CLOUD NAVIGATION BAR
        ═══════════════════════════════════════════════════════════ -->
-  <nav class="cloud-nav" id="cloud-nav">
-    <a class="nav-link active" data-page="home" onclick="navigate('home');return false;" href="#"><i
-        class="fa-solid fa-house"></i> <span>Home</span></a>
-    <a class="nav-link" data-page="about" onclick="navigate('about');return false;" href="#"><i
-        class="fa-solid fa-users"></i> <span>About</span></a>
-    <a class="nav-link" data-page="registration" onclick="navigate('registration');return false;" href="#"><i
-        class="fa-solid fa-id-card-clip"></i> <span>Registration</span></a>
-    <a class="nav-link" data-page="participants" onclick="navigate('participants');return false;" href="#"><i
-        class="fa-solid fa-users-viewfinder"></i> <span>Participants</span></a>
-    <a class="nav-link" data-page="teams" onclick="navigate('teams');return false;" href="#"><i
-        class="fa-solid fa-people-group"></i> <span>Teams</span></a>
-    <a class="nav-link" data-page="donations" onclick="navigate('donations');return false;" href="#"><i
-        class="fa-solid fa-hand-holding-heart"></i> <span>Donations</span></a>
-    <a class="nav-link" data-page="contact" onclick="navigate('contact');return false;" href="#"><i
-        class="fa-solid fa-envelope"></i> <span>Contact</span></a>
-    <a class="nav-link" data-page="profile" onclick="navigate('profile');return false;" href="#"><i
-        class="fa-solid fa-circle-user"></i> <span>Profile</span></a>
-
-  </nav>
+  <div class="nav-wrapper">
+    <nav class="cloud-nav" id="cloud-nav">
+      <a class="nav-link active" data-page="home" onclick="navigate('home');return false;" href="#"><i
+          class="fa-solid fa-house"></i> <span>Home</span></a>
+      <a class="nav-link" data-page="about" onclick="navigate('about');return false;" href="#"><i
+          class="fa-solid fa-users"></i> <span>About</span></a>
+      <!-- <a class="nav-link" data-page="registration" onclick="navigate('registration');return false;" href="#"><i
+          class="fa-solid fa-id-card-clip"></i> <span>Registration</span></a> -->
+      <a class="nav-link" data-page="participants" onclick="navigate('participants');return false;" href="#"><i
+          class="fa-solid fa-users-viewfinder"></i> <span>Participants</span></a>
+      <!-- <a class="nav-link" data-page="teams" onclick="navigate('teams');return false;" href="#"><i
+          class="fa-solid fa-people-group"></i> <span>Teams</span></a> -->
+      <a class="nav-link" data-page="donations" onclick="navigate('donations');return false;" href="#"><i
+          class="fa-solid fa-hand-holding-heart"></i> <span>Donations</span></a>
+      <a class="nav-link" data-page="contact" onclick="navigate('contact');return false;" href="#"><i
+          class="fa-solid fa-envelope"></i> <span>Contact</span></a>
+      <a class="nav-link" data-page="profile" onclick="navigate('profile');return false;" href="#"><i
+          class="fa-solid fa-circle-user"></i> <span>Profile</span></a>
+    </nav>
+    <button class="theme-toggle-bubble" onclick="toggleTheme();return false;" id="theme-toggle-btn" title="Toggle Theme">
+      <i class="fa-solid fa-moon"></i>
+    </button>
+  </div>
 
   <!-- Toast Container -->
   <div id="toast-container"></div>
@@ -168,8 +172,8 @@
         </h1>
         <p class="hero-desc"
           style="font-weight: 500; font-size: 1.15rem; text-shadow: none;">
-          <strong style="font-weight: 800; font-size: 1.2rem; color: #111111;">Welcome to CodeMiners</strong><br>
-          <span style="color: #333333;">A community of innovators, developers, and problem-solvers dedicated to creating
+          <strong style="font-weight: 800; font-size: 1.2rem; color: var(--text-light);">Welcome to CodeMiners</strong><br>
+          <span style="color: var(--text-muted);">A community of innovators, developers, and problem-solvers dedicated to creating
             opportunities for students through workshops, hackathons, and technical events.</span>
         </p>
       </div>
@@ -1041,7 +1045,7 @@
         </div>
         <style>
           .participants-container {
-            max-width: 960px;
+            max-width: 1400px;
             margin: 0 auto;
             display: grid;
             gap: 24px;
@@ -1053,13 +1057,23 @@
             gap: 12px;
           }
 
+          #miners-grid {
+            will-change: transform, scroll-position;
+            transform: translate3d(0, 0, 0);
+            backface-visibility: hidden;
+            -webkit-overflow-scrolling: touch;
+          }
+
           .event-item {
             padding: 16px;
             border: 1.5px solid var(--rock-border);
             border-radius: 10px;
             cursor: pointer;
-            transition: var(--transition-smooth);
+            transition: border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             background: rgba(0, 0, 0, 0.2);
+            will-change: transform;
+            transform: translate3d(0, 0, 0);
+            backface-visibility: hidden;
           }
 
           .event-item:hover,
@@ -1081,8 +1095,15 @@
 
           @media(min-width: 800px) {
             .participants-container {
-              grid-template-columns: 1fr 1fr;
+              grid-template-columns: 9fr 16fr;
+              grid-template-areas:
+                "events miners"
+                "events winners";
             }
+
+            .participants-container > .participants-box:nth-child(1) { grid-area: events; }
+            .participants-container > .participants-box:nth-child(2) { grid-area: miners; }
+            .participants-container > .participants-box:nth-child(3) { grid-area: winners; }
 
             .participants-box {
               height: 100%;
@@ -1100,7 +1121,7 @@
               <!-- Dynamically populated -->
             </div>
           </div>
-          <!-- Right Box: Miners (16 ratio) -->
+          <!-- Middle Box: Miners (16 ratio) -->
           <div class="glass-card no-tilt participants-box">
             <div class="card-header">
               <div class="card-title" id="participants-list-title"><i class="fa-solid fa-users"></i> Miners List</div>
@@ -1108,6 +1129,36 @@
             <div class="card-body" style="padding: 24px;" id="participants-list-content">
               <p style="text-align: center; color: rgba(255,255,255,0.5); margin-top: 40px;">Select an event from the
                 left to view its miners.</p>
+            </div>
+          </div>
+          <!-- Right Box: Winners List -->
+          <div class="glass-card no-tilt participants-box">
+            <div class="card-header">
+              <div class="card-title"><i class="fa-solid fa-trophy"></i> Winners List</div>
+            </div>
+            <div class="card-body" style="padding: 24px;" id="winners-list-content">
+              <div class="events-list-box">
+                <!-- CODE COMMANDERS -->
+                <div class="winner-dropdown">
+                  <div class="event-item" onclick="const details = this.nextElementSibling; if(details.style.display === 'block'){details.style.display = 'none'; this.style.borderRadius = '10px'; this.classList.remove('active');}else{details.style.display = 'block'; this.style.borderRadius = '10px 10px 0 0'; this.classList.add('active');}">
+                    <div class="event-item-title" style="display: flex; justify-content: space-between; align-items: center;">
+                      <span>CODE COMMANDERS</span>
+                      <span style="color: var(--gold-primary); font-size: 14px;"><i class="fa-solid fa-medal"></i> First</span>
+                    </div>
+                  </div>
+                  <div class="winner-details" style="display: none; padding: 16px; border: 1.5px solid var(--rock-border); border-top: none; border-radius: 0 0 10px 10px; background: rgba(0, 0, 0, 0.1); margin-top: 0px; margin-bottom: 12px;">
+                    <ul style="list-style: none; padding: 0; margin: 0; color: var(--text-muted); font-size: 14px; line-height: 1.8;">
+                      <li><strong style="color: var(--text-light);">Ishan V Narayanan</strong> - Team Lead</li>
+                      <li>Bandirala Ritesh</li>
+                      <li>P Navadeep</li>
+                      <li>Akhilesh Rathod</li>
+                      <li>C. Sai Kishore</li>
+                    </ul>
+                  </div>
+                </div>
+                <!-- Additional winners can be added below -->
+                
+              </div>
             </div>
           </div>
         </div>
@@ -1192,17 +1243,17 @@
                 </div>
 
                 <div
-                  style="display:flex; flex-direction:column; gap: 16px; text-align: left; background: rgba(0,0,0,0.15); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                  style="display:flex; flex-direction:column; gap: 16px; text-align: left; background: var(--dark-stone-mid); padding: 20px; border-radius: 12px; border: 1px solid var(--rock-border);">
 
                   <div
-                    style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px;">
+                    style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--rock-border); padding-bottom: 12px;">
                     <span
                       style="color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Username</span>
                     <span id="profile-username" style="color: var(--text-light); font-weight: 500;">—</span>
                   </div>
 
                   <div
-                    style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px;">
+                    style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--rock-border); padding-bottom: 12px;">
                     <span
                       style="color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Full
                       Name</span>
@@ -1210,7 +1261,7 @@
                   </div>
 
                   <div
-                    style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px;">
+                    style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--rock-border); padding-bottom: 12px;">
                     <span
                       style="color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Email</span>
                     <span id="profile-email" style="color: var(--text-light); font-weight: 500;">—</span>
@@ -1228,19 +1279,19 @@
               <!-- RIGHT COLUMN: About + Projects + Sign out -->
               <div class="profile-right">
                 <div
-                  style="text-align: left; background: rgba(0,0,0,0.15); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px;">
+                  style="text-align: left; background: var(--dark-stone-mid); padding: 20px; border-radius: 12px; border: 1px solid var(--rock-border); margin-bottom: 20px;">
                   <span
                     style="color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 8px;">About
                     Me</span>
                   <p id="profile-about"
-                    style="color: var(--text-light); font-size: 14px; line-height: 1.6; margin: 0; background: rgba(255,255,255,0.03); padding: 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                    style="color: var(--text-light); font-size: 14px; line-height: 1.6; margin: 0; background: var(--dark-stone-light); padding: 14px; border-radius: 8px; border: 1px solid var(--rock-border);">
                     —</p>
                 </div>
 
                 <div
-                  style="text-align: left; background: rgba(0,0,0,0.15); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); flex: 1; display: flex; flex-direction: column;">
+                  style="text-align: left; background: var(--dark-stone-mid); padding: 20px; border-radius: 12px; border: 1px solid var(--rock-border); flex: 1; display: flex; flex-direction: column;">
                   <div
-                    style="display:flex; align-items:center; gap: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px; margin-bottom: 12px;">
+                    style="display:flex; align-items:center; gap: 8px; border-bottom: 1px solid var(--rock-border); padding-bottom: 12px; margin-bottom: 12px;">
                     <i class="fa-solid fa-link" style="color: var(--gold-primary);"></i>
                     <span
                       style="color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Personal
@@ -1380,13 +1431,13 @@
           style="display: none; max-width: 960px; margin: 0 auto; grid-template-columns: 1fr; gap: 32px;">
           
           <!-- Team Event Info / Registration Instructions -->
-          <div class="glass-card" style="border: 1.5px solid #111111; background: rgba(255, 255, 255, 0.9); box-shadow: none !important;">
+          <div class="glass-card" style="border: 1.5px solid rgba(42,46,53,0.15); background: rgba(255, 255, 255, 0.9); box-shadow: none !important;">
             <div class="card-body" style="padding: 24px; display: flex; align-items: flex-start; gap: 16px;">
               <div style="font-size: 28px; color: var(--gold-primary); margin-top: 2px;">
                 <i class="fa-solid fa-circle-info"></i>
               </div>
               <div id="team-info-banner-content" style="flex: 1;">
-                <h3 style="margin: 0 0 6px 0; font-size: 16px; font-weight: 800; color: #111111; display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <h3 style="margin: 0 0 6px 0; font-size: 16px; font-weight: 800; color: var(--text-light); display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
                   Ideackathon Team Registration &amp; Payment
                   <span style="font-size: 11px; font-weight: 700; color: #111; background: #eee; border: 1px solid #ccc; border-radius: 12px; padding: 2px 8px; display: inline-flex; align-items: center; gap: 4px;">
                     <img src="cloud-community-logo.jpg" alt="CC" style="width: 13px; height: 13px; border-radius: 50%; object-fit: cover;"> &lt;CC&gt; Collab
@@ -1483,7 +1534,7 @@
             </div>
             <div class="card-body" style="padding: 24px;">
               <h2 id="dash-team-name"
-                style="font-size: 24px; color: #111111; font-weight: 800; margin-bottom: 8px;">
+                style="font-size: 24px; color: var(--text-light); font-weight: 800; margin-bottom: 8px;">
                 —</h2>
               <p id="dash-team-desc"
                 style="color: #444444; font-size: 14px; margin-bottom: 20px; line-height: 1.5;">—</p>
@@ -1493,7 +1544,7 @@
                 <div
                   style="font-size: 11px; color: #777777; text-transform: uppercase; margin-bottom: 4px;">
                   Tech Stack</div>
-                <div id="dash-team-tech" style="font-weight: 600; color: #111111;">—</div>
+                <div id="dash-team-tech" style="font-weight: 600; color: var(--text-light);">—</div>
               </div>
 
               <div
@@ -1541,11 +1592,37 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="portal-script.min.js?v=31"></script>
   <script>
+    // Initialize theme from localStorage immediately to prevent color flash
+    (function() {
+      const isInv = localStorage.getItem('portal-theme-inverted') === 'true';
+      if (isInv) {
+        document.body.classList.add('theme-inverted');
+        document.addEventListener('DOMContentLoaded', () => {
+          const themeBtn = document.getElementById('theme-toggle-btn');
+          if (themeBtn) {
+            themeBtn.innerHTML = '<i class="fa-solid fa-sun"></i>';
+          }
+        });
+      }
+    })();
+
+    function toggleTheme() {
+      const body = document.body;
+      body.classList.toggle('theme-inverted');
+      const isInv = body.classList.contains('theme-inverted');
+      localStorage.setItem('portal-theme-inverted', isInv ? 'true' : 'false');
+      
+      const themeBtn = document.getElementById('theme-toggle-btn');
+      if (themeBtn) {
+        themeBtn.innerHTML = isInv ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+      }
+    }
+
     // Global user doc reference (declared in portal-script.js)
 
     // Cryptographic Helpers (AES-CBC + SHA256 Blind Indexing)
-    const CRYPTO_SALT = 'CM_SecretSalt_2026_Key';
-    const GLOBAL_SALT = 'CM_GlobalSalt_2026_Hash';
+    var CRYPTO_SALT = 'CM_SecretSalt_2026_Key';
+    var GLOBAL_SALT = 'CM_GlobalSalt_2026_Hash';
 
     function getDerivationKey(uid) {
       return CryptoJS.SHA256(uid + CRYPTO_SALT).toString();
@@ -1760,8 +1837,8 @@
 
               if (projects.length > 0) {
                 projectsEl.innerHTML = projects.map(p => `
-                  <div style="margin-bottom: 12px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.02);">
-                    <div style="color: var(--gold-light); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">${p.name || 'Untitled Project'}</div>
+                  <div style="margin-bottom: 12px; background: var(--dark-stone-light); padding: 12px; border-radius: 8px; border: 1px solid var(--rock-border);">
+                    <div style="color: var(--gold-primary); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">${p.name || 'Untitled Project'}</div>
                     ${p.link ? `<a href="${p.link}" target="_blank" style="color: var(--blue-accent); text-decoration: underline; font-size: 13px; word-break: break-all;"><i class="fa-solid fa-link" style="font-size: 11px; margin-right: 6px;"></i>${p.link}</a>` : ''}
                   </div>
                 `).join('');
@@ -1885,8 +1962,8 @@
         const projectsEl = document.getElementById('profile-projects');
         if (newProjects.length > 0 && projectsEl) {
           projectsEl.innerHTML = newProjects.map(p => `
-            <div style="margin-bottom: 12px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.02);">
-              <div style="color: var(--gold-light); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">${p.name || 'Untitled Project'}</div>
+            <div style="margin-bottom: 12px; background: var(--dark-stone-light); padding: 12px; border-radius: 8px; border: 1px solid var(--rock-border);">
+              <div style="color: var(--gold-primary); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">${p.name || 'Untitled Project'}</div>
               ${p.link ? `<a href="${p.link}" target="_blank" style="color: var(--blue-accent); text-decoration: underline; font-size: 13px; word-break: break-all;"><i class="fa-solid fa-link" style="font-size: 11px; margin-right: 6px;"></i>${p.link}</a>` : ''}
             </div>
           `).join('');
@@ -1999,11 +2076,21 @@
             }
         }
         
-        window.addEventListener('resize', initCanvas);
+        let lastWidth = window.innerWidth;
+        window.addEventListener('resize', () => {
+            // Prevent RAM spikes on mobile scroll by only re-rendering on width change
+            if (window.innerWidth !== lastWidth) {
+                lastWidth = window.innerWidth;
+                initCanvas();
+            }
+        });
         initCanvas();
 
         function drawNetwork() {
             ctx.clearRect(0, 0, width, height);
+            
+            const isInv = document.body.classList.contains('theme-inverted');
+            const rgb = isInv ? '240, 165, 0' : '150, 140, 120';
             
             for (let i = 0; i < particles.length; i++) {
                 let p = particles[i];
@@ -2019,7 +2106,7 @@
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
                 const maxNodeOpacity = p.isLarge ? 0.3 : 0.9; 
-                ctx.fillStyle = `rgba(20, 20, 20, ${maxNodeOpacity})`;
+                ctx.fillStyle = `rgba(${rgb}, ${maxNodeOpacity})`;
                 ctx.fill();
             }
             
@@ -2044,7 +2131,7 @@
                             ctx.beginPath();
                             ctx.moveTo(p1.x, p1.y);
                             ctx.lineTo(p2.x, p2.y);
-                            ctx.strokeStyle = `rgba(20, 20, 20, ${finalOpacity})`;
+                            ctx.strokeStyle = `rgba(${rgb}, ${finalOpacity})`;
                             ctx.lineWidth = 0.6;
                             ctx.stroke();
                         }
